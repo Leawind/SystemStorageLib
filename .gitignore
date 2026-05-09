@@ -1,0 +1,47 @@
+# eclipse
+eclipse/
+bin
+*.launch
+.settings
+.metadata
+.classpath
+.project
+
+# idea
+.idea/
+out
+*.ipr
+*.iws
+*.iml
+
+# vscode
+.vscode/
+
+# visual studio
+.vs/
+
+# gradle
+build/
+.gradle/
+
+# other
+run
+runs
+
+# AI tools
+/.ai/
+.clinerules/
+.codebuddy/
+.cursorrules/
+.kilocode/
+.lingma/
+.marscode/
+.trae/
+
+# logs
+**/logs/*.log
+**/logs/*.log.gz
+
+# JFR
+.profileconfig.json
+*.jfr
