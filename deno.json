@@ -30,6 +30,8 @@
     "trailingCommas": "onlyMultiLine",
     "typeLiteral.separatorKind": "semiColon",
     "include": [
+      ".github/",
+      ".releaserc.json",
       "deno.json",
       "scripts/**"
     ],

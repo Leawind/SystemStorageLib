@@ -1,6 +1,5 @@
 pluginManagement {
     repositories {
-        mavenLocal()
         mavenCentral()
         gradlePluginPortal()
         maven("https://maven.kikugie.dev/releases")
@@ -21,10 +20,14 @@ stonecutter {
     kotlinController = true
     shared {
         fun mc(version: String, vararg loaders: String) {
-            // Make the relevant version directories named "1.20.2-fabric", "1.20.2-forge", etc.
-            for (it in loaders) version("$version-$it", version)
+            for (loader in loaders) {
+                version("$version-$loader", version)
+            }
         }
 
+        mc("1.19.4", "fabric", "forge")
+        mc("1.20.1", "fabric", "forge")
+        mc("1.21.11", "fabric", "neoforge")
         mc("26.1", "fabric", "neoforge")
 
         vcsVersion = "26.1-fabric"
@@ -32,4 +35,4 @@ stonecutter {
     create(rootProject)
 }
 
-rootProject.name = "YourModName"
+rootProject.name = "SystemStorageLib"

@@ -6,24 +6,37 @@ plugins {
 
 modSettings {
     clientOptions {
+        // https://minecraft.wiki/w/Options.txt
         fov = 90
-        guiScale = 3
+        guiScale = 2
         narrator = false
-        darkBackground = true
         musicVolume = 0.0
+        guiScale = 3
+
+        additionalLines = mapOf(
+            "maxFps" to "60",
+            "renderDistance" to "8",
+            "simulationDistance" to "5",
+            "mouseSensitivity" to "0.22"
+        )
     }
 }
 
+dependencies {
+}
 
-// Example of overriding publishing settings
+
 publishMods {
     modrinth {
-        if (mod.isFabric) requires("fabric-api")
+        if (mod.isFabric) {
+            requires("fabric-api")
+            optional("modmenu")
+        }
     }
 
     curseforge {
-        clientRequired = true // Set as needed
-        serverRequired = false // Set as needed
+        clientRequired = false
+        serverRequired = false
         if (mod.isFabric) requires("fabric-api")
     }
 }
