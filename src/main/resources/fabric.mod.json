@@ -11,7 +11,7 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "${group}.PlatformEntrypoint"
+      "${group}.platform.PlatformEntrypoint"
     ]
   },
   "depends": {

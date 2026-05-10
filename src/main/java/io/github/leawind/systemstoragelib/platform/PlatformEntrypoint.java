@@ -1,4 +1,4 @@
-package io.github.leawind.systemstoragelib;
+package io.github.leawind.systemstoragelib.platform;
 /*? if fabric {*/
 
 import net.fabricmc.api.ModInitializer;
