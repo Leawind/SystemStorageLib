@@ -10,9 +10,9 @@ bin
 # idea
 .idea/
 out
+*.iml
 *.ipr
 *.iws
-*.iml
 
 # vscode
 .vscode/
@@ -21,12 +21,14 @@ out
 .vs/
 
 # gradle
-build/
 .gradle/
+.kotlin/
+build/
+secrets.gradle
+versions/*-*/**
 
-# other
-run
-runs
+# Minecraft
+run/
 
 # AI tools
 /.ai/
@@ -42,6 +44,9 @@ runs
 **/logs/*.log
 **/logs/*.log.gz
 
-# JFR
-.profileconfig.json
+# Java
+hs_err_*.log
+replay_*.log
+*.hprof
 *.jfr
+.profileconfig.json
