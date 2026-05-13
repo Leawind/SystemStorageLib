@@ -27,23 +27,15 @@ modSettings {
 
 val shadowBundle: Configuration by configurations.creating
 
-fun DependencyHandlerScope.shadow(dependencyNotation: String) {
-    implementation(dependencyNotation)
-    add("shadowBundle", dependencyNotation)
-}
-
 repositories {
+    mavenCentral()
     maven("https://jitpack.io")
 }
 
 dependencies {
-    shadow("com.github.Leawind:inventory-java:5b9aca4746")
-    shadow("dev.dirs:directories:26")
+    implementation(project(":core"))
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.11.3")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-
-    compileOnly("org.jspecify:jspecify:1.0.0")
+    add("shadowBundle", project(":core", configuration = "shadowJarOutput"))
 }
 
 tasks.shadowJar {
@@ -52,21 +44,13 @@ tasks.shadowJar {
 
     configurations = listOf(shadowBundle)
 
+    println("remapJar: ${tasks.findByName("remapJar")}, project.name=${project.name}, project.version=${project.version}")
     if (tasks.findByName("remapJar") == null) {
-        println("remapJar: null, project.name=${project.name}, project.version=${project.version}")
         archiveClassifier.set("")
     } else {
-        println("remapJar: exists, project.name=${project.name}, project.version=${project.version}")
         archiveClassifier.set("shadow")
     }
 
-    relocate("io.github.leawind.inventory", "io.github.leawind.systemstoragelib.lib.inventory")
-    relocate("dev.dirs", "io.github.leawind.systemstoragelib.lib.dirs") // dev.dirs:directories
-
-    // Exclude license files and metadata from bundled libraries to avoid confusion
-    exclude("META-INF/native-image/**") // dev.dirs:directories
-
-    minimize()
 }
 
 tasks.withType<RemapJarTask>().matching { it.name == "remapJar" }.configureEach {
@@ -76,10 +60,6 @@ tasks.withType<RemapJarTask>().matching { it.name == "remapJar" }.configureEach 
 
 tasks.assemble {
     dependsOn(tasks.shadowJar)
-}
-
-tasks.test {
-    useJUnitPlatform()
 }
 
 if (mod.isForge) {

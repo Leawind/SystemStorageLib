@@ -36,3 +36,5 @@ stonecutter {
 }
 
 rootProject.name = "SystemStorageLib"
+
+include("core")
