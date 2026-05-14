@@ -20,7 +20,7 @@ dependencies {
     compileOnly("org.slf4j:slf4j-api:2.0.17")
     testImplementation("org.slf4j:slf4j-simple:2.0.17")
 
-    implementation("com.github.Leawind:inventory-java:5b9aca4746")
+    implementation("com.github.Leawind:inventory-java:498a483d63")
     implementation("dev.dirs:directories:26")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.3")
