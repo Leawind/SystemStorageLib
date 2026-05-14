@@ -3,6 +3,7 @@ package io.github.leawind.systemstoragelib.v1.impl.managers;
 import io.github.leawind.inventory.lock.LockUtils;
 import io.github.leawind.systemstoragelib.v1.api.exception.CredentialIntegrityException;
 import io.github.leawind.systemstoragelib.v1.api.managers.CredentialStore;
+import io.github.leawind.systemstoragelib.v1.impl.utils.machineid.MachineIdProvider;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -188,8 +189,12 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
 
   private SecretKey deriveKey() {
     try {
-      // TODO
-      String keyMaterial = System.getProperty("user.name") + ":" + System.getProperty("user.home");
+      String keyMaterial =
+          System.getProperty("user.name")
+              + ":"
+              + System.getProperty("user.home")
+              + ":"
+              + MachineIdProvider.getMachineId();
       byte[] salt = "SystemStorageLib-CredentialStore-v1".getBytes(StandardCharsets.UTF_8);
 
       PBEKeySpec keySpec =
