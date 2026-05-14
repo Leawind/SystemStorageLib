@@ -1,15 +1,16 @@
 package io.github.leawind.systemstoragelib.v1.impl;
 
 import io.github.leawind.systemstoragelib.v1.api.ScopeStorage;
+import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
-import io.github.leawind.systemstoragelib.v1.api.managers.CredentialStore;
-import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
 import io.github.leawind.systemstoragelib.v1.impl.log.LogManager;
 import io.github.leawind.systemstoragelib.v1.impl.log.SystemLogger;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import org.jspecify.annotations.Nullable;
@@ -19,31 +20,70 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   public static final String ROOT_DIR_NAME = "mc_system_storage";
 
   private final Path logsDir;
-  private final Path credentialsDir;
-  private final Path dataDir;
-  private final Path configDir;
-  private final Path cacheDir;
-  private final Path dataLocalDir;
+
+  /// ### Examples
+  ///
+  /// - config: `/home/Steve/.config/mc_system_storage/config`.
+  /// - data: `/home/Steve/.local/share/mc_system_storage/data`.
+  private final Map<StoreType<?>, Path> scopedDirs;
 
   private final LogManager logWriter;
-  private final Map<String, ScopeStorageImpl> scopes = new ConcurrentHashMap<>();
+  private final Map<String, Optional<ScopeStorage>> scopes = new ConcurrentHashMap<>();
 
-  public SystemStorageLibImpl(
-      Path logsDir,
-      Path credentialsDir,
-      Path dataDir,
-      Path configDir,
-      Path cacheDir,
-      Path dataLocalDir) {
+  /// ### Args
+  ///
+  /// #### `logsDir`
+  ///
+  /// Directory to store logs.
+  ///
+  /// #### `scopedDirs`
+  ///
+  /// Map of {@link StoreType} to {@link Path} of directory.
+  ///
+  /// - Must contain all {@link StoreType}.
+  /// - Must be unique for each {@link StoreType}.
+  ///
+  /// Example:
+  ///
+  /// - config: `/home/Steve/.config/mc_system_storage/config`.
+  /// - data: `/home/Steve/.local/share/mc_system_storage/data`.
+  ///
+  /// ### Throws {@link IllegalArgumentException}
+  ///
+  /// - If `scopedDirs` does not contain all {@link StoreType}.
+  /// - If any value in `scopedDirs` is not unique.
+  public SystemStorageLibImpl(Path logsDir, Map<StoreType<?>, Path> scopedDirs) {
+    validateDirs(scopedDirs);
+
     this.logsDir = logsDir;
-    this.credentialsDir = credentialsDir;
-    this.dataDir = dataDir;
-    this.configDir = configDir;
-    this.cacheDir = cacheDir;
-    this.dataLocalDir = dataLocalDir;
+    this.scopedDirs = Map.copyOf(scopedDirs);
 
     logWriter = new LogManager(logsDir, 10 * 1024 * 1024, 10);
     detectScopes();
+  }
+
+  private static void validateDirs(Map<StoreType<?>, Path> scopedDirs)
+      throws IllegalArgumentException {
+    // Check for missing StoreTypes.
+    List<StoreType<?>> missingTypes = StoreType.Utils.missingTypes(scopedDirs.keySet());
+    if (!missingTypes.isEmpty()) {
+      throw new IllegalArgumentException("Missing StoreTypes: " + missingTypes);
+    }
+
+    // Check for unique scopedDirs for each StoreType.
+    for (var entry : scopedDirs.entrySet()) {
+      for (var other : scopedDirs.entrySet()) {
+        if (!entry.getKey().equals(other.getKey()) && entry.getValue().equals(other.getValue())) {
+          throw new IllegalArgumentException(
+              "dir for each StoreType must be unique, but "
+                  + entry.getKey()
+                  + " and "
+                  + other.getKey()
+                  + " are the same: "
+                  + entry.getValue());
+        }
+      }
+    }
   }
 
   @Override
@@ -86,11 +126,22 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   @Override
   public ScopeStorage scope(String scope) {
     validateScope(scope);
-    return scopes.computeIfAbsent(scope, this::createScopeStorage);
+
+    if (scopes.containsKey(scope)) {
+      var optional = scopes.get(scope);
+      if (optional.isPresent()) {
+        return optional.get();
+      }
+    }
+
+    var storage = createScopeStorage(scope);
+    scopes.put(scope, Optional.of(storage));
+    return storage;
   }
 
   @Override
   public Stream<String> getAllScopes() {
+    detectScopes();
     return scopes.keySet().stream();
   }
 
@@ -99,21 +150,13 @@ public class SystemStorageLibImpl implements SystemStorageLib {
     return logsDir;
   }
 
-  private ScopeStorageImpl createScopeStorage(String scope) {
-    return new ScopeStorageImpl(
-        scope,
-        new SystemLogger(logWriter, scope),
-        CredentialStore.of(credentialsDir.resolve(scope)),
-        StorageManager.of(dataDir.resolve(scope)),
-        StorageManager.of(configDir.resolve(scope)),
-        StorageManager.of(cacheDir.resolve(scope)),
-        StorageManager.of(dataLocalDir.resolve(scope)));
+  private ScopeStorage createScopeStorage(String scope) {
+    return ScopeStorage.ofDirs(scope, new SystemLogger(logWriter, scope), scopedDirs);
   }
 
   private void detectScopes() {
-    scanDirectoryForScopes(dataDir.resolve(ROOT_DIR_NAME));
-    scanDirectoryForScopes(configDir.resolve(ROOT_DIR_NAME));
-    scanDirectoryForScopes(cacheDir.resolve(ROOT_DIR_NAME));
+    scopes.values().removeIf(Optional::isEmpty);
+    scopedDirs.values().forEach(this::scanDirectoryForScopes);
   }
 
   private void scanDirectoryForScopes(Path rootDir) {
@@ -125,9 +168,8 @@ public class SystemStorageLibImpl implements SystemStorageLib {
           .filter(Files::isDirectory)
           .map(p -> p.getFileName().toString())
           .filter(this::isScopeValid)
-          .forEach(scope -> scopes.putIfAbsent(scope, null));
-    } catch (IOException e) {
-      // Silently ignore scan failures
+          .forEach(scope -> scopes.putIfAbsent(scope, Optional.empty()));
+    } catch (IOException ignored) {
     }
   }
 }
