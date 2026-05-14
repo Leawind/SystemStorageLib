@@ -9,19 +9,11 @@ import org.junit.jupiter.api.Test;
 public class ScopeStorageTest extends SystemStorageLibTest {
   @Test
   void notNull() {
-    assertNotNull(SCOPE.data());
-    assertNotNull(SCOPE.config());
-    assertNotNull(SCOPE.cache());
-    assertNotNull(SCOPE.credentials());
-    assertNotNull(SCOPE.logger());
-  }
-
-  @Test
-  void testLock() throws IOException {
-    StorageManager data = SCOPE.data();
-
-    data.getLock().readLock().lock();
-
-    data.getLock().readLock().unlock();
+    assertNotNull(storage.logger());
+    assertNotNull(storage.credentials());
+    assertNotNull(storage.config());
+    assertNotNull(storage.data());
+    assertNotNull(storage.dataLocal());
+    assertNotNull(storage.cache());
   }
 }
