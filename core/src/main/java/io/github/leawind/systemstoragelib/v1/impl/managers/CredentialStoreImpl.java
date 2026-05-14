@@ -62,8 +62,6 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
   private static final String FILE_SUFFIX = ".enc";
   private static final String TMP_SUFFIX = ".tmp";
 
-  private static final int MAX_KEY_LENGTH = 1024;
-
   private static final Set<PosixFilePermission> DIR_PERMISSIONS =
       PosixFilePermissions.fromString("rwx------");
   private static final Set<PosixFilePermission> FILE_PERMISSIONS =
@@ -120,6 +118,7 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
   @Override
   public @Nullable String get(@NonNull String key)
       throws CredentialIntegrityException, IOException {
+    validateKey(key);
     Path filePath = keyToFilePath(key);
     if (!Files.exists(filePath)) {
       return null;
@@ -146,41 +145,16 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
     Files.deleteIfExists(keyToFilePath(key));
   }
 
-  // region Key normalization and hashing
+  // region Key validation and hashing
 
   private void validateKey(String key) {
     if (key == null || key.isEmpty()) {
       throw new IllegalArgumentException("Key must not be null or empty");
     }
-    String normalized = normalizeKey(key);
-    if (normalized.isEmpty()) {
-      throw new IllegalArgumentException("Key becomes empty after normalization");
-    }
-  }
-
-  private String normalizeKey(String key) {
-    StringBuilder sb = new StringBuilder(key.length());
-    for (char c : key.toCharArray()) {
-      if (c < 0x20 || c == 0x7F) {
-        continue;
-      }
-      if (c == '/' || c == '\\') {
-        sb.append('_');
-      } else {
-        sb.append(c);
-      }
-    }
-    String normalized = sb.toString();
-    if (normalized.length() > MAX_KEY_LENGTH) {
-      normalized = normalized.substring(0, MAX_KEY_LENGTH);
-    }
-    return normalized;
   }
 
   private Path keyToFilePath(String key) {
-    String normalized = normalizeKey(key);
-    String hash = sha256Hex(normalized);
-    return getDirPath().resolve(hash + FILE_SUFFIX);
+    return getDirPath().resolve(sha256Hex(key) + FILE_SUFFIX);
   }
 
   private static String sha256Hex(String input) {
