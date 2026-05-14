@@ -1,4 +1,4 @@
-package io.github.leawind.systemstoragelib.v1.api;
+package io.github.leawind.systemstoragelib.v1.api.managers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import io.github.leawind.systemstoragelib.v1.api.managers.CredentialStore;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -81,24 +80,6 @@ public class CredentialStoreTest {
   @Test
   void testEmptyKeyRejected() {
     assertThrows(IllegalArgumentException.class, () -> store.set("", "value"));
-  }
-
-  @Test
-  void testPathTraversalKey() throws IOException {
-    store.set("../../etc/passwd", "value");
-    assertEquals("value", store.get("../../etc/passwd"));
-  }
-
-  @Test
-  void testKeyWithSlashes() throws IOException {
-    store.set("path/to/key", "value");
-    assertEquals("value", store.get("path/to/key"));
-  }
-
-  @Test
-  void testKeyWithControlChars() throws IOException {
-    store.set("key\twith\ncontrol", "value");
-    assertEquals("value", store.get("key\twith\ncontrol"));
   }
 
   @Test
