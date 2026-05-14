@@ -1,6 +1,5 @@
 package io.github.leawind.systemstoragelib.v1.impl;
 
-import dev.dirs.BaseDirectories;
 import io.github.leawind.systemstoragelib.v1.api.ScopeStorage;
 import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
 import io.github.leawind.systemstoragelib.v1.api.managers.CredentialStore;
@@ -29,17 +28,21 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   private final LogManager logWriter;
   private final Map<String, ScopeStorageImpl> scopes = new ConcurrentHashMap<>();
 
-  public SystemStorageLibImpl() {
-    var baseDirs = BaseDirectories.get();
-    logsDir = Path.of(baseDirs.dataDir, ROOT_DIR_NAME, "logs");
-    credentialsDir = Path.of(baseDirs.dataDir, ROOT_DIR_NAME, "credentials");
-    dataDir = Path.of(baseDirs.dataDir, ROOT_DIR_NAME, "data");
-    configDir = Path.of(baseDirs.configDir, ROOT_DIR_NAME, "config");
-    cacheDir = Path.of(baseDirs.cacheDir, ROOT_DIR_NAME, "cache");
-    dataLocalDir = Path.of(baseDirs.dataLocalDir, ROOT_DIR_NAME, "dataLocal");
+  public SystemStorageLibImpl(
+      Path logsDir,
+      Path credentialsDir,
+      Path dataDir,
+      Path configDir,
+      Path cacheDir,
+      Path dataLocalDir) {
+    this.logsDir = logsDir;
+    this.credentialsDir = credentialsDir;
+    this.dataDir = dataDir;
+    this.configDir = configDir;
+    this.cacheDir = cacheDir;
+    this.dataLocalDir = dataLocalDir;
 
     logWriter = new LogManager(logsDir, 10 * 1024 * 1024, 10);
-
     detectScopes();
   }
 
