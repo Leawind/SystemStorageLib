@@ -54,11 +54,7 @@ public class StorageManagerImpl implements StorageManager {
     }
 
     try (var paths = Files.walk(dirPath)) {
-      // Walk in reverse order so children are deleted before their parent directories.
-      // Files.walk returns paths in pre-order (parent first), so reversing ensures
-      // leaf files are deleted before their containing directories.
-      var sorted =
-          paths.sorted(java.util.Comparator.reverseOrder()).toList();
+      var sorted = paths.sorted(java.util.Comparator.reverseOrder()).toList();
       for (Path path : sorted) {
         if (path.equals(dirPath) || lockPath.equals(path)) {
           continue;

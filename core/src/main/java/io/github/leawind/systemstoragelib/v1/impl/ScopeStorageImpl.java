@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 public record ScopeStorageImpl(
     String scope,
     Logger logger,
-    CredentialStore credentialStore,
+    CredentialStore credentials,
     StorageManager data,
     StorageManager config,
     StorageManager cache,

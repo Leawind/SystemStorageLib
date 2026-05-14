@@ -12,7 +12,7 @@ public class ScopeStorageTest extends SystemStorageLibTest {
     assertNotNull(SCOPE.data());
     assertNotNull(SCOPE.config());
     assertNotNull(SCOPE.cache());
-    assertNotNull(SCOPE.credentialStore());
+    assertNotNull(SCOPE.credentials());
     assertNotNull(SCOPE.logger());
   }
 

@@ -6,6 +6,13 @@ import org.jspecify.annotations.Nullable;
 
 public interface SystemStorageLib {
 
+  /// ### Throws
+  ///
+  /// - `IllegalArgumentException` if scope is invalid.
+  ScopeStorage scope(String scope);
+
+  Stream<String> getAllScopes();
+
   /// - `2 <= length <= 63`
   /// - Must not start or end with `-`, `+`, `.`
   /// - Allowed characters:
@@ -18,14 +25,7 @@ public interface SystemStorageLib {
     return validateScope(scope) == null;
   }
 
-  /// ### Throws
-  ///
-  /// - `IllegalArgumentException` if scope is invalid.
-  ScopeStorage getScopeStorage(String scope);
-
-  Stream<String> scopes();
-
-  Path getLogDir();
+  Path getLogsDir();
 
   static SystemStorageLib getInstance() {
     return SystemStorageLibHolder.INSTANCE;

@@ -19,7 +19,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
   public static final String ROOT_DIR_NAME = "mc_system_storage";
 
-  private final Path logDir;
+  private final Path logsDir;
   private final Path credentialsDir;
   private final Path dataDir;
   private final Path configDir;
@@ -31,14 +31,14 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
   public SystemStorageLibImpl() {
     var baseDirs = BaseDirectories.get();
-    logDir = Path.of(baseDirs.dataDir, ROOT_DIR_NAME, "logs");
+    logsDir = Path.of(baseDirs.dataDir, ROOT_DIR_NAME, "logs");
     credentialsDir = Path.of(baseDirs.dataDir, ROOT_DIR_NAME, "credentials");
     dataDir = Path.of(baseDirs.dataDir, ROOT_DIR_NAME, "data");
     configDir = Path.of(baseDirs.configDir, ROOT_DIR_NAME, "config");
     cacheDir = Path.of(baseDirs.cacheDir, ROOT_DIR_NAME, "cache");
     dataLocalDir = Path.of(baseDirs.dataLocalDir, ROOT_DIR_NAME, "dataLocal");
 
-    logWriter = new LogManager(logDir, 10 * 1024 * 1024, 10);
+    logWriter = new LogManager(logsDir, 10 * 1024 * 1024, 10);
 
     detectScopes();
   }
@@ -81,19 +81,19 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   }
 
   @Override
-  public ScopeStorage getScopeStorage(String scope) {
+  public ScopeStorage scope(String scope) {
     validateScope(scope);
     return scopes.computeIfAbsent(scope, this::createScopeStorage);
   }
 
   @Override
-  public Stream<String> scopes() {
+  public Stream<String> getAllScopes() {
     return scopes.keySet().stream();
   }
 
   @Override
-  public Path getLogDir() {
-    return logDir;
+  public Path getLogsDir() {
+    return logsDir;
   }
 
   private ScopeStorageImpl createScopeStorage(String scope) {
