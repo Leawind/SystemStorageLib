@@ -3,16 +3,12 @@ package io.github.leawind.systemstoragelib.v1.impl.managers;
 import io.github.leawind.inventory.lock.LockUtils;
 import io.github.leawind.systemstoragelib.v1.api.exception.CredentialIntegrityException;
 import io.github.leawind.systemstoragelib.v1.api.managers.CredentialStore;
+import io.github.leawind.systemstoragelib.v1.impl.utils.AtomicFileWriter;
 import io.github.leawind.systemstoragelib.v1.utils.machineid.MachineIdProvider;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -33,8 +29,6 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /// AES-256-GCM encrypted credential storage with environment-bound key derivation.
 ///
@@ -50,7 +44,6 @@ import org.slf4j.LoggerFactory;
 ///
 /// AES key derived via PBKDF2 from `user.name:user.home`.
 public class CredentialStoreImpl extends StorageManagerImpl implements CredentialStore {
-  private static final Logger LOG = LoggerFactory.getLogger(CredentialStoreImpl.class);
 
   private static final byte FORMAT_VERSION = 0x01;
   private static final int IV_LENGTH = 12;
@@ -61,7 +54,6 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
   private static final int AES_KEY_LENGTH_BITS = 256;
 
   private static final String FILE_SUFFIX = ".enc";
-  private static final String TMP_SUFFIX = ".tmp";
 
   private static final Set<PosixFilePermission> DIR_PERMISSIONS =
       PosixFilePermissions.fromString("rwx------");
@@ -94,16 +86,7 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
       byte[] plaintext = value.getBytes(StandardCharsets.UTF_8);
       byte[] encrypted = encrypt(plaintext);
 
-      Path tmpPath = resolveTmpPath(filePath);
-
-      try {
-        writeAtomically(tmpPath, encrypted);
-        moveAtomically(tmpPath, filePath);
-      } catch (IOException e) {
-        cleanUpTmp(tmpPath);
-        throw e;
-      }
-
+      AtomicFileWriter.write(filePath, encrypted);
       applyFilePermissions(filePath);
     } catch (InvalidAlgorithmParameterException
         | BadPaddingException
@@ -274,42 +257,6 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
       Files.createDirectories(getDirPath());
     }
     applyDirPermissions(getDirPath());
-  }
-
-  private static Path resolveTmpPath(Path filePath) {
-    return filePath.resolveSibling(filePath.getFileName() + TMP_SUFFIX);
-  }
-
-  private static void writeAtomically(Path tmpPath, byte[] data) throws IOException {
-    try (FileChannel channel =
-        FileChannel.open(
-            tmpPath,
-            StandardOpenOption.CREATE,
-            StandardOpenOption.WRITE,
-            StandardOpenOption.TRUNCATE_EXISTING)) {
-      int written = channel.write(ByteBuffer.wrap(data));
-      if (written != data.length) {
-        throw new IOException("Failed to write all data to file: " + tmpPath);
-      }
-      channel.force(true);
-    }
-  }
-
-  private static void moveAtomically(Path source, Path target) throws IOException {
-    try {
-      Files.move(
-          source, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-    } catch (AtomicMoveNotSupportedException e) {
-      Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
-    }
-  }
-
-  private static void cleanUpTmp(Path tmpPath) {
-    try {
-      Files.deleteIfExists(tmpPath);
-    } catch (IOException e) {
-      LOG.warn("Failed to clean up temp file: {}", tmpPath, e);
-    }
   }
 
   private static void validateFileSize(byte[] fileContent, Path filePath) {
