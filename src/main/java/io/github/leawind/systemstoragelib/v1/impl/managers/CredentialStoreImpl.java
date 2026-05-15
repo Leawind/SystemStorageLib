@@ -29,6 +29,7 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 
 /// AES-256-GCM encrypted credential storage with environment-bound key derivation.
 ///
@@ -66,8 +67,8 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
 
   private volatile SecretKey aesKey;
 
-  public CredentialStoreImpl(Path dirPath) {
-    super(dirPath);
+  public CredentialStoreImpl(Logger logger, Path dirPath) {
+    super(logger, dirPath);
   }
 
   @Override

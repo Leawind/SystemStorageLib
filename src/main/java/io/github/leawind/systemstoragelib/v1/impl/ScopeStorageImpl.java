@@ -1,8 +1,11 @@
 package io.github.leawind.systemstoragelib.v1.impl;
 
+import io.github.leawind.inventory.type.UnsafeTypeUtils;
 import io.github.leawind.systemstoragelib.v1.api.ScopeStorage;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
+import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -14,13 +17,19 @@ public final class ScopeStorageImpl implements ScopeStorage {
 
   /// ### Throws {@link IllegalArgumentException}
   ///
-  /// - If any manager type is not the expected one for the StoreType.
   /// - If any StoreType is missing.
   /// - If any dirPath is not unique.
-  public ScopeStorageImpl(
-      String scope, Logger logger, Map<StoreType<?>, ? extends StorageManager> managers)
-      throws IllegalArgumentException {
+  public ScopeStorageImpl(String scope, Logger logger, Map<StoreType<?>, Path> dirs) {
+    Map<StoreType<?>, ? extends StorageManager> managers = new HashMap<>();
+
+    for (var entry : dirs.entrySet()) {
+      StoreType<?> type = entry.getKey();
+      Path scopedPath = entry.getValue().resolve(scope);
+
+      managers.put(type, UnsafeTypeUtils.cast(type.manager(logger, scopedPath)));
+    }
     validateManagers(managers);
+
     this.scope = scope;
     this.logger = logger;
     this.managers = managers;
@@ -28,17 +37,6 @@ public final class ScopeStorageImpl implements ScopeStorage {
 
   private static void validateManagers(Map<StoreType<?>, ? extends StorageManager> managers)
       throws IllegalArgumentException {
-    // Check manager types
-    for (var entry : managers.entrySet()) {
-      if (!entry.getKey().managerClass().isAssignableFrom(entry.getValue().getClass())) {
-        throw new IllegalArgumentException(
-            "Invalid manager type for StoreType "
-                + entry.getKey()
-                + ": "
-                + entry.getValue().getClass().getName());
-      }
-    }
-
     // Check for missing StoreTypes.
     List<StoreType<?>> missingTypes = StoreType.Utils.missingTypes(managers.keySet());
     if (!missingTypes.isEmpty()) {

@@ -1,5 +1,6 @@
 import gg.meza.stonecraft.mod
 import net.fabricmc.loom.task.RemapJarTask
+import org.gradle.util.internal.VersionNumber
 
 plugins {
     id("com.gradleup.shadow") version "8.3.10"
@@ -42,7 +43,7 @@ configurations.all {
     exclude(group = "net.fabricmc.fabric-api", module = "fabric-gametest-api-v1")
 }
 
-val dependsSlf4j = mod.minecraftVersion <= "1.16.5"
+val dependsSlf4j = VersionNumber.parse(mod.minecraftVersion) <= VersionNumber.parse("1.16.5")
 
 dependencies {
     if (dependsSlf4j) {

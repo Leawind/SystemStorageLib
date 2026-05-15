@@ -1,8 +1,6 @@
 package io.github.leawind.systemstoragelib.v1.api.managers;
 
-import io.github.leawind.systemstoragelib.v1.impl.managers.CredentialStoreImpl;
 import java.io.IOException;
-import java.nio.file.Path;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -33,8 +31,4 @@ public interface CredentialStore extends StorageManager {
 
   /// Remove the entry for the given key if it exists. Do nothing if it does not exist.
   void remove(@NonNull String key) throws IOException;
-
-  static CredentialStore of(Path dirPath) {
-    return new CredentialStoreImpl(dirPath);
-  }
 }

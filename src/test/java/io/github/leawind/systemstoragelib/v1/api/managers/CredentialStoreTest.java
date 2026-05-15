@@ -7,22 +7,27 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.github.leawind.systemstoragelib.v1.impl.managers.CredentialStoreImpl;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CredentialStoreTest {
 
   @TempDir Path tempDir;
 
+  private static final Logger TEST_LOGGER = LoggerFactory.getLogger(CredentialStoreTest.class);
+
   private CredentialStore store;
 
   @BeforeEach
   void setUp() {
-    store = CredentialStore.of(tempDir.resolve("credentials"));
+    store = new CredentialStoreImpl(TEST_LOGGER, tempDir.resolve("credentials"));
   }
 
   @Test

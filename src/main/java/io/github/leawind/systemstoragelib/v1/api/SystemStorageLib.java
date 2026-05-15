@@ -3,8 +3,11 @@ package io.github.leawind.systemstoragelib.v1.api;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 
 public interface SystemStorageLib {
+
+  Logger logger();
 
   /// ### Throws
   ///

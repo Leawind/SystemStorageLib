@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 
 public class SystemStorageLibImpl implements SystemStorageLib {
 
@@ -27,7 +28,8 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   /// - data: `/home/Steve/.local/share/mc_system_storage/data`.
   private final Map<StoreType<?>, Path> scopedDirs;
 
-  private final LogManager logWriter;
+  private final LogManager logManager;
+  private final Logger logger;
   private final Map<String, Optional<ScopeStorage>> scopes = new ConcurrentHashMap<>();
 
   /// ### Args
@@ -58,7 +60,8 @@ public class SystemStorageLibImpl implements SystemStorageLib {
     this.logsDir = logsDir;
     this.scopedDirs = Map.copyOf(scopedDirs);
 
-    logWriter = new LogManager(logsDir, 10 * 1024 * 1024, 10);
+    logManager = new LogManager(logsDir, 10 * 1024 * 1024, 10);
+    logger = new SystemLogger(logManager, "");
     detectScopes();
   }
 
@@ -84,6 +87,33 @@ public class SystemStorageLibImpl implements SystemStorageLib {
         }
       }
     }
+  }
+
+  @Override
+  public Logger logger() {
+    return logger;
+  }
+
+  @Override
+  public ScopeStorage scope(String scope) {
+    validateScope(scope);
+
+    if (scopes.containsKey(scope)) {
+      var optional = scopes.get(scope);
+      if (optional.isPresent()) {
+        return optional.get();
+      }
+    }
+
+    var storage = createScopeStorage(scope);
+    scopes.put(scope, Optional.of(storage));
+    return storage;
+  }
+
+  @Override
+  public Stream<String> getAllScopes() {
+    detectScopes();
+    return scopes.keySet().stream();
   }
 
   @Override
@@ -124,34 +154,12 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   }
 
   @Override
-  public ScopeStorage scope(String scope) {
-    validateScope(scope);
-
-    if (scopes.containsKey(scope)) {
-      var optional = scopes.get(scope);
-      if (optional.isPresent()) {
-        return optional.get();
-      }
-    }
-
-    var storage = createScopeStorage(scope);
-    scopes.put(scope, Optional.of(storage));
-    return storage;
-  }
-
-  @Override
-  public Stream<String> getAllScopes() {
-    detectScopes();
-    return scopes.keySet().stream();
-  }
-
-  @Override
   public Path getLogsDir() {
     return logsDir;
   }
 
   private ScopeStorage createScopeStorage(String scope) {
-    return ScopeStorage.ofDirs(scope, new SystemLogger(logWriter, scope), scopedDirs);
+    return new ScopeStorageImpl(scope, new SystemLogger(logManager, scope), scopedDirs);
   }
 
   private void detectScopes() {

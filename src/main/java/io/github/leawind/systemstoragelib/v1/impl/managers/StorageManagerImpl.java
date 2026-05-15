@@ -9,15 +9,18 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.locks.ReadWriteLock;
+import org.slf4j.Logger;
 
 public class StorageManagerImpl implements StorageManager {
   private static final String LOCK_FILE_NAME = ".lock";
 
+  private final Logger logger;
   private final Path dirPath;
   private final Path lockPath;
   private final Lazy<Result<FileBasedReentrantReadWriteLock, IOException>> lockLazy;
 
-  public StorageManagerImpl(Path dirPath) {
+  public StorageManagerImpl(Logger logger, Path dirPath) {
+    this.logger = logger;
     this.dirPath = dirPath;
     this.lockPath = dirPath.resolve(LOCK_FILE_NAME);
     this.lockLazy =
@@ -30,6 +33,11 @@ public class StorageManagerImpl implements StorageManager {
                 return Result.err(e);
               }
             });
+  }
+
+  @Override
+  public Logger logger() {
+    return logger;
   }
 
   @Override

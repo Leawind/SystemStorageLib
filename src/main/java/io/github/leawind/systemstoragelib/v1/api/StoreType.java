@@ -2,11 +2,14 @@ package io.github.leawind.systemstoragelib.v1.api;
 
 import io.github.leawind.systemstoragelib.v1.api.managers.CredentialStore;
 import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
+import io.github.leawind.systemstoragelib.v1.impl.managers.CredentialStoreImpl;
+import io.github.leawind.systemstoragelib.v1.impl.managers.StorageManagerImpl;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
+import java.util.function.BiFunction;
+import org.slf4j.Logger;
 
 /// Defines storage locations for different types of data within a specific scope.
 /// Each scope provides access to storage managers tailored for different data categories.
@@ -23,23 +26,26 @@ import java.util.function.Function;
 public final class StoreType<S extends StorageManager> {
 
   public static final StoreType<CredentialStore> CREDENTIALS =
-      new StoreType<>(CredentialStore.class, "credentials", false, CredentialStore::of);
+      new StoreType<>(CredentialStore.class, "credentials", false, CredentialStoreImpl::new);
   public static final StoreType<StorageManager> CONFIG =
-      new StoreType<>(StorageManager.class, "config", true, StorageManager::of);
+      new StoreType<>(StorageManager.class, "config", true, StorageManagerImpl::new);
   public static final StoreType<StorageManager> DATA =
-      new StoreType<>(StorageManager.class, "data", true, StorageManager::of);
+      new StoreType<>(StorageManager.class, "data", true, StorageManagerImpl::new);
   public static final StoreType<StorageManager> CACHE =
-      new StoreType<>(StorageManager.class, "cache", true, StorageManager::of);
+      new StoreType<>(StorageManager.class, "cache", true, StorageManagerImpl::new);
   public static final StoreType<StorageManager> DATA_LOCAL =
-      new StoreType<>(StorageManager.class, "data_local", true, StorageManager::of);
+      new StoreType<>(StorageManager.class, "data_local", true, StorageManagerImpl::new);
 
   private final Class<S> clazz;
   private final String identifier;
   private final boolean customizable;
-  private final Function<Path, S> managerFactory;
+  private final BiFunction<Logger, Path, S> managerFactory;
 
   private StoreType(
-      Class<S> clazz, String identifier, boolean customizable, Function<Path, S> managerFactory) {
+      Class<S> clazz,
+      String identifier,
+      boolean customizable,
+      BiFunction<Logger, Path, S> managerFactory) {
     this.clazz = clazz;
     this.identifier = identifier;
     this.customizable = customizable;
@@ -50,8 +56,8 @@ public final class StoreType<S extends StorageManager> {
     return clazz;
   }
 
-  public S manager(Path dirPath) {
-    return managerFactory.apply(dirPath);
+  public S manager(Logger logger, Path dirPath) {
+    return managerFactory.apply(logger, dirPath);
   }
 
   public String identifier() {

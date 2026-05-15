@@ -1,11 +1,14 @@
 package io.github.leawind.systemstoragelib.v1.api.managers;
 
-import io.github.leawind.systemstoragelib.v1.impl.managers.StorageManagerImpl;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.locks.ReadWriteLock;
+import org.slf4j.Logger;
 
 public interface StorageManager {
+
+  Logger logger();
+
   Path getDirPath();
 
   /// Get the read-write lock for the storage directory.
@@ -28,8 +31,4 @@ public interface StorageManager {
 
   /// Delete the entire storage directory and all contents.
   void delete() throws IOException;
-
-  static StorageManager of(Path dirPath) {
-    return new StorageManagerImpl(dirPath);
-  }
 }

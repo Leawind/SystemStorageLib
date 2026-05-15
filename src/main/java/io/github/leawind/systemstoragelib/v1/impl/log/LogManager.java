@@ -7,14 +7,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.Instant;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
 public class LogManager extends StorageManagerImpl {
-
-  private static final Logger ERROR_LOGGER = LoggerFactory.getLogger(LogManager.class);
-
   private static final String LOG_FILE_NAME = "latest.log";
 
   private final Path logFilePath;
@@ -22,7 +18,7 @@ public class LogManager extends StorageManagerImpl {
   private final int maxArchiveFiles;
 
   public LogManager(Path logDir, long maxFileSize, int maxArchiveFiles) {
-    super(logDir);
+    super(LoggerFactory.getLogger(LogManager.class), logDir);
     this.logFilePath = logDir.resolve(LOG_FILE_NAME);
     this.maxFileSize = maxFileSize;
     this.maxArchiveFiles = maxArchiveFiles;
@@ -45,7 +41,7 @@ public class LogManager extends StorageManagerImpl {
             logFilePath, line + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
       }
     } catch (IOException e) {
-      ERROR_LOGGER.error("Failed to write log to {}", logFilePath, e);
+      logger().error("Failed to write log to {}", logFilePath, e);
     }
   }
 
