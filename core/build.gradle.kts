@@ -22,6 +22,7 @@ dependencies {
 
     implementation("com.github.Leawind:inventory-java:498a483d63")
     implementation("dev.dirs:directories:26")
+    implementation("com.google.code.gson:gson:2.14.0")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -37,10 +38,16 @@ tasks.shadowJar {
     minimize()
 
     relocate("io.github.leawind.inventory", "io.github.leawind.systemstoragelib.lib.inventory")
+
+    // dev.dirs:directories
+    exclude("META-INF/native-image/**")
     relocate("dev.dirs", "io.github.leawind.systemstoragelib.lib.dirs")
 
-    // Exclude license files and metadata from bundled libraries to avoid confusion
-    exclude("META-INF/native-image/**") // dev.dirs:directories
+    // com.google.code.gson:gson
+    exclude("META-INF/maven/**")
+    exclude("META-INF/proguard/**")
+    exclude("com/google/errorprone/**")
+    relocate("com.google.gson", "io.github.leawind.systemstoragelib.lib.gson")
 
     archiveClassifier.set("all")
 }
