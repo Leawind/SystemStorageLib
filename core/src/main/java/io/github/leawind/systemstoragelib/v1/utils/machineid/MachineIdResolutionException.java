@@ -1,4 +1,4 @@
-package io.github.leawind.systemstoragelib.v1.impl.utils.machineid;
+package io.github.leawind.systemstoragelib.v1.utils.machineid;
 
 public final class MachineIdResolutionException extends RuntimeException {
 
