@@ -25,17 +25,27 @@ modSettings {
 }
 
 
-val shadowBundle: Configuration by configurations.creating
 
 repositories {
     mavenCentral()
     maven("https://jitpack.io")
 }
 
-dependencies {
-    implementation(project(":core"))
+val shadowBundle: Configuration by configurations.creating
 
-    add("shadowBundle", project(":core", configuration = "shadowJarOutput"))
+fun DependencyHandlerScope.shadow(dependencyNotation: String) {
+    implementation(dependencyNotation)
+    add("shadowBundle", dependencyNotation)
+}
+
+dependencies {
+    shadow("com.github.Leawind:inventory-java:498a483d63")
+    shadow("dev.dirs:directories:26")
+
+    testImplementation("org.junit.jupiter:junit-jupiter:5.11.3")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    compileOnly("org.jspecify:jspecify:1.0.0")
 }
 
 tasks.shadowJar {
@@ -51,6 +61,12 @@ tasks.shadowJar {
         archiveClassifier.set("shadow")
     }
 
+    minimize()
+
+    relocate("io.github.leawind.inventory", "io.github.leawind.systemstoragelib.lib.inventory")
+    relocate("dev", "io.github.leawind.systemstoragelib.lib.dev") // directories
+
+    exclude("META-INF/native-image/**") // directories
 }
 
 tasks.withType<RemapJarTask>().matching { it.name == "remapJar" }.configureEach {
@@ -77,6 +93,10 @@ if (mod.isForge) {
     tasks.compileTestJava {
         dependsOn("generatePackMCMetaJson")
     }
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 publishMods {
