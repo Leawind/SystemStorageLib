@@ -12,6 +12,7 @@ java {
 repositories {
     mavenCentral()
     maven("https://jitpack.io")
+    maven("https://libraries.minecraft.net")
 }
 
 dependencies {
@@ -22,7 +23,7 @@ dependencies {
 
     implementation("com.github.Leawind:inventory-java:498a483d63")
     implementation("dev.dirs:directories:26")
-    implementation("com.google.code.gson:gson:2.14.0")
+    implementation("com.mojang:datafixerupper:9.0.19") // gson, guava, fastutil
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -33,23 +34,24 @@ tasks.test {
 }
 
 tasks.shadowJar {
+    archiveClassifier.set("all")
     configurations = listOf(project.configurations.runtimeClasspath.get())
 
     minimize()
 
     relocate("io.github.leawind.inventory", "io.github.leawind.systemstoragelib.lib.inventory")
 
-    // dev.dirs:directories
-    exclude("META-INF/native-image/**")
-    relocate("dev.dirs", "io.github.leawind.systemstoragelib.lib.dirs")
+    relocate("dev", "io.github.leawind.systemstoragelib.lib.dev") // directories
+    relocate("com", "io.github.leawind.systemstoragelib.lib.com") // gson, datafixerupper
+    relocate("javax", "io.github.leawind.systemstoragelib.lib.javax") // datafixerupper
+    relocate("org", "io.github.leawind.systemstoragelib.lib.org") // datafixerupper
+    relocate("it", "io.github.leawind.systemstoragelib.lib.it") // datafixerupper
 
-    // com.google.code.gson:gson
-    exclude("META-INF/maven/**")
-    exclude("META-INF/proguard/**")
-    exclude("com/google/errorprone/**")
-    relocate("com.google.gson", "io.github.leawind.systemstoragelib.lib.gson")
-
-    archiveClassifier.set("all")
+    exclude("META-INF/native-image/**") // directories
+    exclude("META-INF/maven/**") // gson
+    exclude("META-INF/proguard/**") // gson
+    exclude("com/google/errorprone/**") // gson
+    exclude("META-INF/LICENSE*") // datafixerupper
 }
 
 val shadowJarOutput: Configuration by configurations.creating {
