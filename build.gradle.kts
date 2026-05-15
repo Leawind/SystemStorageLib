@@ -38,7 +38,17 @@ fun DependencyHandlerScope.shadow(dependencyNotation: String) {
     add("shadowBundle", dependencyNotation)
 }
 
+configurations.all {
+    exclude(group = "net.fabricmc.fabric-api", module = "fabric-gametest-api-v1")
+}
+
+val dependsSlf4j = mod.minecraftVersion <= "1.16.5"
+
 dependencies {
+    if (dependsSlf4j) {
+        shadow("org.slf4j:slf4j-api:2.0.17")
+    }
+
     shadow("com.github.Leawind:inventory-java:498a483d63")
     shadow("dev.dirs:directories:26")
 
@@ -64,9 +74,17 @@ tasks.shadowJar {
     minimize()
 
     relocate("io.github.leawind.inventory", "io.github.leawind.systemstoragelib.lib.inventory")
-    relocate("dev", "io.github.leawind.systemstoragelib.lib.dev") // directories
 
-    exclude("META-INF/native-image/**") // directories
+    // directories
+    relocate("dev.dirs", "io.github.leawind.systemstoragelib.lib.dirs")
+    exclude("META-INF/native-image/**")
+
+    // slf4j
+    if (dependsSlf4j) {
+        relocate("org.slf4j", "io.github.leawind.systemstoragelib.lib.slf4j")
+        exclude("META-INF/maven/org.slf4j/**")
+        exclude("META-INF/LICENSE.txt")
+    }
 }
 
 tasks.withType<RemapJarTask>().matching { it.name == "remapJar" }.configureEach {
