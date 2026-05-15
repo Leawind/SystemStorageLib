@@ -58,8 +58,19 @@ tasks.withType<RemapJarTask>().matching { it.name == "remapJar" }.configureEach 
     inputFile.set(tasks.shadowJar.flatMap { it.archiveFile })
 }
 
+val collectJar by tasks.registering(Copy::class) {
+    description = "Collect all jars to one directory"
+    dependsOn(tasks.assemble)
+    from(layout.buildDirectory.dir("libs")) {
+        include("*.jar")
+        exclude("*-shadow.jar")
+    }
+    into(rootProject.layout.buildDirectory.dir("all-libs"))
+}
+
 tasks.assemble {
     dependsOn(tasks.shadowJar)
+    finalizedBy(collectJar)
 }
 
 if (mod.isForge) {
