@@ -56,6 +56,10 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
+    testImplementation("com.google.jimfs:jimfs:1.3.0") {
+        exclude(group = "com.google.guava", module = "guava") // conflict with 1.20.1-forge `guava:32.1.1-jre`
+    }
+
     compileOnly("org.jspecify:jspecify:1.0.0")
 }
 
