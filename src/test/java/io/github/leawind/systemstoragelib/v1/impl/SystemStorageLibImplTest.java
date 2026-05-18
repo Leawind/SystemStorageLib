@@ -3,6 +3,7 @@ package io.github.leawind.systemstoragelib.v1.impl;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -40,7 +41,7 @@ public class SystemStorageLibImplTest {
   class Construction {
     @Test
     void createsWithValidDirs() {
-      assertDoesNotThrow(() -> createImpl());
+      assertDoesNotThrow(SystemStorageLibImplTest.this::createImpl);
     }
 
     @Test
@@ -215,7 +216,7 @@ public class SystemStorageLibImplTest {
       var impl = createImpl();
       var storage1 = impl.scope("scope_a");
       var storage2 = impl.scope("scope_b");
-      assertFalse(storage1.equals(storage2));
+      assertNotEquals(storage1, storage2);
     }
   }
 

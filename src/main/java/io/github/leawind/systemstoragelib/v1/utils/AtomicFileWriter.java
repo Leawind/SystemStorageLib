@@ -56,7 +56,7 @@ public final class AtomicFileWriter {
 
   /// Writes {@code data} to {@code tmpPath} and calls fsync.
   ///
-  /// @throws IOException if the write is incomplete or fsync fails
+  /// @throws IOException if the `write` is incomplete or fsync fails
   static void writeToTmp(Path tmpPath, byte[] data) throws IOException {
     try (FileChannel channel =
         FileChannel.open(

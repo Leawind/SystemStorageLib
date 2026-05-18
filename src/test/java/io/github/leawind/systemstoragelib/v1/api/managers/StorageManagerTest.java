@@ -47,7 +47,7 @@ public class StorageManagerTest {
 
   @Test
   void testClearRemovesAllFilesExceptLock() throws IOException {
-    try (var unused = LockUtils.writeLock(manager.getLock())) {
+    try (var ignored = LockUtils.writeLock(manager.getLock())) {
       Path dir = manager.getDirPath();
       Files.createDirectories(dir);
       Files.createFile(dir.resolve("file1.txt"));
@@ -68,7 +68,7 @@ public class StorageManagerTest {
   }
 
   @Test
-  void testClearDoesNothingIfDirNotExists() throws IOException {
+  void testClearDoesNothingIfDirNotExists() {
     // Don't create directory
     assertFalse(Files.exists(manager.getDirPath()));
     // Should not throw
@@ -79,7 +79,7 @@ public class StorageManagerTest {
   void testDeleteRemovesDirectoryAndLockFile() throws IOException {
     Path dir = manager.getDirPath();
 
-    try (var unused = LockUtils.writeLock(manager.getLock())) {
+    try (var ignored = LockUtils.writeLock(manager.getLock())) {
       Files.createDirectories(dir);
       Files.createFile(dir.resolve("data.txt"));
     }
@@ -116,6 +116,7 @@ public class StorageManagerTest {
 
     @Test
     void testReadLockCanBeAcquiredConcurrentlyByDifferentThreads() throws Exception {
+      // ExecutorService is not AutoCloseable in java 17
       ExecutorService executor = Executors.newFixedThreadPool(2);
       CountDownLatch startLatch = new CountDownLatch(1);
       CountDownLatch doneLatch = new CountDownLatch(2);

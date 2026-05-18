@@ -70,17 +70,6 @@ final class MachineIdProviderImpl {
               Path primary = Paths.get("/etc/machine-id");
               Path fallback = Paths.get("/var/lib/dbus/machine-id");
 
-              final class Util {
-                static String readFirstLineIfExists(Path path) throws IOException {
-                  if (Files.exists(path) && Files.isReadable(path)) {
-                    // Compatible with Java 8
-                    String content = Files.readString(path).trim();
-                    return content.isEmpty() ? null : content;
-                  }
-                  return null;
-                }
-              }
-
               String id = Files.readString(primary).trim();
 
               if (id.isEmpty()) {

@@ -12,10 +12,6 @@ public class SystemLogger implements Logger {
   private final String scope;
   private final long pid;
 
-  public SystemLogger(LogManager logManager) {
-    this(logManager, "");
-  }
-
   public SystemLogger(LogManager logManager, String scope) {
     this.logManager = logManager;
     this.scope = scope;

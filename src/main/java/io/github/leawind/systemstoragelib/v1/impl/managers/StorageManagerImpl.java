@@ -75,7 +75,7 @@ public class StorageManagerImpl implements StorageManager {
 
   @Override
   public void delete() throws IOException {
-    try (var unused = LockUtils.lock(getLock().writeLock())) {
+    try (var ignored = LockUtils.lock(getLock().writeLock())) {
       clear();
     }
     Files.deleteIfExists(lockPath);

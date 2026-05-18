@@ -81,7 +81,7 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
     validateKey(key);
     Path filePath = keyToFilePath(key);
 
-    try (var unused = LockUtils.lock(getLock().writeLock())) {
+    try (var ignored = LockUtils.lock(getLock().writeLock())) {
       ensureDirectoryExists();
 
       byte[] plaintext = value.getBytes(StandardCharsets.UTF_8);
@@ -109,7 +109,7 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
       return null;
     }
 
-    try (var unused = LockUtils.lock(getLock().readLock())) {
+    try (var ignored = LockUtils.lock(getLock().readLock())) {
       byte[] fileContent = Files.readAllBytes(filePath);
       validateFileSize(fileContent, filePath);
       byte[] plaintext = decryptFileContent(fileContent, filePath);
