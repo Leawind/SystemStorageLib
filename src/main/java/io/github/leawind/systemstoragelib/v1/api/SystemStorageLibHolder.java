@@ -17,20 +17,26 @@ final class SystemStorageLibHolder {
     var baseDirs = BaseDirectories.get();
     return new SystemStorageLibImpl(
         Path.of(baseDirs.dataDir, SystemStorageLibImpl.ROOT_DIR_NAME, "logs"),
+        Path.of(baseDirs.configDir, SystemStorageLibImpl.ROOT_DIR_NAME, "metaconfig"),
         Map.of(
             StoreType.CACHE,
             Path.of(
-                baseDirs.cacheDir, SystemStorageLibImpl.ROOT_DIR_NAME, StoreType.CACHE.identifier()),
+                baseDirs.cacheDir,
+                SystemStorageLibImpl.ROOT_DIR_NAME,
+                StoreType.CACHE.identifier()),
             StoreType.CONFIG,
             Path.of(
-                baseDirs.configDir, SystemStorageLibImpl.ROOT_DIR_NAME, StoreType.CONFIG.identifier()),
+                baseDirs.configDir,
+                SystemStorageLibImpl.ROOT_DIR_NAME,
+                StoreType.CONFIG.identifier()),
             StoreType.CREDENTIALS,
             Path.of(
                 baseDirs.dataDir,
                 SystemStorageLibImpl.ROOT_DIR_NAME,
                 StoreType.CREDENTIALS.identifier()),
             StoreType.DATA,
-            Path.of(baseDirs.dataDir, SystemStorageLibImpl.ROOT_DIR_NAME, StoreType.DATA.identifier()),
+            Path.of(
+                baseDirs.dataDir, SystemStorageLibImpl.ROOT_DIR_NAME, StoreType.DATA.identifier()),
             StoreType.DATA_LOCAL,
             Path.of(
                 baseDirs.dataLocalDir,

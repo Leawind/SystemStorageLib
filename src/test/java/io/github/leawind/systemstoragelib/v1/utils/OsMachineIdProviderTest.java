@@ -1,9 +1,9 @@
-package io.github.leawind.systemstoragelib.v1.impl.uttils;
+package io.github.leawind.systemstoragelib.v1.utils;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.github.leawind.systemstoragelib.v1.utils.machineid.MachineIdProvider;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class OsMachineIdProviderTest {
   @Test

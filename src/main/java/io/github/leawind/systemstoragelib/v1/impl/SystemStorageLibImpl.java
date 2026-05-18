@@ -3,8 +3,10 @@ package io.github.leawind.systemstoragelib.v1.impl;
 import io.github.leawind.systemstoragelib.v1.api.ScopeStorage;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
+import io.github.leawind.systemstoragelib.v1.api.managers.MetaConfigManager;
 import io.github.leawind.systemstoragelib.v1.impl.log.LogManager;
 import io.github.leawind.systemstoragelib.v1.impl.log.SystemLogger;
+import io.github.leawind.systemstoragelib.v1.impl.managers.MetaConfigManagerImpl;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,6 +32,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
   private final LogManager logManager;
   private final Logger logger;
+  private final MetaConfigManager metaConfig;
   private final Map<String, Optional<ScopeStorage>> scopes = new ConcurrentHashMap<>();
 
   /// ### Args
@@ -37,6 +40,10 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   /// #### `logsDir`
   ///
   /// Directory to store logs.
+  ///
+  /// #### `metaConfigDir`
+  ///
+  /// Directory to store meta configuration.
   ///
   /// #### `scopedDirs`
   ///
@@ -54,7 +61,8 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   ///
   /// - If `scopedDirs` does not contain all {@link StoreType}.
   /// - If any value in `scopedDirs` is not unique.
-  public SystemStorageLibImpl(Path logsDir, Map<StoreType<?>, Path> scopedDirs) {
+  public SystemStorageLibImpl(
+      Path logsDir, Path metaConfigDir, Map<StoreType<?>, Path> scopedDirs) {
     validateDirs(scopedDirs);
 
     this.logsDir = logsDir;
@@ -62,6 +70,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
     logManager = new LogManager(logsDir, 10 * 1024 * 1024, 10);
     logger = new SystemLogger(logManager, "");
+    metaConfig = new MetaConfigManagerImpl(logger, metaConfigDir);
     detectScopes();
   }
 
@@ -92,6 +101,11 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   @Override
   public Logger logger() {
     return logger;
+  }
+
+  @Override
+  public MetaConfigManager metaConfig() {
+    return metaConfig;
   }
 
   @Override

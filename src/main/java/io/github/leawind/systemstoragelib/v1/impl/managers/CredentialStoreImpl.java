@@ -3,7 +3,7 @@ package io.github.leawind.systemstoragelib.v1.impl.managers;
 import io.github.leawind.inventory.lock.LockUtils;
 import io.github.leawind.systemstoragelib.v1.api.exception.CredentialIntegrityException;
 import io.github.leawind.systemstoragelib.v1.api.managers.CredentialStore;
-import io.github.leawind.systemstoragelib.v1.impl.utils.AtomicFileWriter;
+import io.github.leawind.systemstoragelib.v1.utils.AtomicFileWriter;
 import io.github.leawind.systemstoragelib.v1.utils.machineid.MachineIdProvider;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

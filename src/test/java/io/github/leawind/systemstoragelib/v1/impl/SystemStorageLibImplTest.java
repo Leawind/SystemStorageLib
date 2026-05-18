@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
+import io.github.leawind.systemstoragelib.v1.api.managers.MetaConfigManager;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,11 +31,16 @@ public class SystemStorageLibImplTest {
     return dirs;
   }
 
+  private SystemStorageLibImpl createImpl() {
+    return new SystemStorageLibImpl(
+        tempDir.resolve("logs"), tempDir.resolve("metaconfig"), allDirs());
+  }
+
   @Nested
   class Construction {
     @Test
     void createsWithValidDirs() {
-      assertDoesNotThrow(() -> new SystemStorageLibImpl(tempDir.resolve("logs"), allDirs()));
+      assertDoesNotThrow(() -> createImpl());
     }
 
     @Test
@@ -44,7 +50,9 @@ public class SystemStorageLibImplTest {
       var ex =
           assertThrows(
               IllegalArgumentException.class,
-              () -> new SystemStorageLibImpl(tempDir.resolve("logs"), dirs));
+              () ->
+                  new SystemStorageLibImpl(
+                      tempDir.resolve("logs"), tempDir.resolve("metaconfig"), dirs));
       assertTrue(ex.getMessage().contains("Missing StoreTypes"));
     }
 
@@ -60,7 +68,9 @@ public class SystemStorageLibImplTest {
       var ex =
           assertThrows(
               IllegalArgumentException.class,
-              () -> new SystemStorageLibImpl(tempDir.resolve("logs"), dirs));
+              () ->
+                  new SystemStorageLibImpl(
+                      tempDir.resolve("logs"), tempDir.resolve("metaconfig"), dirs));
       assertTrue(ex.getMessage().contains("dir for each StoreType must be unique"));
     }
 
@@ -68,7 +78,9 @@ public class SystemStorageLibImplTest {
     void throwsWhenAllMissing() {
       assertThrows(
           IllegalArgumentException.class,
-          () -> new SystemStorageLibImpl(tempDir.resolve("logs"), Map.of()));
+          () ->
+              new SystemStorageLibImpl(
+                  tempDir.resolve("logs"), tempDir.resolve("metaconfig"), Map.of()));
     }
   }
 
@@ -77,31 +89,31 @@ public class SystemStorageLibImplTest {
 
     @Test
     void validScopeReturnsNull() {
-      var impl = new SystemStorageLibImpl(tempDir.resolve("logs"), allDirs());
+      var impl = createImpl();
       assertNull(impl.validateScope("valid-scope"));
     }
 
     @Test
     void emptyScopeIsInvalid() {
-      var impl = new SystemStorageLibImpl(tempDir.resolve("logs"), allDirs());
+      var impl = createImpl();
       assertNotNull(impl.validateScope(""));
     }
 
     @Test
     void tooShortScopeIsInvalid() {
-      var impl = new SystemStorageLibImpl(tempDir.resolve("logs"), allDirs());
+      var impl = createImpl();
       assertNotNull(impl.validateScope("a"));
     }
 
     @Test
     void tooLongScopeIsInvalid() {
-      var impl = new SystemStorageLibImpl(tempDir.resolve("logs"), allDirs());
+      var impl = createImpl();
       assertNotNull(impl.validateScope("a".repeat(1024)));
     }
 
     @Test
     void scopeStartingWithDashIsInvalid() {
-      var impl = new SystemStorageLibImpl(tempDir.resolve("logs"), allDirs());
+      var impl = createImpl();
       String result = impl.validateScope("-invalid");
       assertNotNull(result);
       assertTrue(result.contains("must not start with"));
@@ -109,7 +121,7 @@ public class SystemStorageLibImplTest {
 
     @Test
     void scopeStartingWithPlusIsInvalid() {
-      var impl = new SystemStorageLibImpl(tempDir.resolve("logs"), allDirs());
+      var impl = createImpl();
       String result = impl.validateScope("+invalid");
       assertNotNull(result);
       assertTrue(result.contains("must not start with"));
@@ -117,7 +129,7 @@ public class SystemStorageLibImplTest {
 
     @Test
     void scopeStartingWithDotIsInvalid() {
-      var impl = new SystemStorageLibImpl(tempDir.resolve("logs"), allDirs());
+      var impl = createImpl();
       String result = impl.validateScope(".invalid");
       assertNotNull(result);
       assertTrue(result.contains("must not start with"));
@@ -125,7 +137,7 @@ public class SystemStorageLibImplTest {
 
     @Test
     void scopeEndingWithDashIsInvalid() {
-      var impl = new SystemStorageLibImpl(tempDir.resolve("logs"), allDirs());
+      var impl = createImpl();
       String result = impl.validateScope("invalid-");
       assertNotNull(result);
       assertTrue(result.contains("must not end with"));
@@ -133,7 +145,7 @@ public class SystemStorageLibImplTest {
 
     @Test
     void scopeEndingWithPlusIsInvalid() {
-      var impl = new SystemStorageLibImpl(tempDir.resolve("logs"), allDirs());
+      var impl = createImpl();
       String result = impl.validateScope("invalid+");
       assertNotNull(result);
       assertTrue(result.contains("must not end with"));
@@ -141,7 +153,7 @@ public class SystemStorageLibImplTest {
 
     @Test
     void scopeEndingWithDotIsInvalid() {
-      var impl = new SystemStorageLibImpl(tempDir.resolve("logs"), allDirs());
+      var impl = createImpl();
       String result = impl.validateScope("invalid.");
       assertNotNull(result);
       assertTrue(result.contains("must not end with"));
@@ -149,32 +161,32 @@ public class SystemStorageLibImplTest {
 
     @Test
     void scopeWithInvalidCharacterIsInvalid() {
-      var impl = new SystemStorageLibImpl(tempDir.resolve("logs"), allDirs());
+      var impl = createImpl();
       assertNotNull(impl.validateScope("invalid scope"));
     }
 
     @Test
     void scopeWithAllowedSpecialCharsIsValid() {
-      var impl = new SystemStorageLibImpl(tempDir.resolve("logs"), allDirs());
+      var impl = createImpl();
       assertNull(impl.validateScope("my_scope-v1.2+feature"));
     }
 
     @Test
     void isScopeValidDelegatesToValidateScope() {
-      var impl = new SystemStorageLibImpl(tempDir.resolve("logs"), allDirs());
+      var impl = createImpl();
       assertTrue(impl.isScopeValid("valid"));
       assertFalse(impl.isScopeValid(""));
     }
 
     @Test
     void scopeAtMinLengthIsValid() {
-      var impl = new SystemStorageLibImpl(tempDir.resolve("logs"), allDirs());
+      var impl = createImpl();
       assertNull(impl.validateScope("ab"));
     }
 
     @Test
     void scopeAtMaxLengthIsValid() {
-      var impl = new SystemStorageLibImpl(tempDir.resolve("logs"), allDirs());
+      var impl = createImpl();
       assertNull(impl.validateScope("a".repeat(63)));
     }
   }
@@ -184,7 +196,7 @@ public class SystemStorageLibImplTest {
 
     @Test
     void scopeReturnsScopeStorage() {
-      var impl = new SystemStorageLibImpl(tempDir.resolve("logs"), allDirs());
+      var impl = createImpl();
       var storage = impl.scope("test_scope");
       assertNotNull(storage);
       assertEquals("test_scope", storage.scope());
@@ -192,7 +204,7 @@ public class SystemStorageLibImplTest {
 
     @Test
     void sameScopeReturnsSameInstance() {
-      var impl = new SystemStorageLibImpl(tempDir.resolve("logs"), allDirs());
+      var impl = createImpl();
       var storage1 = impl.scope("test_scope");
       var storage2 = impl.scope("test_scope");
       assertEquals(storage1, storage2);
@@ -200,7 +212,7 @@ public class SystemStorageLibImplTest {
 
     @Test
     void differentScopesReturnDifferentInstances() {
-      var impl = new SystemStorageLibImpl(tempDir.resolve("logs"), allDirs());
+      var impl = createImpl();
       var storage1 = impl.scope("scope_a");
       var storage2 = impl.scope("scope_b");
       assertFalse(storage1.equals(storage2));
@@ -213,8 +225,19 @@ public class SystemStorageLibImplTest {
     @Test
     void getLogsDirReturnsProvidedPath() {
       Path logsDir = tempDir.resolve("logs");
-      var impl = new SystemStorageLibImpl(logsDir, allDirs());
+      var impl = new SystemStorageLibImpl(logsDir, tempDir.resolve("metaconfig"), allDirs());
       assertEquals(logsDir, impl.getLogsDir());
+    }
+  }
+
+  @Nested
+  class MetaConfig {
+
+    @Test
+    void metaConfigReturnsNonNullManager() {
+      var impl = createImpl();
+      MetaConfigManager mgr = impl.metaConfig();
+      assertNotNull(mgr);
     }
   }
 }

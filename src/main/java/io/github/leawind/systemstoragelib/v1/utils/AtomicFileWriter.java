@@ -1,4 +1,4 @@
-package io.github.leawind.systemstoragelib.v1.impl.utils;
+package io.github.leawind.systemstoragelib.v1.utils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

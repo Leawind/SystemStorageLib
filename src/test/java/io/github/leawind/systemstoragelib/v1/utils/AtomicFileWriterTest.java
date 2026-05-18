@@ -1,4 +1,4 @@
-package io.github.leawind.systemstoragelib.v1.impl.utils;
+package io.github.leawind.systemstoragelib.v1.utils;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -9,6 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
+import io.github.leawind.systemstoragelib.v1.utils.AtomicFileWriter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
