@@ -3,8 +3,11 @@ package io.github.leawind.systemstoragelib.v1.api;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.JsonOps;
 import io.github.leawind.systemstoragelib.v1.api.managers.CredentialStore;
 import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
 import java.nio.file.Path;
@@ -159,6 +162,76 @@ public class StoreTypeTest {
     void missingTypesReturnsAllWhenNonePresent() {
       List<StoreType<?>> missing = StoreType.Utils.missingTypes(Set.of());
       assertEquals(5, missing.size());
+    }
+  }
+
+  @Nested
+  class Of {
+
+    @Test
+    void ofCredentials() {
+      assertEquals(StoreType.CREDENTIALS, StoreType.of("credentials"));
+    }
+
+    @Test
+    void ofConfig() {
+      assertEquals(StoreType.CONFIG, StoreType.of("config"));
+    }
+
+    @Test
+    void ofData() {
+      assertEquals(StoreType.DATA, StoreType.of("data"));
+    }
+
+    @Test
+    void ofCache() {
+      assertEquals(StoreType.CACHE, StoreType.of("cache"));
+    }
+
+    @Test
+    void ofDataLocal() {
+      assertEquals(StoreType.DATA_LOCAL, StoreType.of("data_local"));
+    }
+
+    @Test
+    void ofUnknownThrows() {
+      assertThrows(IllegalArgumentException.class, () -> StoreType.of("unknown"));
+    }
+
+    @Test
+    void ofEmptyThrows() {
+      assertThrows(IllegalArgumentException.class, () -> StoreType.of(""));
+    }
+  }
+
+  @Nested
+  class CodecRoundTrip {
+
+    @Test
+    void codecEncodesIdentifier() {
+      DataResult<com.google.gson.JsonElement> result =
+          StoreType.CODEC.encodeStart(JsonOps.INSTANCE, StoreType.CONFIG);
+      assertTrue(result.result().isPresent());
+      assertEquals("config", result.result().get().getAsString());
+    }
+
+    @Test
+    void codecDecodesIdentifier() {
+      DataResult<StoreType<?>> result =
+          StoreType.CODEC.parse(JsonOps.INSTANCE, new com.google.gson.JsonPrimitive("data"));
+      assertTrue(result.result().isPresent());
+      assertEquals(StoreType.DATA, result.result().get());
+    }
+
+    @Test
+    void codecRoundTripAllTypes() {
+      for (var type : StoreType.values()) {
+        var encoded = StoreType.CODEC.encodeStart(JsonOps.INSTANCE, type);
+        assertTrue(encoded.result().isPresent());
+        var decoded = StoreType.CODEC.parse(JsonOps.INSTANCE, encoded.result().get());
+        assertTrue(decoded.result().isPresent());
+        assertEquals(type, decoded.result().get());
+      }
     }
   }
 

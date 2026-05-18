@@ -1,5 +1,6 @@
 package io.github.leawind.systemstoragelib.v1.api;
 
+import com.mojang.serialization.Codec;
 import io.github.leawind.systemstoragelib.v1.api.managers.CredentialStore;
 import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
 import io.github.leawind.systemstoragelib.v1.impl.managers.CredentialStoreImpl;
@@ -24,6 +25,9 @@ import org.slf4j.Logger;
 ///
 /// @apiNote Each category must have different directory.
 public final class StoreType<S extends StorageManager> {
+
+  public static final Codec<StoreType<?>> CODEC =
+      Codec.STRING.xmap(StoreType::of, StoreType::identifier);
 
   public static final StoreType<CredentialStore> CREDENTIALS =
       new StoreType<>(CredentialStore.class, "credentials", false, CredentialStoreImpl::new);
@@ -70,6 +74,17 @@ public final class StoreType<S extends StorageManager> {
 
   public static StoreType<?>[] values() {
     return new StoreType<?>[] {CREDENTIALS, CONFIG, DATA, CACHE, DATA_LOCAL};
+  }
+
+  public static StoreType<?> of(String identifier) {
+    return switch (identifier) {
+      case "credentials" -> CREDENTIALS;
+      case "config" -> CONFIG;
+      case "data" -> DATA;
+      case "cache" -> CACHE;
+      case "data_local" -> DATA_LOCAL;
+      default -> throw new IllegalArgumentException("Unknown store type: " + identifier);
+    };
   }
 
   public static final class Utils {
