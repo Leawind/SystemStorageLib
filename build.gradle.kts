@@ -48,6 +48,7 @@ val dependsSlf4j = VersionNumber.parse(mod.minecraftVersion) <= VersionNumber.pa
 dependencies {
     if (dependsSlf4j) {
         shadow("org.slf4j:slf4j-api:2.0.17")
+        shadow("org.slf4j:slf4j-simple:2.0.17")
     }
 
     shadow("com.github.Leawind:inventory-java:498a483d63")
