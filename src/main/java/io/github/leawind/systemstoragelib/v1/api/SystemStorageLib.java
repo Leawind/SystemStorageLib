@@ -8,8 +8,10 @@ import org.slf4j.Logger;
 
 public interface SystemStorageLib {
 
+  /// Logger for this library instance
   Logger logger();
 
+  /// Manager for meta configuration
   MetaConfigManager metaConfig();
 
   /// ### Throws

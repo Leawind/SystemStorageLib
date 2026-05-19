@@ -11,6 +11,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.managers.MetaConfigManager;
+import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
+import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -232,13 +235,173 @@ public class SystemStorageLibImplTest {
   }
 
   @Nested
-  class MetaConfig {
+  class MetaConfigAccess {
 
     @Test
     void metaConfigReturnsNonNullManager() {
       var impl = createImpl();
       MetaConfigManager mgr = impl.metaConfig();
       assertNotNull(mgr);
+    }
+  }
+
+  @Nested
+  class CustomDirsFromMetaConfig {
+
+    @Test
+    void scopeUsesCustomDirsWhenConfigured() throws IOException {
+      var impl = createImpl();
+
+      // Set up custom dir for DATA store type in scope "my-scope"
+      Path customDataDir = tempDir.resolve("custom-data");
+      MetaConfig config = MetaConfig.getDefault();
+      config.getOrCreateScopeConfig("my-scope").customDirs().put(StoreType.DATA, customDataDir);
+      impl.metaConfig().set(config);
+
+      // Create scope — it should use the custom dir for DATA
+      var storage = impl.scope("my-scope");
+      StorageManager dataManager = storage.storage(StoreType.DATA);
+
+      assertEquals(
+          customDataDir.resolve("my-scope"),
+          dataManager.getDirPath(),
+          "DATA storage should use the custom dir from MetaConfig");
+    }
+
+    @Test
+    void scopeUsesDefaultDirsWhenNoCustomConfig() {
+      var impl = createImpl();
+      var storage = impl.scope("my-scope");
+      StorageManager dataManager = storage.storage(StoreType.DATA);
+
+      // Should fall back to defaultScopedDirs
+      assertEquals(
+          tempDir.resolve("data").resolve("my-scope"),
+          dataManager.getDirPath(),
+          "DATA storage should use the default dir when no custom config");
+    }
+
+    @Test
+    void unconfiguredStoreTypesUseDefault() throws IOException {
+      var impl = createImpl();
+
+      // Only configure custom dir for DATA
+      Path customDataDir = tempDir.resolve("custom-data");
+      MetaConfig config = MetaConfig.getDefault();
+      config.getOrCreateScopeConfig("my-scope").customDirs().put(StoreType.DATA, customDataDir);
+      impl.metaConfig().set(config);
+
+      var storage = impl.scope("my-scope");
+      StorageManager configManager = storage.storage(StoreType.CONFIG);
+
+      // CONFIG should still use default
+      assertEquals(
+          tempDir.resolve("config").resolve("my-scope"),
+          configManager.getDirPath(),
+          "CONFIG storage should use default when only DATA has custom dir");
+    }
+  }
+
+  @Nested
+  class OnUpdateMetaConfig {
+
+    @Test
+    void setUpdatesExistingScopePaths() throws IOException {
+      var impl = createImpl();
+
+      // Create scope first with default dirs
+      var storage = impl.scope("my-scope");
+      StorageManager dataManager = storage.storage(StoreType.DATA);
+
+      // Set a custom dir via set() — this should trigger onChanged and update existing scope
+      Path customDataDir = tempDir.resolve("custom-data");
+      MetaConfig newConfig = MetaConfig.getDefault();
+      newConfig.getOrCreateScopeConfig("my-scope").customDirs().put(StoreType.DATA, customDataDir);
+      impl.metaConfig().set(newConfig);
+
+      assertEquals(
+          customDataDir.resolve("my-scope"),
+          dataManager.getDirPath(),
+          "DATA path should be updated after MetaConfig set()");
+    }
+
+    @Test
+    void setToDefaultRevertsToDefaultPath() throws IOException {
+      var impl = createImpl();
+
+      // First set up a custom dir
+      Path customDataDir = tempDir.resolve("custom-data");
+      MetaConfig customConfig = MetaConfig.getDefault();
+      customConfig
+          .getOrCreateScopeConfig("my-scope")
+          .customDirs()
+          .put(StoreType.DATA, customDataDir);
+
+      var storage = impl.scope("my-scope");
+      StorageManager dataManager = storage.storage(StoreType.DATA);
+
+      impl.metaConfig().set(customConfig);
+
+      assertEquals(
+          customDataDir.resolve("my-scope"),
+          dataManager.getDirPath(),
+          "DATA path should use custom dir after first update");
+
+      // Now set a config without the custom dir
+      MetaConfig defaultConfig = MetaConfig.getDefault();
+      impl.metaConfig().set(defaultConfig);
+
+      assertEquals(
+          tempDir.resolve("data").resolve("my-scope"),
+          dataManager.getDirPath(),
+          "DATA path should revert to default after removing custom config");
+    }
+
+    @Test
+    void setOnlyAffectsConfiguredStoreTypes() throws IOException {
+      var impl = createImpl();
+
+      var storage = impl.scope("my-scope");
+      StorageManager configManager = storage.storage(StoreType.CONFIG);
+      Path originalConfigPath = configManager.getDirPath();
+
+      // Set custom dir only for DATA
+      Path customDataDir = tempDir.resolve("custom-data");
+      MetaConfig newConfig = MetaConfig.getDefault();
+      newConfig.getOrCreateScopeConfig("my-scope").customDirs().put(StoreType.DATA, customDataDir);
+
+      impl.metaConfig().set(newConfig);
+
+      // CONFIG path should be unchanged
+      assertEquals(
+          originalConfigPath,
+          configManager.getDirPath(),
+          "CONFIG path should not change when only DATA has custom dir");
+    }
+
+    @Test
+    void setForDifferentScopeDoesNotAffectCurrentScope() throws IOException {
+      var impl = createImpl();
+
+      var storage = impl.scope("my-scope");
+      StorageManager dataManager = storage.storage(StoreType.DATA);
+      Path originalPath = dataManager.getDirPath();
+
+      // Set a config change for a different scope
+      Path customDataDir = tempDir.resolve("custom-data");
+      MetaConfig newConfig = MetaConfig.getDefault();
+      newConfig
+          .getOrCreateScopeConfig("other-scope")
+          .customDirs()
+          .put(StoreType.DATA, customDataDir);
+
+      impl.metaConfig().set(newConfig);
+
+      // my-scope's path should be unchanged
+      assertEquals(
+          originalPath,
+          dataManager.getDirPath(),
+          "DATA path for my-scope should not change when a different scope is configured");
     }
   }
 }

@@ -4,12 +4,15 @@ import io.github.leawind.systemstoragelib.v1.api.ScopeStorage;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
 import io.github.leawind.systemstoragelib.v1.api.managers.MetaConfigManager;
+import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
+import io.github.leawind.systemstoragelib.v1.api.metaconfig.PerScopeConfig;
 import io.github.leawind.systemstoragelib.v1.impl.log.LogManager;
 import io.github.leawind.systemstoragelib.v1.impl.log.SystemLogger;
 import io.github.leawind.systemstoragelib.v1.impl.managers.MetaConfigManagerImpl;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -28,7 +31,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   ///
   /// - config: `/home/Steve/.config/mc_system_storage/config`.
   /// - data: `/home/Steve/.local/share/mc_system_storage/data`.
-  private final Map<StoreType<?>, Path> scopedDirs;
+  private final Map<StoreType<?>, Path> defaultScopedDirs;
 
   private final LogManager logManager;
   private final Logger logger;
@@ -62,16 +65,68 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   /// - If `scopedDirs` does not contain all {@link StoreType}.
   /// - If any value in `scopedDirs` is not unique.
   public SystemStorageLibImpl(
-      Path logsDir, Path metaConfigDir, Map<StoreType<?>, Path> scopedDirs) {
-    validateDirs(scopedDirs);
+      Path logsDir, Path metaConfigDir, Map<StoreType<?>, Path> defaultScopedDirs) {
+    validateDirs(defaultScopedDirs);
 
     this.logsDir = logsDir;
-    this.scopedDirs = Map.copyOf(scopedDirs);
+    this.defaultScopedDirs = new HashMap<>(defaultScopedDirs);
 
     logManager = new LogManager(logsDir, 10 * 1024 * 1024, 10);
     logger = new SystemLogger(logManager, "");
     metaConfig = new MetaConfigManagerImpl(logger, metaConfigDir);
+    // Listen for external changes to meta config and update scope storage paths accordingly.
+    metaConfig.onChanged().on(this::onUpdateMetaConfig);
+
     detectScopes();
+  }
+
+  private void onUpdateMetaConfig(MetaConfig newConfig) {
+    // for each scope we have
+    for (var scopeEntry : scopes.entrySet()) {
+      String scope = scopeEntry.getKey();
+      var scopeOpt = scopeEntry.getValue();
+      if (scopeOpt.isEmpty()) {
+        continue;
+      }
+      ScopeStorage scopeStorage = scopeOpt.get();
+
+      PerScopeConfig perScopeConfig = newConfig.getScopeConfig(scope);
+      Map<StoreType<?>, Path> customDirs =
+          (perScopeConfig != null) ? perScopeConfig.customDirs() : null;
+
+      // for each store type
+      for (var storeType : StoreType.values()) {
+        var newDirPath = (customDirs != null) ? customDirs.get(storeType) : null;
+
+        if (newDirPath == null) {
+          // Not in config, use default
+          newDirPath = defaultScopedDirs.get(storeType);
+        }
+
+        try {
+          var manager = scopeStorage.storage(storeType);
+          if (manager.getDirPath().equals(newDirPath)) {
+            continue;
+          }
+
+          logger()
+              .info(
+                  "Updating dir path for scope `{}`, store type `{}` from `{}` to `{}`",
+                  scope,
+                  storeType,
+                  manager.getDirPath(),
+                  newDirPath.resolve(scope));
+
+          manager.setDirPath(newDirPath.resolve(scope));
+        } catch (Exception e) {
+          logger.warn(
+              "Failed to update dir path for scope `{}`, store type `{}`: `{}`",
+              scope,
+              storeType,
+              e.getMessage());
+        }
+      }
+    }
   }
 
   private static void validateDirs(Map<StoreType<?>, Path> scopedDirs)
@@ -173,12 +228,26 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   }
 
   private ScopeStorage createScopeStorage(String scope) {
-    return new ScopeStorageImpl(scope, new SystemLogger(logManager, scope), scopedDirs);
+    // Build a directory map for the given scope, preferring custom directories from MetaConfig.
+    Map<StoreType<?>, Path> dirsForScope = new HashMap<>(defaultScopedDirs);
+    try {
+      // Load meta configuration which may contain per‑scope custom directory mappings.
+      MetaConfig meta = metaConfig.get();
+      var perScope = meta.getScopeConfig(scope);
+      if (perScope != null) {
+        // Override default directories with any custom paths defined for this scope.
+        dirsForScope.putAll(perScope.customDirs());
+      }
+    } catch (IOException e) {
+      // If we cannot read the meta config, fall back to the default scoped directories.
+      logger.warn("Failed to load meta config for scope {}: {}", scope, e.getMessage());
+    }
+    return new ScopeStorageImpl(scope, new SystemLogger(logManager, scope), dirsForScope);
   }
 
   private void detectScopes() {
     scopes.values().removeIf(Optional::isEmpty);
-    scopedDirs.values().forEach(this::scanDirectoryForScopes);
+    defaultScopedDirs.values().forEach(this::scanDirectoryForScopes);
   }
 
   private void scanDirectoryForScopes(Path rootDir) {

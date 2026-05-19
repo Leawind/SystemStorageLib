@@ -41,6 +41,73 @@ public class StorageManagerTest {
   }
 
   @Test
+  void testDirPathIsAbsoluteAndNormalized() {
+    Path relativePath = tempDir.resolve("storage/../storage");
+    StorageManager mgr = new StorageManagerImpl(TEST_LOGGER, relativePath);
+    assertEquals(relativePath.toAbsolutePath().normalize(), mgr.getDirPath());
+  }
+
+  @Test
+  void testSetDirPathUpdatesPath() {
+    Path newPath = tempDir.resolve("new-storage");
+    manager.setDirPath(newPath);
+    assertEquals(newPath, manager.getDirPath());
+  }
+
+  @Test
+  void testSetDirPathResetsLock() throws IOException {
+    // Acquire lock on original path
+    manager.getLock().readLock().lock();
+    manager.getLock().readLock().unlock();
+
+    // Change dirPath — lock should be reset
+    Path newPath = tempDir.resolve("new-storage");
+    manager.setDirPath(newPath);
+
+    // Lock should work on the new path
+    assertDoesNotThrow(
+        () -> {
+          manager.getLock().writeLock().lock();
+          manager.getLock().writeLock().unlock();
+        });
+  }
+
+  @Test
+  void testSetDirPathNormalizesPath() {
+    Path newPath = tempDir.resolve("new-storage/../new-storage");
+    manager.setDirPath(newPath);
+    assertEquals(newPath.toAbsolutePath().normalize(), manager.getDirPath());
+  }
+
+  @Test
+  void testSetDirPathDeletesOldLockFile() throws IOException {
+    // Force lock file creation on original path
+    manager.getLock().readLock().lock();
+    manager.getLock().readLock().unlock();
+
+    Path oldLockFile = manager.getDirPath().resolve(".lock");
+    assertTrue(Files.exists(oldLockFile), "Lock file should exist after acquiring lock");
+
+    Path newPath = tempDir.resolve("new-storage");
+    manager.setDirPath(newPath);
+
+    assertFalse(Files.exists(oldLockFile), "Old lock file should be deleted after setDirPath");
+  }
+
+  @Test
+  void testSetDirPathCreatesLockUnderNewPath() throws IOException {
+    Path newPath = tempDir.resolve("new-storage");
+    manager.setDirPath(newPath);
+
+    // Acquire lock — should create .lock file under new path
+    manager.getLock().readLock().lock();
+    manager.getLock().readLock().unlock();
+
+    Path newLockFile = newPath.resolve(".lock");
+    assertTrue(Files.exists(newLockFile), "Lock file should exist under new path");
+  }
+
+  @Test
   void testDirCreatedOnGetLock() {
     assertFalse(Files.exists(manager.getDirPath()));
   }

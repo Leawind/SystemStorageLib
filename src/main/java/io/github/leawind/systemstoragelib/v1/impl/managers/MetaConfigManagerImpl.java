@@ -32,18 +32,33 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
   private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
   private static final String CONFIG_FILE_NAME = "config.json";
 
-  private final Path configFilePath;
+  private Path configFilePath;
   private final EventEmitter<MetaConfig> onChanged = new EventEmitter<>();
 
-  private volatile @Nullable MetaConfig config;
-  private volatile @Nullable WatchService watchService;
+  private volatile @Nullable MetaConfig config = null;
+  private volatile @Nullable WatchService watchService = null;
 
   private final Object watchStartLock = new Object();
 
   public MetaConfigManagerImpl(Logger logger, Path dirPath) {
     super(logger, dirPath);
-    configFilePath = getDirPath().resolve(CONFIG_FILE_NAME).toAbsolutePath().normalize();
+    this.configFilePath = dirPath.resolve(CONFIG_FILE_NAME).toAbsolutePath().normalize();
     ensureWatchStarted();
+  }
+
+  @Override
+  public void setDirPath(Path dirPath) {
+    synchronized (watchStartLock) {
+      super.setDirPath(dirPath);
+      this.configFilePath = dirPath.resolve(CONFIG_FILE_NAME).toAbsolutePath().normalize();
+      this.config = null;
+      try {
+        stopWatching();
+      } catch (IOException e) {
+        logger().warn("Failed to stop watch service when updating dirPath", e);
+      }
+      ensureWatchStarted();
+    }
   }
 
   @Override
@@ -62,7 +77,8 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
 
   @Override
   public void set(MetaConfig config) throws IOException {
-    if (get().equals(config)) {
+    MetaConfig oldConfig = get();
+    if (oldConfig.equals(config)) {
       return;
     }
 
@@ -80,6 +96,10 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
       String json = GSON.toJson(encoded.get());
       AtomicFileWriter.write(configFilePath, json.getBytes(StandardCharsets.UTF_8));
     }
+
+    synchronized (onChanged) {
+      onChanged.emit(config);
+    }
   }
 
   @Override
@@ -92,20 +112,32 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
     MetaConfigManager.super.delete();
   }
 
-  public void stopWatching() throws IOException {
+  @Override
+  public void close() throws IOException {
+    stopWatching();
+  }
+
+  public synchronized void stopWatching() throws IOException {
     var ws = watchService;
-    if (ws != null) {
-      try {
-        ws.close();
-      } catch (IOException e) {
-        logger().warn("Failed to close watch service", e);
-        throw e;
-      }
-      watchService = null;
+    if (ws == null) {
+      return;
     }
+
+    try {
+      ws.close();
+    } catch (IOException e) {
+      logger().warn("Failed to close watch service", e);
+      throw e;
+    }
+
+    watchService = null;
   }
 
   private @Nullable MetaConfig readAndCache() throws IOException {
+    if (configFilePath == null) {
+      return null;
+    }
+
     if (!Files.exists(configFilePath)) {
       return null;
     }
@@ -235,10 +267,5 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
     } catch (IOException e) {
       logger().error("Failed to handle meta config file change", e);
     }
-  }
-
-  @Override
-  public void close() throws IOException {
-    stopWatching();
   }
 }

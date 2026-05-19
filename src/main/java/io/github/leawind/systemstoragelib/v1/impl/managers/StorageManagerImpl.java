@@ -15,24 +15,24 @@ public class StorageManagerImpl implements StorageManager {
   private static final String LOCK_FILE_NAME = ".lock";
 
   private final Logger logger;
-  private final Path dirPath;
-  private final Path lockPath;
-  private final Lazy<Result<FileBasedReentrantReadWriteLock, IOException>> lockLazy;
+  private Path dirPath;
+  private Path lockPath;
+  private final Lazy<Result<FileBasedReentrantReadWriteLock, IOException>> lockLazy =
+      new Lazy<>(
+          () -> {
+            try {
+              Files.createDirectories(lockPath.getParent());
+              return Result.ok(new FileBasedReentrantReadWriteLock(lockPath));
+            } catch (IOException e) {
+              return Result.err(e);
+            }
+          });
 
   public StorageManagerImpl(Logger logger, Path dirPath) {
     this.logger = logger;
-    this.dirPath = dirPath;
-    this.lockPath = dirPath.resolve(LOCK_FILE_NAME);
-    this.lockLazy =
-        new Lazy<>(
-            () -> {
-              try {
-                Files.createDirectories(lockPath.getParent());
-                return Result.ok(new FileBasedReentrantReadWriteLock(lockPath));
-              } catch (IOException e) {
-                return Result.err(e);
-              }
-            });
+    this.dirPath = dirPath.toAbsolutePath().normalize();
+    this.lockPath = this.dirPath.resolve(LOCK_FILE_NAME);
+    lockLazy.reset();
   }
 
   @Override
@@ -46,7 +46,18 @@ public class StorageManagerImpl implements StorageManager {
   }
 
   @Override
-  public ReadWriteLock getLock() throws IOException {
+  public synchronized void setDirPath(Path dirPath) {
+    try {
+      Files.deleteIfExists(lockPath);
+    } catch (IOException ignored) {
+    }
+    this.dirPath = dirPath.toAbsolutePath().normalize();
+    this.lockPath = this.dirPath.resolve(LOCK_FILE_NAME);
+    lockLazy.reset();
+  }
+
+  @Override
+  public synchronized ReadWriteLock getLock() throws IOException {
     var result = lockLazy.get();
     if (result.isOk()) {
       return result.unwrap();

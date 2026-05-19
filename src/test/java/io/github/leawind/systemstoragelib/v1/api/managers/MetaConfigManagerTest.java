@@ -204,7 +204,7 @@ public class MetaConfigManagerTest {
     }
 
     @Test
-    void setDoesNotTriggerOnChanged() throws IOException, InterruptedException {
+    void setTriggersOnChanged() throws IOException, InterruptedException {
       manager.set(createNonDefaultConfig());
       waitForWatcherSettle();
 
@@ -213,9 +213,9 @@ public class MetaConfigManagerTest {
 
       manager.set(MetaConfig.getDefault());
 
-      assertFalse(
+      assertTrue(
           latch.await(500, TimeUnit.MILLISECONDS),
-          "onChanged should NOT be triggered when set() writes the config");
+          "onChanged should be triggered when set() writes a different config");
     }
 
     @Test

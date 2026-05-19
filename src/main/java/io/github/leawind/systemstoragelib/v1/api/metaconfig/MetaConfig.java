@@ -2,8 +2,10 @@ package io.github.leawind.systemstoragelib.v1.api.metaconfig;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 public final class MetaConfig {
@@ -30,6 +32,14 @@ public final class MetaConfig {
   }
 
   // endregion
+
+  public Set<String> scopeSet() {
+    return Collections.unmodifiableSet(scopesConfig.keySet());
+  }
+
+  public Set<Map.Entry<String, PerScopeConfig>> entrySet() {
+    return Collections.unmodifiableSet(scopesConfig.entrySet());
+  }
 
   public @Nullable PerScopeConfig getScopeConfig(String scopeName) {
     return scopesConfig.get(scopeName);
