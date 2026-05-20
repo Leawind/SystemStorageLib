@@ -4,9 +4,11 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonSyntaxException;
+import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import io.github.leawind.inventory.event.EventEmitter;
 import io.github.leawind.inventory.lock.LockUtils;
+import io.github.leawind.inventory.misc.UncheckedCloseable;
 import io.github.leawind.systemstoragelib.v1.api.managers.MetaConfigManager;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
 import io.github.leawind.systemstoragelib.v1.utils.AtomicFileWriter;
@@ -20,6 +22,7 @@ import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.Objects;
+import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -82,12 +85,12 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
       return;
     }
 
-    try (var ignored = LockUtils.lock(getLock().writeLock())) {
+    try (UncheckedCloseable ignored = LockUtils.lock(getLock().writeLock())) {
       this.config = config;
       Files.createDirectories(getDirPath());
 
-      var result = MetaConfig.CODEC.encodeStart(JsonOps.INSTANCE, config);
-      var encoded = result.result();
+      DataResult<JsonElement> result = MetaConfig.CODEC.encodeStart(JsonOps.INSTANCE, config);
+      Optional<JsonElement> encoded = result.result();
       if (encoded.isEmpty()) {
         logger().warn("Failed to encode meta config: {}", result.error().orElse(null));
         return;
@@ -118,7 +121,7 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
   }
 
   public synchronized void stopWatching() throws IOException {
-    var ws = watchService;
+    WatchService ws = watchService;
     if (ws == null) {
       return;
     }
@@ -142,7 +145,7 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
       return null;
     }
 
-    try (var ignored = LockUtils.lock(getLock().readLock())) {
+    try (UncheckedCloseable ignored = LockUtils.lock(getLock().readLock())) {
       String content = Files.readString(configFilePath, StandardCharsets.UTF_8);
       if (content.isEmpty()) {
         logger().warn("Meta config file is empty: {}", configFilePath);
@@ -159,8 +162,8 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
         return null;
       }
 
-      var parsedResult = MetaConfig.CODEC.parse(JsonOps.INSTANCE, jsonElement);
-      var parsed = parsedResult.result();
+      DataResult<MetaConfig> parsedResult = MetaConfig.CODEC.parse(JsonOps.INSTANCE, jsonElement);
+      Optional<MetaConfig> parsed = parsedResult.result();
       if (parsed.isPresent()) {
         config = parsed.get();
         return config;
@@ -186,14 +189,14 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
       }
 
       try {
-        var ws = getDirPath().getFileSystem().newWatchService();
+        WatchService ws = getDirPath().getFileSystem().newWatchService();
         Files.createDirectories(getDirPath());
         getDirPath()
             .register(
                 ws, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_CREATE);
 
         watchService = ws;
-        var thread = new Thread(this::watchLoop, "meta-config-watcher");
+        Thread thread = new Thread(this::watchLoop, "meta-config-watcher");
         thread.setDaemon(true);
         thread.start();
       } catch (IOException e) {
@@ -203,7 +206,7 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
   }
 
   private void watchLoop() {
-    var ws = watchService;
+    WatchService ws = watchService;
     if (ws == null) {
       logger().error("Starting watch loop but watch service is null");
       return;

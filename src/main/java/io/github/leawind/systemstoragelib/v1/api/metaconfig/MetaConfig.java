@@ -58,10 +58,10 @@ public final class MetaConfig {
     if (this == o) {
       return true;
     }
-    if (!(o instanceof MetaConfig other)) {
+    if (!(o instanceof MetaConfig)) {
       return false;
     }
-    return scopesConfig.equals(other.scopesConfig);
+    return scopesConfig.equals(((MetaConfig) o).scopesConfig);
   }
 
   @Override

@@ -14,7 +14,7 @@ final class SystemStorageLibHolder {
 
   private static SystemStorageLib bootstrap() {
 
-    var baseDirs = BaseDirectories.get();
+    BaseDirectories baseDirs = BaseDirectories.get();
     return new SystemStorageLibImpl(
         Path.of(baseDirs.dataDir, SystemStorageLibImpl.ROOT_DIR_NAME, "logs"),
         Path.of(baseDirs.configDir, SystemStorageLibImpl.ROOT_DIR_NAME, "metaconfig"),

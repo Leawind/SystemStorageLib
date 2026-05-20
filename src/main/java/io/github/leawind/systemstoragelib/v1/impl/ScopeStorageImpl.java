@@ -22,7 +22,7 @@ public final class ScopeStorageImpl implements ScopeStorage {
   public ScopeStorageImpl(String scope, Logger logger, Map<StoreType<?>, Path> dirs) {
     Map<StoreType<?>, ? extends StorageManager> managers = new HashMap<>();
 
-    for (var entry : dirs.entrySet()) {
+    for (Map.Entry<StoreType<?>, Path> entry : dirs.entrySet()) {
       StoreType<?> type = entry.getKey();
       Path scopedPath = entry.getValue().resolve(scope);
 
@@ -44,8 +44,8 @@ public final class ScopeStorageImpl implements ScopeStorage {
     }
 
     // Check for unique manager dir path
-    for (var entry : managers.entrySet()) {
-      for (var other : managers.entrySet()) {
+    for (Map.Entry<StoreType<?>, ? extends StorageManager> entry : managers.entrySet()) {
+      for (Map.Entry<StoreType<?>, ? extends StorageManager> other : managers.entrySet()) {
         if (!entry.getKey().equals(other.getKey())
             && entry.getValue().getDirPath().equals(other.getValue().getDirPath())) {
           throw new IllegalArgumentException(

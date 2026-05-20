@@ -25,8 +25,6 @@ modSettings {
     }
 }
 
-
-
 repositories {
     mavenCentral()
     maven("https://jitpack.io")
@@ -43,6 +41,13 @@ configurations.all {
     exclude(group = "net.fabricmc.fabric-api", module = "fabric-gametest-api-v1")
 }
 
+if (VersionNumber.parse(mod.minecraftVersion) <= VersionNumber.parse("1.16.5")) {
+    java {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+}
+
 val dependsSlf4j = VersionNumber.parse(mod.minecraftVersion) <= VersionNumber.parse("1.16.5")
 
 dependencies {
@@ -51,7 +56,7 @@ dependencies {
         shadow("org.slf4j:slf4j-simple:2.0.17")
     }
 
-    shadow("com.github.Leawind:inventory-java:498a483d63")
+    shadow("com.github.Leawind:inventory-java:46400162ee")
     shadow("dev.dirs:directories:26")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.3")

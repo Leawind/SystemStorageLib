@@ -4,11 +4,15 @@ import io.github.leawind.inventory.just.Result;
 import io.github.leawind.inventory.lock.FileBasedReentrantReadWriteLock;
 import io.github.leawind.inventory.lock.LockUtils;
 import io.github.leawind.inventory.misc.Lazy;
+import io.github.leawind.inventory.misc.UncheckedCloseable;
 import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.stream.Stream;
 import org.slf4j.Logger;
 
 public class StorageManagerImpl implements StorageManager {
@@ -58,7 +62,7 @@ public class StorageManagerImpl implements StorageManager {
 
   @Override
   public synchronized ReadWriteLock getLock() throws IOException {
-    var result = lockLazy.get();
+    Result<FileBasedReentrantReadWriteLock, IOException> result = lockLazy.get();
     if (result.isOk()) {
       return result.unwrap();
     } else {
@@ -72,8 +76,8 @@ public class StorageManagerImpl implements StorageManager {
       return;
     }
 
-    try (var paths = Files.walk(dirPath)) {
-      var sorted = paths.sorted(java.util.Comparator.reverseOrder()).toList();
+    try (Stream<Path> paths = Files.walk(dirPath)) {
+      List<Path> sorted = paths.sorted(Comparator.reverseOrder()).toList();
       for (Path path : sorted) {
         if (path.equals(dirPath) || lockPath.equals(path)) {
           continue;
@@ -86,7 +90,7 @@ public class StorageManagerImpl implements StorageManager {
 
   @Override
   public void delete() throws IOException {
-    try (var ignored = LockUtils.lock(getLock().writeLock())) {
+    try (UncheckedCloseable ignored = LockUtils.lock(getLock().writeLock())) {
       clear();
     }
     Files.deleteIfExists(lockPath);

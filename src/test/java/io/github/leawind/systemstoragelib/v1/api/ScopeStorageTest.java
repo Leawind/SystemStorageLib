@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
 import io.github.leawind.systemstoragelib.v1.impl.ScopeStorageImpl;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -53,16 +54,16 @@ public class ScopeStorageTest {
     assertNotNull(storage);
     assertEquals("my_scope", storage.scope());
 
-    var config = storage.storage(StoreType.CONFIG);
+    StorageManager config = storage.storage(StoreType.CONFIG);
     assertTrue(config.getDirPath().endsWith("my_scope"));
   }
 
   @Test
   void throwsWhenMissingStoreTypes() {
-    for (var type : StoreType.values()) {
+    for (StoreType<?> type : StoreType.values()) {
       Map<StoreType<?>, Path> incomplete = new HashMap<>(dirs);
       incomplete.remove(type);
-      var ex =
+      IllegalArgumentException ex =
           assertThrows(
               IllegalArgumentException.class,
               () -> new ScopeStorageImpl("scope", TEST_LOGGER, incomplete));
@@ -80,7 +81,7 @@ public class ScopeStorageTest {
     duplicateDirs.put(StoreType.CACHE, tempDir.resolve("cache"));
     duplicateDirs.put(StoreType.DATA_LOCAL, tempDir.resolve("dl"));
 
-    var ex =
+    IllegalArgumentException ex =
         assertThrows(
             IllegalArgumentException.class,
             () -> new ScopeStorageImpl("scope", TEST_LOGGER, duplicateDirs));

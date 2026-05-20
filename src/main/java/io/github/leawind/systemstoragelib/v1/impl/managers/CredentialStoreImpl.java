@@ -1,6 +1,7 @@
 package io.github.leawind.systemstoragelib.v1.impl.managers;
 
 import io.github.leawind.inventory.lock.LockUtils;
+import io.github.leawind.inventory.misc.UncheckedCloseable;
 import io.github.leawind.systemstoragelib.v1.api.exception.CredentialIntegrityException;
 import io.github.leawind.systemstoragelib.v1.api.managers.CredentialStore;
 import io.github.leawind.systemstoragelib.v1.utils.AtomicFileWriter;
@@ -81,7 +82,7 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
     validateKey(key);
     Path filePath = keyToFilePath(key);
 
-    try (var ignored = LockUtils.lock(getLock().writeLock())) {
+    try (UncheckedCloseable ignored = LockUtils.lock(getLock().writeLock())) {
       ensureDirectoryExists();
 
       byte[] plaintext = value.getBytes(StandardCharsets.UTF_8);
@@ -109,7 +110,7 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
       return null;
     }
 
-    try (var ignored = LockUtils.lock(getLock().readLock())) {
+    try (UncheckedCloseable ignored = LockUtils.lock(getLock().readLock())) {
       byte[] fileContent = Files.readAllBytes(filePath);
       validateFileSize(fileContent, filePath);
       byte[] plaintext = decryptFileContent(fileContent, filePath);
@@ -183,7 +184,7 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
 
       PBEKeySpec keySpec =
           new PBEKeySpec(keyMaterial.toCharArray(), salt, 65536, AES_KEY_LENGTH_BITS);
-      var keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+      SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
       byte[] keyBytes = keyFactory.generateSecret(keySpec).getEncoded();
       keySpec.clearPassword();
 

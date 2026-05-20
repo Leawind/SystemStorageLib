@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.leawind.inventory.lock.LockUtils;
+import io.github.leawind.inventory.misc.UncheckedCloseable;
 import io.github.leawind.systemstoragelib.v1.impl.managers.StorageManagerImpl;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -114,7 +115,7 @@ public class StorageManagerTest {
 
   @Test
   void testClearRemovesAllFilesExceptLock() throws IOException {
-    try (var ignored = LockUtils.writeLock(manager.getLock())) {
+    try (UncheckedCloseable ignored = LockUtils.writeLock(manager.getLock())) {
       Path dir = manager.getDirPath();
       Files.createDirectories(dir);
       Files.createFile(dir.resolve("file1.txt"));
@@ -146,7 +147,7 @@ public class StorageManagerTest {
   void testDeleteRemovesDirectoryAndLockFile() throws IOException {
     Path dir = manager.getDirPath();
 
-    try (var ignored = LockUtils.writeLock(manager.getLock())) {
+    try (UncheckedCloseable ignored = LockUtils.writeLock(manager.getLock())) {
       Files.createDirectories(dir);
       Files.createFile(dir.resolve("data.txt"));
     }

@@ -4,6 +4,7 @@ import io.github.leawind.systemstoragelib.v1.api.ScopeStorage;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
 import io.github.leawind.systemstoragelib.v1.api.managers.MetaConfigManager;
+import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.PerScopeConfig;
 import io.github.leawind.systemstoragelib.v1.impl.log.LogManager;
@@ -82,9 +83,9 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
   private void onUpdateMetaConfig(MetaConfig newConfig) {
     // for each scope we have
-    for (var scopeEntry : scopes.entrySet()) {
+    for (Map.Entry<String, Optional<ScopeStorage>> scopeEntry : scopes.entrySet()) {
       String scope = scopeEntry.getKey();
-      var scopeOpt = scopeEntry.getValue();
+      Optional<ScopeStorage> scopeOpt = scopeEntry.getValue();
       if (scopeOpt.isEmpty()) {
         continue;
       }
@@ -95,8 +96,8 @@ public class SystemStorageLibImpl implements SystemStorageLib {
           (perScopeConfig != null) ? perScopeConfig.customDirs() : null;
 
       // for each store type
-      for (var storeType : StoreType.values()) {
-        var newDirPath = (customDirs != null) ? customDirs.get(storeType) : null;
+      for (StoreType<?> storeType : StoreType.values()) {
+        Path newDirPath = (customDirs != null) ? customDirs.get(storeType) : null;
 
         if (newDirPath == null) {
           // Not in config, use default
@@ -104,7 +105,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
         }
 
         try {
-          var manager = scopeStorage.storage(storeType);
+          StorageManager manager = scopeStorage.storage(storeType);
           if (manager.getDirPath().equals(newDirPath)) {
             continue;
           }
@@ -138,8 +139,8 @@ public class SystemStorageLibImpl implements SystemStorageLib {
     }
 
     // Check for unique scopedDirs for each StoreType.
-    for (var entry : scopedDirs.entrySet()) {
-      for (var other : scopedDirs.entrySet()) {
+    for (Map.Entry<StoreType<?>, Path> entry : scopedDirs.entrySet()) {
+      for (Map.Entry<StoreType<?>, Path> other : scopedDirs.entrySet()) {
         if (!entry.getKey().equals(other.getKey()) && entry.getValue().equals(other.getValue())) {
           throw new IllegalArgumentException(
               "dir for each StoreType must be unique, but "
@@ -168,13 +169,13 @@ public class SystemStorageLibImpl implements SystemStorageLib {
     validateScope(scope);
 
     if (scopes.containsKey(scope)) {
-      var optional = scopes.get(scope);
+      Optional<ScopeStorage> optional = scopes.get(scope);
       if (optional.isPresent()) {
         return optional.get();
       }
     }
 
-    var storage = createScopeStorage(scope);
+    ScopeStorage storage = createScopeStorage(scope);
     scopes.put(scope, Optional.of(storage));
     return storage;
   }
@@ -197,13 +198,17 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
     char firstChar = scope.charAt(0);
     switch (firstChar) {
-      case '-', '+', '.':
+      case '-':
+      case '+':
+      case '.':
         return "scope must not start with `" + firstChar + "`";
     }
 
     char lastChar = scope.charAt(scope.length() - 1);
     switch (lastChar) {
-      case '-', '+', '.':
+      case '-':
+      case '+':
+      case '.':
         return "scope must not end with `" + lastChar + "`";
     }
 
@@ -212,7 +217,10 @@ public class SystemStorageLibImpl implements SystemStorageLib {
       if (c >= 'a' && c <= 'z') continue;
       if (c >= '0' && c <= '9') continue;
       switch (c) {
-        case '_', '-', '+', '.':
+        case '_':
+        case '-':
+        case '+':
+        case '.':
           continue;
         default:
           return "scope contains invalid characters: " + c;
@@ -233,7 +241,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
     try {
       // Load meta configuration which may contain per‑scope custom directory mappings.
       MetaConfig meta = metaConfig.get();
-      var perScope = meta.getScopeConfig(scope);
+      PerScopeConfig perScope = meta.getScopeConfig(scope);
       if (perScope != null) {
         // Override default directories with any custom paths defined for this scope.
         dirsForScope.putAll(perScope.customDirs());
@@ -254,7 +262,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
     if (!Files.isDirectory(rootDir)) {
       return;
     }
-    try (var entries = Files.list(rootDir)) {
+    try (Stream<Path> entries = Files.list(rootDir)) {
       entries
           .filter(Files::isDirectory)
           .map(p -> p.getFileName().toString())

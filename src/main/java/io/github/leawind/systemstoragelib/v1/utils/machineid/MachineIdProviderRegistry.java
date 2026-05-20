@@ -18,7 +18,7 @@ public class MachineIdProviderRegistry {
 
   public MachineIdProvider getProvider(String os) {
     os = os.toLowerCase();
-    for (var entry : providers.entrySet()) {
+    for (Map.Entry<String, MachineIdProvider> entry : providers.entrySet()) {
       if (entry.getKey().contains(os)) {
         return entry.getValue();
       }

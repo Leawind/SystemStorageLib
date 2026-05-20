@@ -11,6 +11,8 @@ import io.github.leawind.systemstoragelib.v1.impl.managers.CredentialStoreImpl;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -90,8 +92,8 @@ public class CredentialStoreTest {
   @Test
   void testFileNamingIsHashed() throws IOException {
     store.set("github_token", "value");
-    try (var paths = Files.list(store.getDirPath())) {
-      var encFiles = paths.filter(p -> p.toString().endsWith(".enc")).toList();
+    try (Stream<Path> paths = Files.list(store.getDirPath())) {
+      List<Path> encFiles = paths.filter(p -> p.toString().endsWith(".enc")).toList();
       assertEquals(1, encFiles.size());
       for (Path p : encFiles) {
         String name = p.getFileName().toString();
@@ -105,7 +107,7 @@ public class CredentialStoreTest {
   void testFileContentIsEncrypted() throws IOException {
     String secretValue = "this_is_a_secret_that_should_not_appear_in_plaintext";
     store.set("secret_key", secretValue);
-    try (var paths = Files.list(store.getDirPath())) {
+    try (Stream<Path> paths = Files.list(store.getDirPath())) {
       paths
           .filter(p -> p.toString().endsWith(".enc"))
           .forEach(
@@ -126,7 +128,7 @@ public class CredentialStoreTest {
   @Test
   void testFileMinSize() throws IOException {
     store.set("key", "x");
-    try (var paths = Files.list(store.getDirPath())) {
+    try (Stream<Path> paths = Files.list(store.getDirPath())) {
       paths
           .filter(p -> p.toString().endsWith(".enc"))
           .forEach(
@@ -145,7 +147,7 @@ public class CredentialStoreTest {
   @Test
   void testCorruptedFileThrowsIntegrityException() throws IOException {
     store.set("corrupt_key", "value");
-    try (var paths = Files.list(store.getDirPath())) {
+    try (Stream<Path> paths = Files.list(store.getDirPath())) {
       paths
           .filter(p -> p.toString().endsWith(".enc"))
           .findFirst()

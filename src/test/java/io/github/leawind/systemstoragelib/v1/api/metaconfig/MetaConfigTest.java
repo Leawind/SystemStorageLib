@@ -6,6 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -68,10 +71,10 @@ public class MetaConfigTest {
       config.getOrCreateScopeConfig("scope-a");
       config.getOrCreateScopeConfig("scope-b");
 
-      var entries = config.entrySet();
+      Set<Map.Entry<String, PerScopeConfig>> entries = config.entrySet();
 
       assertEquals(2, entries.size());
-      var scopeNames = entries.stream().map(e -> e.getKey()).toList();
+      List<String> scopeNames = entries.stream().map(Map.Entry::getKey).toList();
       assertTrue(scopeNames.contains("scope-a"));
       assertTrue(scopeNames.contains("scope-b"));
     }
@@ -81,8 +84,9 @@ public class MetaConfigTest {
       MetaConfig config = MetaConfig.getDefault();
       PerScopeConfig perScope = config.getOrCreateScopeConfig("scope-a");
 
-      var entries = config.entrySet();
-      var entry = entries.stream().filter(e -> e.getKey().equals("scope-a")).findFirst();
+      Set<Map.Entry<String, PerScopeConfig>> entries = config.entrySet();
+      Optional<Map.Entry<String, PerScopeConfig>> entry =
+          entries.stream().filter(e -> e.getKey().equals("scope-a")).findFirst();
 
       assertTrue(entry.isPresent());
       assertEquals(perScope, entry.get().getValue());

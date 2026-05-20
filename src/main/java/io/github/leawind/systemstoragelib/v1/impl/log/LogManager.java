@@ -1,6 +1,7 @@
 package io.github.leawind.systemstoragelib.v1.impl.log;
 
 import io.github.leawind.inventory.lock.LockUtils;
+import io.github.leawind.inventory.misc.UncheckedCloseable;
 import io.github.leawind.systemstoragelib.v1.impl.managers.StorageManagerImpl;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -34,7 +35,7 @@ public class LogManager extends StorageManagerImpl {
    */
   public void writeLog(Level level, String scope, long pid, String message) {
     try {
-      try (var ignored = LockUtils.lock(getLock().writeLock())) {
+      try (UncheckedCloseable ignored = LockUtils.lock(getLock().writeLock())) {
         rotateIfNeeded();
         String line = formatLine(level, scope, pid, message);
         Files.writeString(

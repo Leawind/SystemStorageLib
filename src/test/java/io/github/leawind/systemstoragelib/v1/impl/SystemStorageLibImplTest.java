@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.github.leawind.systemstoragelib.v1.api.ScopeStorage;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.managers.MetaConfigManager;
 import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
@@ -51,7 +52,7 @@ public class SystemStorageLibImplTest {
     void throwsWhenMissingStoreType() {
       Map<StoreType<?>, Path> dirs = allDirs();
       dirs.remove(StoreType.CREDENTIALS);
-      var ex =
+      IllegalArgumentException ex =
           assertThrows(
               IllegalArgumentException.class,
               () ->
@@ -69,7 +70,7 @@ public class SystemStorageLibImplTest {
       dirs.put(StoreType.DATA, tempDir.resolve("data"));
       dirs.put(StoreType.CACHE, tempDir.resolve("cache"));
       dirs.put(StoreType.DATA_LOCAL, tempDir.resolve("data_local"));
-      var ex =
+      IllegalArgumentException ex =
           assertThrows(
               IllegalArgumentException.class,
               () ->
@@ -93,31 +94,31 @@ public class SystemStorageLibImplTest {
 
     @Test
     void validScopeReturnsNull() {
-      var impl = createImpl();
+      SystemStorageLibImpl impl = createImpl();
       assertNull(impl.validateScope("valid-scope"));
     }
 
     @Test
     void emptyScopeIsInvalid() {
-      var impl = createImpl();
+      SystemStorageLibImpl impl = createImpl();
       assertNotNull(impl.validateScope(""));
     }
 
     @Test
     void tooShortScopeIsInvalid() {
-      var impl = createImpl();
+      SystemStorageLibImpl impl = createImpl();
       assertNotNull(impl.validateScope("a"));
     }
 
     @Test
     void tooLongScopeIsInvalid() {
-      var impl = createImpl();
+      SystemStorageLibImpl impl = createImpl();
       assertNotNull(impl.validateScope("a".repeat(1024)));
     }
 
     @Test
     void scopeStartingWithDashIsInvalid() {
-      var impl = createImpl();
+      SystemStorageLibImpl impl = createImpl();
       String result = impl.validateScope("-invalid");
       assertNotNull(result);
       assertTrue(result.contains("must not start with"));
@@ -125,7 +126,7 @@ public class SystemStorageLibImplTest {
 
     @Test
     void scopeStartingWithPlusIsInvalid() {
-      var impl = createImpl();
+      SystemStorageLibImpl impl = createImpl();
       String result = impl.validateScope("+invalid");
       assertNotNull(result);
       assertTrue(result.contains("must not start with"));
@@ -133,7 +134,7 @@ public class SystemStorageLibImplTest {
 
     @Test
     void scopeStartingWithDotIsInvalid() {
-      var impl = createImpl();
+      SystemStorageLibImpl impl = createImpl();
       String result = impl.validateScope(".invalid");
       assertNotNull(result);
       assertTrue(result.contains("must not start with"));
@@ -141,7 +142,7 @@ public class SystemStorageLibImplTest {
 
     @Test
     void scopeEndingWithDashIsInvalid() {
-      var impl = createImpl();
+      SystemStorageLibImpl impl = createImpl();
       String result = impl.validateScope("invalid-");
       assertNotNull(result);
       assertTrue(result.contains("must not end with"));
@@ -149,7 +150,7 @@ public class SystemStorageLibImplTest {
 
     @Test
     void scopeEndingWithPlusIsInvalid() {
-      var impl = createImpl();
+      SystemStorageLibImpl impl = createImpl();
       String result = impl.validateScope("invalid+");
       assertNotNull(result);
       assertTrue(result.contains("must not end with"));
@@ -157,7 +158,7 @@ public class SystemStorageLibImplTest {
 
     @Test
     void scopeEndingWithDotIsInvalid() {
-      var impl = createImpl();
+      SystemStorageLibImpl impl = createImpl();
       String result = impl.validateScope("invalid.");
       assertNotNull(result);
       assertTrue(result.contains("must not end with"));
@@ -165,32 +166,32 @@ public class SystemStorageLibImplTest {
 
     @Test
     void scopeWithInvalidCharacterIsInvalid() {
-      var impl = createImpl();
+      SystemStorageLibImpl impl = createImpl();
       assertNotNull(impl.validateScope("invalid scope"));
     }
 
     @Test
     void scopeWithAllowedSpecialCharsIsValid() {
-      var impl = createImpl();
+      SystemStorageLibImpl impl = createImpl();
       assertNull(impl.validateScope("my_scope-v1.2+feature"));
     }
 
     @Test
     void isScopeValidDelegatesToValidateScope() {
-      var impl = createImpl();
+      SystemStorageLibImpl impl = createImpl();
       assertTrue(impl.isScopeValid("valid"));
       assertFalse(impl.isScopeValid(""));
     }
 
     @Test
     void scopeAtMinLengthIsValid() {
-      var impl = createImpl();
+      SystemStorageLibImpl impl = createImpl();
       assertNull(impl.validateScope("ab"));
     }
 
     @Test
     void scopeAtMaxLengthIsValid() {
-      var impl = createImpl();
+      SystemStorageLibImpl impl = createImpl();
       assertNull(impl.validateScope("a".repeat(63)));
     }
   }
@@ -200,25 +201,25 @@ public class SystemStorageLibImplTest {
 
     @Test
     void scopeReturnsScopeStorage() {
-      var impl = createImpl();
-      var storage = impl.scope("test_scope");
+      SystemStorageLibImpl impl = createImpl();
+      ScopeStorage storage = impl.scope("test_scope");
       assertNotNull(storage);
       assertEquals("test_scope", storage.scope());
     }
 
     @Test
     void sameScopeReturnsSameInstance() {
-      var impl = createImpl();
-      var storage1 = impl.scope("test_scope");
-      var storage2 = impl.scope("test_scope");
+      SystemStorageLibImpl impl = createImpl();
+      ScopeStorage storage1 = impl.scope("test_scope");
+      ScopeStorage storage2 = impl.scope("test_scope");
       assertEquals(storage1, storage2);
     }
 
     @Test
     void differentScopesReturnDifferentInstances() {
-      var impl = createImpl();
-      var storage1 = impl.scope("scope_a");
-      var storage2 = impl.scope("scope_b");
+      SystemStorageLibImpl impl = createImpl();
+      ScopeStorage storage1 = impl.scope("scope_a");
+      ScopeStorage storage2 = impl.scope("scope_b");
       assertNotEquals(storage1, storage2);
     }
   }
@@ -229,7 +230,8 @@ public class SystemStorageLibImplTest {
     @Test
     void getLogsDirReturnsProvidedPath() {
       Path logsDir = tempDir.resolve("logs");
-      var impl = new SystemStorageLibImpl(logsDir, tempDir.resolve("metaconfig"), allDirs());
+      SystemStorageLibImpl impl =
+          new SystemStorageLibImpl(logsDir, tempDir.resolve("metaconfig"), allDirs());
       assertEquals(logsDir, impl.getLogsDir());
     }
   }
@@ -239,7 +241,7 @@ public class SystemStorageLibImplTest {
 
     @Test
     void metaConfigReturnsNonNullManager() {
-      var impl = createImpl();
+      SystemStorageLibImpl impl = createImpl();
       MetaConfigManager mgr = impl.metaConfig();
       assertNotNull(mgr);
     }
@@ -250,7 +252,7 @@ public class SystemStorageLibImplTest {
 
     @Test
     void scopeUsesCustomDirsWhenConfigured() throws IOException {
-      var impl = createImpl();
+      SystemStorageLibImpl impl = createImpl();
 
       // Set up custom dir for DATA store type in scope "my-scope"
       Path customDataDir = tempDir.resolve("custom-data");
@@ -259,7 +261,7 @@ public class SystemStorageLibImplTest {
       impl.metaConfig().set(config);
 
       // Create scope — it should use the custom dir for DATA
-      var storage = impl.scope("my-scope");
+      ScopeStorage storage = impl.scope("my-scope");
       StorageManager dataManager = storage.storage(StoreType.DATA);
 
       assertEquals(
@@ -270,8 +272,8 @@ public class SystemStorageLibImplTest {
 
     @Test
     void scopeUsesDefaultDirsWhenNoCustomConfig() {
-      var impl = createImpl();
-      var storage = impl.scope("my-scope");
+      SystemStorageLibImpl impl = createImpl();
+      ScopeStorage storage = impl.scope("my-scope");
       StorageManager dataManager = storage.storage(StoreType.DATA);
 
       // Should fall back to defaultScopedDirs
@@ -283,7 +285,7 @@ public class SystemStorageLibImplTest {
 
     @Test
     void unconfiguredStoreTypesUseDefault() throws IOException {
-      var impl = createImpl();
+      SystemStorageLibImpl impl = createImpl();
 
       // Only configure custom dir for DATA
       Path customDataDir = tempDir.resolve("custom-data");
@@ -291,7 +293,7 @@ public class SystemStorageLibImplTest {
       config.getOrCreateScopeConfig("my-scope").customDirs().put(StoreType.DATA, customDataDir);
       impl.metaConfig().set(config);
 
-      var storage = impl.scope("my-scope");
+      ScopeStorage storage = impl.scope("my-scope");
       StorageManager configManager = storage.storage(StoreType.CONFIG);
 
       // CONFIG should still use default
@@ -307,10 +309,10 @@ public class SystemStorageLibImplTest {
 
     @Test
     void setUpdatesExistingScopePaths() throws IOException {
-      var impl = createImpl();
+      SystemStorageLibImpl impl = createImpl();
 
       // Create scope first with default dirs
-      var storage = impl.scope("my-scope");
+      ScopeStorage storage = impl.scope("my-scope");
       StorageManager dataManager = storage.storage(StoreType.DATA);
 
       // Set a custom dir via set() — this should trigger onChanged and update existing scope
@@ -327,7 +329,7 @@ public class SystemStorageLibImplTest {
 
     @Test
     void setToDefaultRevertsToDefaultPath() throws IOException {
-      var impl = createImpl();
+      SystemStorageLibImpl impl = createImpl();
 
       // First set up a custom dir
       Path customDataDir = tempDir.resolve("custom-data");
@@ -337,7 +339,7 @@ public class SystemStorageLibImplTest {
           .customDirs()
           .put(StoreType.DATA, customDataDir);
 
-      var storage = impl.scope("my-scope");
+      ScopeStorage storage = impl.scope("my-scope");
       StorageManager dataManager = storage.storage(StoreType.DATA);
 
       impl.metaConfig().set(customConfig);
@@ -359,9 +361,9 @@ public class SystemStorageLibImplTest {
 
     @Test
     void setOnlyAffectsConfiguredStoreTypes() throws IOException {
-      var impl = createImpl();
+      SystemStorageLibImpl impl = createImpl();
 
-      var storage = impl.scope("my-scope");
+      ScopeStorage storage = impl.scope("my-scope");
       StorageManager configManager = storage.storage(StoreType.CONFIG);
       Path originalConfigPath = configManager.getDirPath();
 
@@ -381,9 +383,9 @@ public class SystemStorageLibImplTest {
 
     @Test
     void setForDifferentScopeDoesNotAffectCurrentScope() throws IOException {
-      var impl = createImpl();
+      SystemStorageLibImpl impl = createImpl();
 
-      var storage = impl.scope("my-scope");
+      ScopeStorage storage = impl.scope("my-scope");
       StorageManager dataManager = storage.storage(StoreType.DATA);
       Path originalPath = dataManager.getDirPath();
 

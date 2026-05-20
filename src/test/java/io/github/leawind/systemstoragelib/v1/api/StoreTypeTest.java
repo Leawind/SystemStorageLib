@@ -6,11 +6,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.google.gson.JsonElement;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import io.github.leawind.systemstoragelib.v1.api.managers.CredentialStore;
 import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Nested;
@@ -67,13 +69,14 @@ public class StoreTypeTest {
 
     @Test
     void valuesReturnsAllFiveTypes() {
-      var values = StoreType.values();
+      StoreType<?>[] values = StoreType.values();
       assertEquals(5, values.length);
     }
 
     @Test
     void valuesContainsAllConstants() {
-      var values = Set.of(StoreType.values());
+      Set<StoreType<?>> values = new HashSet<>();
+      java.util.Collections.addAll(values, StoreType.values());
       assertTrue(values.contains(StoreType.CREDENTIALS));
       assertTrue(values.contains(StoreType.CONFIG));
       assertTrue(values.contains(StoreType.DATA));
@@ -225,10 +228,11 @@ public class StoreTypeTest {
 
     @Test
     void codecRoundTripAllTypes() {
-      for (var type : StoreType.values()) {
-        var encoded = StoreType.CODEC.encodeStart(JsonOps.INSTANCE, type);
+      for (StoreType<?> type : StoreType.values()) {
+        DataResult<JsonElement> encoded = StoreType.CODEC.encodeStart(JsonOps.INSTANCE, type);
         assertTrue(encoded.result().isPresent());
-        var decoded = StoreType.CODEC.parse(JsonOps.INSTANCE, encoded.result().get());
+        DataResult<StoreType<?>> decoded =
+            StoreType.CODEC.parse(JsonOps.INSTANCE, encoded.result().get());
         assertTrue(decoded.result().isPresent());
         assertEquals(type, decoded.result().get());
       }
@@ -240,8 +244,9 @@ public class StoreTypeTest {
 
     @Test
     void allIdentifiersAreUnique() {
-      var values = StoreType.values();
-      long distinctCount = Set.of(values).stream().map(StoreType::identifier).distinct().count();
+      StoreType<?>[] values = StoreType.values();
+      long distinctCount =
+          java.util.Arrays.stream(values).map(StoreType::identifier).distinct().count();
       assertEquals(values.length, distinctCount, "All StoreType identifiers must be unique");
     }
   }

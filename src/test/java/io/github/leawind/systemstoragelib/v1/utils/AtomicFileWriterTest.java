@@ -9,8 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
-import io.github.leawind.systemstoragelib.v1.utils.AtomicFileWriter;
+import java.nio.file.Paths;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -58,7 +58,7 @@ public class AtomicFileWriterTest {
     Path target = tempDir.resolve("data.bin");
     AtomicFileWriter.write(target, new byte[] {1});
 
-    try (var paths = Files.list(tempDir)) {
+    try (Stream<Path> paths = Files.list(tempDir)) {
       long tmpCount = paths.filter(p -> p.toString().endsWith(".tmp")).count();
       assertEquals(0, tmpCount, "No .tmp file should remain after successful write");
     }
@@ -101,15 +101,15 @@ public class AtomicFileWriterTest {
 
   @Test
   void resolveTmpPath_appendsTmpSuffix() {
-    Path target = Path.of("/some/dir/file.enc");
+    Path target = Paths.get("/some/dir/file.enc");
     Path tmp = AtomicFileWriter.resolveTmpPath(target);
 
-    assertEquals(Path.of("/some/dir/file.enc.tmp"), tmp);
+    assertEquals(Paths.get("/some/dir/file.enc.tmp"), tmp);
   }
 
   @Test
   void resolveTmpPath_sameDirectoryAsTarget() {
-    Path target = Path.of("/a/b/c.txt");
+    Path target = Paths.get("/a/b/c.txt");
     Path tmp = AtomicFileWriter.resolveTmpPath(target);
 
     assertEquals(target.getParent(), tmp.getParent());
@@ -205,7 +205,7 @@ public class AtomicFileWriterTest {
     assertThrows(IOException.class, () -> AtomicFileWriter.write(targetDir, new byte[] {1}));
 
     // No .tmp file should remain
-    try (var paths = Files.list(tempDir)) {
+    try (Stream<Path> paths = Files.list(tempDir)) {
       long tmpCount =
           paths
               .filter(p -> p.toString().endsWith(".tmp") || p.toString().endsWith(".tmp.tmp"))

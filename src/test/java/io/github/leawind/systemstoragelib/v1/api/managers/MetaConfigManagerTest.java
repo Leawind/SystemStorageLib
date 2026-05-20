@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.mojang.serialization.JsonOps;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
@@ -57,7 +58,7 @@ public class MetaConfigManagerTest {
   }
 
   private MetaConfig createNonDefaultConfig() {
-    var config = MetaConfig.getDefault();
+    MetaConfig config = MetaConfig.getDefault();
     config
         .getOrCreateScopeConfig("scope1")
         .customDirs()
@@ -66,7 +67,7 @@ public class MetaConfigManagerTest {
   }
 
   private MetaConfig createNonDefaultConfig2() {
-    var config = MetaConfig.getDefault();
+    MetaConfig config = MetaConfig.getDefault();
     config
         .getOrCreateScopeConfig("scope2")
         .customDirs()
@@ -182,8 +183,9 @@ public class MetaConfigManagerTest {
       }
     }
 
-    private static String toJson(MetaConfig config) {
-      var element = MetaConfig.CODEC.encodeStart(JsonOps.INSTANCE, config).result().orElseThrow();
+    private String toJson(MetaConfig config) {
+      JsonElement element =
+          MetaConfig.CODEC.encodeStart(JsonOps.INSTANCE, config).result().orElseThrow();
       return GSON.toJson(element);
     }
 
@@ -192,7 +194,7 @@ public class MetaConfigManagerTest {
       manager.set(createNonDefaultConfig());
       waitForWatcherSettle();
 
-      var latch = new CountDownLatch(1);
+      CountDownLatch latch = new CountDownLatch(1);
       registerListener(latch::countDown);
 
       MetaConfig differentConfig = createNonDefaultConfig2();
@@ -208,7 +210,7 @@ public class MetaConfigManagerTest {
       manager.set(createNonDefaultConfig());
       waitForWatcherSettle();
 
-      var latch = new CountDownLatch(1);
+      CountDownLatch latch = new CountDownLatch(1);
       registerListener(latch::countDown);
 
       manager.set(MetaConfig.getDefault());
@@ -223,7 +225,7 @@ public class MetaConfigManagerTest {
       manager.set(createNonDefaultConfig());
       waitForWatcherSettle();
 
-      var latch = new CountDownLatch(1);
+      CountDownLatch latch = new CountDownLatch(1);
       registerListener(latch::countDown);
 
       manager.set(createNonDefaultConfig());
@@ -244,7 +246,7 @@ public class MetaConfigManagerTest {
       manager.set(createNonDefaultConfig());
       waitForWatcherSettle();
 
-      var latch = new CountDownLatch(1);
+      CountDownLatch latch = new CountDownLatch(1);
       registerListener(latch::countDown);
 
       Files.writeString(configFilePath(), "{invalid json content");
