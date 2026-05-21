@@ -2,18 +2,12 @@
   "schemaVersion": 1,
   "id": "${id}",
   "version": "${version}",
-
   "name": "${name}",
   "description": "${description}",
-  "authors": [],
+  "authors": ["Leawind"],
   "contact": {},
-
   "environment": "*",
-  "entrypoints": {
-    "main": [
-      "${group}.platform.PlatformEntrypoint"
-    ]
-  },
+  "entrypoints": {},
   "depends": {
     "fabricloader": "*",
     "minecraft": ">=${minecraftVersion}"
