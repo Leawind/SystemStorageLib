@@ -26,6 +26,9 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
   public static final String ROOT_DIR_NAME = "mc_system_storage";
 
+  public static final int MIN_SCOPE_LENGTH = 2;
+  public static final int MAX_SCOPE_LENGTH = 128;
+
   private final Path logsDir;
 
   /// ### Examples
@@ -193,8 +196,12 @@ public class SystemStorageLibImpl implements SystemStorageLib {
       return "scope is empty";
     }
 
-    if (!(2 <= scope.length() && scope.length() <= 63)) {
-      return "scope length must be between 2 and 63 characters";
+    if (!(MIN_SCOPE_LENGTH <= scope.length() && scope.length() <= MAX_SCOPE_LENGTH)) {
+      return "scope length must be between "
+          + MIN_SCOPE_LENGTH
+          + " and "
+          + MAX_SCOPE_LENGTH
+          + " characters";
     }
 
     char firstChar = scope.charAt(0);

@@ -21,7 +21,7 @@ public interface SystemStorageLib {
 
   Stream<String> getAllScopes();
 
-  /// - `2 <= length <= 63`
+  /// - `2 <= length <= 128`
   /// - Must not start or end with `-`, `+`, `.`
   /// - Allowed characters:
   ///   - digits

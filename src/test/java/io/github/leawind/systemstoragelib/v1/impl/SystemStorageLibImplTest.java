@@ -16,6 +16,7 @@ import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Nested;
@@ -192,7 +193,9 @@ public class SystemStorageLibImplTest {
     @Test
     void scopeAtMaxLengthIsValid() {
       SystemStorageLibImpl impl = createImpl();
-      assertNull(impl.validateScope("a".repeat(63)));
+      char[] chars = new char[SystemStorageLibImpl.MAX_SCOPE_LENGTH];
+      Arrays.fill(chars, 'a');
+      assertNull(impl.validateScope(new String(chars)));
     }
   }
 
