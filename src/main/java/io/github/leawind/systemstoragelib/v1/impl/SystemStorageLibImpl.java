@@ -244,7 +244,17 @@ public class SystemStorageLibImpl implements SystemStorageLib {
       PerScopeConfig perScope = meta.getScopeConfig(scope);
       if (perScope != null) {
         // Override default directories with any custom paths defined for this scope.
-        dirsForScope.putAll(perScope.customDirs());
+        perScope
+            .customDirs()
+            .forEach(
+                (storeType, path) -> {
+                  if (storeType.customizable()) {
+                    dirsForScope.put(storeType, path);
+                  } else {
+                    logger()
+                        .error("Path of store type {} is not customizable", storeType.identifier());
+                  }
+                });
       }
     } catch (IOException e) {
       // If we cannot read the meta config, fall back to the default scoped directories.
