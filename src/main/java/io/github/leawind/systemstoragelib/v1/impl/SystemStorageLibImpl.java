@@ -120,11 +120,12 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
           manager.setDirPath(newDirPath.resolve(scope));
         } catch (Exception e) {
-          logger.warn(
-              "Failed to update dir path for scope `{}`, store type `{}`: `{}`",
-              scope,
-              storeType,
-              e.getMessage());
+          logger()
+              .warn(
+                  "Failed to update dir path for scope `{}`, store type `{}`: `{}`",
+                  scope,
+                  storeType,
+                  e.getMessage());
         }
       }
     }
@@ -258,7 +259,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
       }
     } catch (IOException e) {
       // If we cannot read the meta config, fall back to the default scoped directories.
-      logger.warn("Failed to load meta config for scope {}: {}", scope, e.getMessage());
+      logger().warn("Failed to load meta config for scope {}: {}", scope, e.getMessage());
     }
     return new ScopeStorageImpl(scope, new SystemLogger(logManager, scope), dirsForScope);
   }
