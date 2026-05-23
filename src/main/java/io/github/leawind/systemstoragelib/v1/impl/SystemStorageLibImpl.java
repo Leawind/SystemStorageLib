@@ -170,7 +170,10 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
   @Override
   public ScopeStorage scope(String scope) {
-    validateScope(scope);
+    String err = validateScope(scope);
+    if (err != null) {
+      throw new IllegalArgumentException("Invalid scope: " + err);
+    }
 
     if (scopes.containsKey(scope)) {
       Optional<ScopeStorage> optional = scopes.get(scope);
