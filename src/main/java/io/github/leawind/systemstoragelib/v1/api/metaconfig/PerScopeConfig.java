@@ -50,6 +50,38 @@ public final class PerScopeConfig {
     customDirs.put(storeType, path.normalize());
   }
 
+  /// Replaces all custom directory mappings with the given entries.
+  ///
+  /// All entries are validated first; if any entry fails, none are applied.
+  ///
+  /// @param dirs map of store type to custom directory path
+  /// @throws NullPointerException if {@code dirs} or any path value is null
+  /// @throws IllegalArgumentException if any path is not absolute, any store type is not
+  ///     customizable, or any two store types share the same path
+  public void setCustomDirs(Map<StoreType<?>, Path> dirs) {
+    Objects.requireNonNull(dirs, "dirs must not be null");
+    // Validate all entries first
+    dirs.forEach(
+        (storeType, path) -> {
+          Objects.requireNonNull(path, "custom directory path must not be null");
+          if (!storeType.customizable()) {
+            throw new IllegalArgumentException(
+                "Store type is not customizable: " + storeType.identifier());
+          }
+          if (!path.isAbsolute()) {
+            throw new IllegalArgumentException("Custom directory path must be absolute: " + path);
+          }
+        });
+
+    long distinctCount = dirs.values().stream().map(Path::normalize).distinct().count();
+    if (distinctCount != dirs.size()) {
+      throw new IllegalArgumentException("Custom directory paths must be unique");
+    }
+
+    customDirs.clear();
+    dirs.forEach((storeType, path) -> customDirs.put(storeType, path.normalize()));
+  }
+
   /// Removes the custom directory mapping for a store type, reverting to the default.
   public void unsetCustomDir(StoreType<?> storeType) {
     customDirs.remove(storeType);

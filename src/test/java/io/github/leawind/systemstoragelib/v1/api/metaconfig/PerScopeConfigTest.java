@@ -74,6 +74,97 @@ public class PerScopeConfigTest {
   }
 
   @Nested
+  class SetCustomDirs {
+
+    @Test
+    void storesMultipleCustomDirs() {
+      PerScopeConfig config = PerScopeConfig.getDefault();
+      Map<StoreType<?>, Path> dirs = new HashMap<>();
+      dirs.put(StoreType.DATA, FOO);
+      dirs.put(StoreType.CONFIG, BAR);
+
+      config.setCustomDirs(dirs);
+
+      assertEquals(2, config.customDirs().size());
+      assertEquals(FOO, config.customDirs().get(StoreType.DATA));
+      assertEquals(BAR, config.customDirs().get(StoreType.CONFIG));
+    }
+
+    @Test
+    void overwritesExistingMappings() {
+      PerScopeConfig config = PerScopeConfig.getDefault();
+      config.setCustomDir(StoreType.DATA, FOO);
+      config.setCustomDir(StoreType.CONFIG, FOO);
+
+      Map<StoreType<?>, Path> dirs = new HashMap<>();
+      dirs.put(StoreType.DATA, BAR);
+      config.setCustomDirs(dirs);
+
+      assertEquals(1, config.customDirs().size());
+      assertEquals(BAR, config.customDirs().get(StoreType.DATA));
+    }
+
+    @Test
+    void replacesAllMappings() {
+      PerScopeConfig config = PerScopeConfig.getDefault();
+      config.setCustomDir(StoreType.DATA, FOO);
+
+      Map<StoreType<?>, Path> dirs = new HashMap<>();
+      dirs.put(StoreType.CONFIG, BAR);
+      config.setCustomDirs(dirs);
+
+      assertEquals(1, config.customDirs().size());
+      assertFalse(config.customDirs().containsKey(StoreType.DATA));
+    }
+
+    @Test
+    void isAtomicOnFailure() {
+      PerScopeConfig config = PerScopeConfig.getDefault();
+      config.setCustomDir(StoreType.DATA, FOO);
+
+      Map<StoreType<?>, Path> dirs = new HashMap<>();
+      dirs.put(StoreType.CONFIG, BAR);
+      dirs.put(StoreType.CREDENTIALS, BAR); // not customizable
+
+      assertThrows(IllegalArgumentException.class, () -> config.setCustomDirs(dirs));
+      // DATA should retain its original value, CONFIG should not have been set
+      assertEquals(FOO, config.customDirs().get(StoreType.DATA));
+      assertFalse(config.customDirs().containsKey(StoreType.CONFIG));
+    }
+
+    @Test
+    void throwsForDuplicatePaths() {
+      Map<StoreType<?>, Path> dirs = new HashMap<>();
+      dirs.put(StoreType.DATA, FOO);
+      dirs.put(StoreType.CONFIG, FOO); // same path
+
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> PerScopeConfig.getDefault().setCustomDirs(dirs));
+    }
+
+    @Test
+    void throwsForDuplicatePathsAfterNormalization() {
+      Map<StoreType<?>, Path> dirs = new HashMap<>();
+      dirs.put(StoreType.DATA, FS.getPath("/foo"));
+      dirs.put(StoreType.CONFIG, FS.getPath("/bar/../foo")); // normalizes to same path
+
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> PerScopeConfig.getDefault().setCustomDirs(dirs));
+    }
+
+    @Test
+    void throwsForNullPathInEntries() {
+      Map<StoreType<?>, Path> dirs = new HashMap<>();
+      dirs.put(StoreType.DATA, null);
+
+      assertThrows(
+          NullPointerException.class, () -> PerScopeConfig.getDefault().setCustomDirs(dirs));
+    }
+  }
+
+  @Nested
   class UnsetCustomDir {
 
     @Test
