@@ -11,14 +11,21 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.AclEntry;
+import java.nio.file.attribute.AclEntryPermission;
+import java.nio.file.attribute.AclEntryType;
+import java.nio.file.attribute.AclFileAttributeView;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.nio.file.attribute.UserPrincipal;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -280,6 +287,7 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
     try {
       Files.setPosixFilePermissions(path, FILE_PERMISSIONS);
     } catch (UnsupportedOperationException ignored) {
+      applyWindowsAcl(path, false);
     }
   }
 
@@ -287,7 +295,45 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
     try {
       Files.setPosixFilePermissions(path, DIR_PERMISSIONS);
     } catch (UnsupportedOperationException ignored) {
+      applyWindowsAcl(path, true);
     }
+  }
+
+  /// Applies owner-only access via ACL on file systems that do not support POSIX permissions.
+  ///
+  /// Preserves existing non-owner ACL entries and adds an owner entry granting read and write
+  /// (and execute for directories), equivalent to `rw-------` for files or `rwx------`.
+  private static void applyWindowsAcl(Path path, boolean isDir) throws IOException {
+    AclFileAttributeView view = Files.getFileAttributeView(path, AclFileAttributeView.class);
+    if (view == null) {
+      return;
+    }
+
+    UserPrincipal owner = view.getOwner();
+    AclEntry ownerEntry =
+        AclEntry.newBuilder()
+            .setType(AclEntryType.ALLOW)
+            .setPrincipal(owner)
+            .setPermissions(
+                isDir
+                    ? new AclEntryPermission[] {
+                      AclEntryPermission.READ_DATA,
+                      AclEntryPermission.WRITE_DATA,
+                      AclEntryPermission.EXECUTE
+                    }
+                    : new AclEntryPermission[] {
+                      AclEntryPermission.READ_DATA, AclEntryPermission.WRITE_DATA
+                    })
+            .build();
+
+    List<AclEntry> entries = new ArrayList<>();
+    for (AclEntry existing : view.getAcl()) {
+      if (!existing.principal().equals(owner)) {
+        entries.add(existing);
+      }
+    }
+    entries.add(ownerEntry);
+    view.setAcl(entries);
   }
 
   // endregion
