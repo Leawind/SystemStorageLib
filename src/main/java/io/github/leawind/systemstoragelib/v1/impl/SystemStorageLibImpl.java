@@ -96,7 +96,8 @@ public class SystemStorageLibImpl implements SystemStorageLib {
           Map<StoreType<?>, Path> customDirs =
               (perScopeConfig != null) ? perScopeConfig.customDirs() : null;
 
-          // for each store type
+          // First pass: compute all new paths and validate uniqueness
+          Map<StoreType<?>, Path> newDirMap = new HashMap<>();
           for (StoreType<?> storeType : StoreType.values()) {
             Path newDirPath = (customDirs != null) ? customDirs.get(storeType) : null;
 
@@ -104,7 +105,8 @@ public class SystemStorageLibImpl implements SystemStorageLib {
             if (newDirPath != null && !storeType.customizable()) {
               logger()
                   .error(
-                      "Path of store type {} is not customizable, ignoring custom dir in MetaConfig update",
+                      "Path of store type {} is not customizable, ignoring custom dir in"
+                          + " MetaConfig update",
                       storeType.identifier());
               continue;
             }
@@ -113,6 +115,24 @@ public class SystemStorageLibImpl implements SystemStorageLib {
               // Not in config, use default
               newDirPath = defaultScopedDirs.get(storeType).resolve(scope);
             }
+
+            newDirMap.put(storeType, newDirPath);
+          }
+
+          // Validate that all store type dirs are unique
+          long distinctCount = newDirMap.values().stream().distinct().count();
+          if (distinctCount != newDirMap.size()) {
+            logger()
+                .warn(
+                    "MetaConfig update contains duplicate dir paths for scope `{}`, ignoring",
+                    scope);
+            return;
+          }
+
+          // Second pass: apply changes
+          for (Map.Entry<StoreType<?>, Path> entry : newDirMap.entrySet()) {
+            StoreType<?> storeType = entry.getKey();
+            Path newDirPath = entry.getValue();
 
             try {
               StorageManager manager = scopeStorage.storage(storeType);
