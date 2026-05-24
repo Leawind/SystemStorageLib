@@ -46,6 +46,8 @@ public class LogManager extends StorageManagerImpl {
     }
   }
 
+  /// Rotate log files: delete `1.log` (oldest), shift `2→1, 3→2, ..., N→N-1`, then move
+  /// `latest.log` to `N.log`.  Higher numbers are newer archives.
   private void rotateIfNeeded() throws IOException {
     if (!Files.exists(logFilePath) || Files.size(logFilePath) < maxFileSize) {
       return;
