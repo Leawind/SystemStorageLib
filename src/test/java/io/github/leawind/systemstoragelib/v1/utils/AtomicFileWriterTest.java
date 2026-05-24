@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -209,10 +211,61 @@ public class AtomicFileWriterTest {
 
     // No .tmp file should remain
     try (Stream<Path> paths = Files.list(tempDir)) {
-      long tmpCount =
-          paths.filter(p -> p.getFileName().toString().contains(".tmp.")).count();
+      long tmpCount = paths.filter(p -> p.getFileName().toString().contains(".tmp.")).count();
       assertEquals(0, tmpCount, "No .tmp file should remain after failure");
     }
+  }
+
+  // endregion
+
+  // region Integration: concurrent writes
+
+  @Test
+  void write_concurrentDoesNotCorrupt() throws Exception {
+    Path target = tempDir.resolve("concurrent.bin");
+    int numThreads = 4;
+    int writesPerThread = 25;
+    CountDownLatch latch = new CountDownLatch(numThreads);
+    AtomicInteger errors = new AtomicInteger();
+
+    Thread[] threads = new Thread[numThreads];
+    for (int t = 0; t < numThreads; t++) {
+      final int threadId = t;
+      threads[t] =
+          new Thread(
+              () -> {
+                latch.countDown();
+                try {
+                  latch.await();
+                } catch (InterruptedException e) {
+                  Thread.currentThread().interrupt();
+                  return;
+                }
+                for (int i = 0; i < writesPerThread; i++) {
+                  try {
+                    byte[] data = ("t" + threadId + "-w" + i).getBytes();
+                    AtomicFileWriter.write(target, data);
+                  } catch (IOException e) {
+                    errors.incrementAndGet();
+                  }
+                }
+              });
+      threads[t].start();
+    }
+
+    for (Thread thread : threads) {
+      thread.join();
+    }
+
+    assertEquals(0, errors.get(), "No write errors during concurrent access");
+    assertTrue(Files.exists(target), "Target file should exist after concurrent writes");
+    byte[] content = Files.readAllBytes(target);
+    assertTrue(content.length > 0, "Target file should contain data, not be corrupted");
+    // Verify content is a valid string (a successful write from some thread)
+    String contentStr = new String(content);
+    assertTrue(
+        contentStr.matches("t[0-3]-w\\d+"),
+        "Content should be a valid write payload, but was: " + contentStr);
   }
 
   // endregion
