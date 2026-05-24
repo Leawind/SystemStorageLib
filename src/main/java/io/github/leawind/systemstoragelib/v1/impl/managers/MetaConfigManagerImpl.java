@@ -66,16 +66,21 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
 
   @Override
   public MetaConfig get() throws IOException {
-    if (config != null) {
-      return config;
+    MetaConfig cached = config;
+    if (cached != null) {
+      return cached;
     }
 
-    MetaConfig result = readAndCache();
-    if (result != null) {
-      return result;
+    synchronized (this) {
+      if (config != null) {
+        return config;
+      }
+      MetaConfig result = readAndCache();
+      if (result != null) {
+        return result;
+      }
+      return MetaConfig.getDefault();
     }
-
-    return MetaConfig.getDefault();
   }
 
   @Override
