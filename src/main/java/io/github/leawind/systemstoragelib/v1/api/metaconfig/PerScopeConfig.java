@@ -32,11 +32,22 @@ public final class PerScopeConfig {
   }
 
   /// Associates a custom directory path with a store type.
+  ///
+  /// @param storeType the store type to configure
+  /// @param path the custom directory path, must be non-null and absolute
+  /// @throws NullPointerException if {@code path} is null
+  /// @throws IllegalArgumentException if {@code path} is not absolute or {@code storeType} is not
+  ///     customizable
   public void setCustomDir(StoreType<?> storeType, Path path) {
+    Objects.requireNonNull(path, "custom directory path must not be null");
     if (!storeType.customizable()) {
-      throw new IllegalArgumentException("Store type is not customizable");
+      throw new IllegalArgumentException(
+          "Store type is not customizable: " + storeType.identifier());
     }
-    customDirs.put(storeType, path);
+    if (!path.isAbsolute()) {
+      throw new IllegalArgumentException("Custom directory path must be absolute: " + path);
+    }
+    customDirs.put(storeType, path.normalize());
   }
 
   /// Removes the custom directory mapping for a store type, reverting to the default.

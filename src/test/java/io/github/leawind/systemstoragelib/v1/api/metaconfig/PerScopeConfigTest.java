@@ -49,6 +49,28 @@ public class PerScopeConfigTest {
           IllegalArgumentException.class,
           () -> PerScopeConfig.getDefault().setCustomDir(StoreType.CREDENTIALS, FOO));
     }
+
+    @Test
+    void throwsForNullPath() {
+      assertThrows(
+          NullPointerException.class,
+          () -> PerScopeConfig.getDefault().setCustomDir(StoreType.DATA, null));
+    }
+
+    @Test
+    void throwsForRelativePath() {
+      Path relative = FS.getPath("relative/path");
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> PerScopeConfig.getDefault().setCustomDir(StoreType.DATA, relative));
+    }
+
+    @Test
+    void normalizesPath() {
+      PerScopeConfig config = PerScopeConfig.getDefault();
+      config.setCustomDir(StoreType.DATA, FS.getPath("/foo/../foo"));
+      assertEquals(FS.getPath("/foo"), config.customDirs().get(StoreType.DATA));
+    }
   }
 
   @Nested
