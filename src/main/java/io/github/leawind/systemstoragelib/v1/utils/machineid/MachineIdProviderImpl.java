@@ -70,10 +70,12 @@ final class MachineIdProviderImpl {
               Path primary = Paths.get("/etc/machine-id");
               Path fallback = Paths.get("/var/lib/dbus/machine-id");
 
-              String id = Files.readString(primary).trim();
-
-              if (id.isEmpty()) {
-                id = Files.readString(fallback).trim();
+              String id = "";
+              if (Files.exists(primary)) {
+                id = new String(Files.readAllBytes(primary), StandardCharsets.UTF_8).trim();
+              }
+              if (id.isEmpty() && Files.exists(fallback)) {
+                id = new String(Files.readAllBytes(fallback), StandardCharsets.UTF_8).trim();
               }
 
               if (id.isEmpty()) {
