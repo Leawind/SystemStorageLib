@@ -59,7 +59,7 @@ public class AtomicFileWriterTest {
     AtomicFileWriter.write(target, new byte[] {1});
 
     try (Stream<Path> paths = Files.list(tempDir)) {
-      long tmpCount = paths.filter(p -> p.toString().endsWith(".tmp")).count();
+      long tmpCount = paths.filter(p -> p.getFileName().toString().contains(".tmp.")).count();
       assertEquals(0, tmpCount, "No .tmp file should remain after successful write");
     }
   }
@@ -100,11 +100,14 @@ public class AtomicFileWriterTest {
   // region resolveTmpPath()
 
   @Test
-  void resolveTmpPath_appendsTmpSuffix() {
+  void resolveTmpPath_appendsTmpSuffixWithUuid() {
     Path target = Paths.get("/some/dir/file.enc");
     Path tmp = AtomicFileWriter.resolveTmpPath(target);
 
-    assertEquals(Paths.get("/some/dir/file.enc.tmp"), tmp);
+    assertEquals(target.getParent(), tmp.getParent());
+    assertTrue(
+        tmp.getFileName().toString().startsWith("file.enc.tmp."),
+        "tmp file should start with target filename + .tmp.");
   }
 
   @Test
@@ -207,9 +210,7 @@ public class AtomicFileWriterTest {
     // No .tmp file should remain
     try (Stream<Path> paths = Files.list(tempDir)) {
       long tmpCount =
-          paths
-              .filter(p -> p.toString().endsWith(".tmp") || p.toString().endsWith(".tmp.tmp"))
-              .count();
+          paths.filter(p -> p.getFileName().toString().contains(".tmp.")).count();
       assertEquals(0, tmpCount, "No .tmp file should remain after failure");
     }
   }

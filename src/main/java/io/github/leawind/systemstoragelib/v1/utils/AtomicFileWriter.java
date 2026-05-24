@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +52,8 @@ public final class AtomicFileWriter {
   /// <p>The temp file is always in the same directory as the target, which is required for
   /// atomic move to work (same file system).
   static Path resolveTmpPath(Path target) {
-    return target.resolveSibling(target.getFileName() + DEFAULT_TMP_SUFFIX);
+    return target.resolveSibling(
+        target.getFileName() + DEFAULT_TMP_SUFFIX + "." + UUID.randomUUID());
   }
 
   /// Writes {@code data} to {@code tmpPath} and calls fsync.
