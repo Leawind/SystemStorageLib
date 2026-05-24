@@ -58,6 +58,10 @@ public interface SystemStorageLib {
   /// @return the singleton instance
   /// @throws IllegalStateException if initialization failed (check previous log output)
   static SystemStorageLib getInstance() {
+    if (SystemStorageLibHolder.INSTANCE == null) {
+      throw new IllegalStateException(
+          "SystemStorageLib failed to initialize. Check previous log output for details.");
+    }
     return SystemStorageLibHolder.INSTANCE;
   }
 }
