@@ -11,7 +11,7 @@ import java.time.Instant;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
-public class LogManager extends StorageManagerImpl {
+public class LogManager extends StorageManagerImpl implements AutoCloseable {
   private static final String LOG_FILE_NAME = "latest.log";
 
   private final Path logFilePath;
@@ -64,6 +64,11 @@ public class LogManager extends StorageManagerImpl {
     }
 
     Files.move(logFilePath, getDirPath().resolve(maxArchiveFiles + ".log"));
+  }
+
+  @Override
+  public void close() throws IOException {
+    Files.deleteIfExists(getDirPath().resolve(LOCK_FILE_NAME));
   }
 
   private static String formatLine(Level level, String scope, long pid, String message) {

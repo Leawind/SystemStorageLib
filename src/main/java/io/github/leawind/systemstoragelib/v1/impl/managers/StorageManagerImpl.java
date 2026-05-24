@@ -16,7 +16,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 
 public class StorageManagerImpl implements StorageManager {
-  private static final String LOCK_FILE_NAME = ".lock";
+  public static final String LOCK_FILE_NAME = ".lock";
 
   private final Logger logger;
   private Path dirPath;
