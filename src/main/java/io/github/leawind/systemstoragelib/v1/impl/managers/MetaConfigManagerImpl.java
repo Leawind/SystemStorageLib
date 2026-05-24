@@ -193,7 +193,10 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
         Files.createDirectories(getDirPath());
         getDirPath()
             .register(
-                ws, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_CREATE);
+                ws,
+                StandardWatchEventKinds.ENTRY_MODIFY,
+                StandardWatchEventKinds.ENTRY_CREATE,
+                StandardWatchEventKinds.ENTRY_DELETE);
 
         watchService = ws;
         Thread thread = new Thread(this::watchLoop, "meta-config-watcher");
@@ -252,10 +255,11 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
   /// Handle file change events detected by the watch service.
   ///
   /// Re-reads the config file and emits `onChanged` if the parsed config differs from the cached
-  /// value.
+  /// value. If the config file was deleted, clears the cache so the next read returns the default.
   private void handleFileChange() {
     try {
       if (!Files.exists(configFilePath)) {
+        config = null;
         return;
       }
 
