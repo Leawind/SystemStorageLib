@@ -8,6 +8,8 @@ public class MachineIdProviderRegistry {
 
   private final Map<String, MachineIdProvider> providers = new HashMap<>();
 
+  public MachineIdProviderRegistry() {}
+
   public Registrar forKeywords(String... keyword) {
     return provider -> {
       for (String k : keyword) {
@@ -19,7 +21,7 @@ public class MachineIdProviderRegistry {
   public MachineIdProvider getProvider(String os) {
     os = os.toLowerCase();
     for (Map.Entry<String, MachineIdProvider> entry : providers.entrySet()) {
-      if (entry.getKey().contains(os)) {
+      if (os.contains(entry.getKey())) {
         return entry.getValue();
       }
     }
