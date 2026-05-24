@@ -36,8 +36,8 @@ public final class PerScopeConfig {
   /// @param storeType the store type to configure
   /// @param path the custom directory path, must be non-null and absolute
   /// @throws NullPointerException if {@code path} is null
-  /// @throws IllegalArgumentException if {@code path} is not absolute or {@code storeType} is not
-  ///     customizable
+  /// @throws IllegalArgumentException if {@code path} is not absolute, {@code storeType} is not
+  ///     customizable, or the path is already assigned to another store type
   public void setCustomDir(StoreType<?> storeType, Path path) {
     Objects.requireNonNull(path, "custom directory path must not be null");
     if (!storeType.customizable()) {
@@ -47,7 +47,15 @@ public final class PerScopeConfig {
     if (!path.isAbsolute()) {
       throw new IllegalArgumentException("Custom directory path must be absolute: " + path);
     }
-    customDirs.put(storeType, path.normalize());
+    Path normalized = path.normalize();
+    boolean conflict =
+        customDirs.entrySet().stream()
+            .anyMatch(e -> !e.getKey().equals(storeType) && e.getValue().equals(normalized));
+    if (conflict) {
+      throw new IllegalArgumentException(
+          "Custom directory path is already assigned to another store type: " + normalized);
+    }
+    customDirs.put(storeType, normalized);
   }
 
   /// Replaces all custom directory mappings with the given entries.

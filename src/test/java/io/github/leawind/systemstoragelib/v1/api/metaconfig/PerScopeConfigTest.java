@@ -51,6 +51,26 @@ public class PerScopeConfigTest {
     }
 
     @Test
+    void throwsForDuplicatePathWithAnotherStoreType() {
+      PerScopeConfig config = PerScopeConfig.getDefault();
+      config.setCustomDir(StoreType.DATA, FOO);
+
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> config.setCustomDir(StoreType.CONFIG, FOO));
+    }
+
+    @Test
+    void throwsForDuplicatePathAfterNormalization() {
+      PerScopeConfig config = PerScopeConfig.getDefault();
+      config.setCustomDir(StoreType.DATA, FS.getPath("/foo"));
+
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> config.setCustomDir(StoreType.CONFIG, FS.getPath("/bar/../foo")));
+    }
+
+    @Test
     void throwsForNullPath() {
       assertThrows(
           NullPointerException.class,
@@ -94,7 +114,7 @@ public class PerScopeConfigTest {
     void overwritesExistingMappings() {
       PerScopeConfig config = PerScopeConfig.getDefault();
       config.setCustomDir(StoreType.DATA, FOO);
-      config.setCustomDir(StoreType.CONFIG, FOO);
+      config.setCustomDir(StoreType.CONFIG, BAR);
 
       Map<StoreType<?>, Path> dirs = new HashMap<>();
       dirs.put(StoreType.DATA, BAR);
