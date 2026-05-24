@@ -43,6 +43,9 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
 
   private final Object watchStartLock = new Object();
 
+  private long lastHandledFileChangeMs = 0;
+  private static final long FILE_CHANGE_DEBOUNCE_MS = 100;
+
   public MetaConfigManagerImpl(Logger logger, Path dirPath) {
     super(logger, dirPath);
     this.configFilePath = dirPath.resolve(CONFIG_FILE_NAME).toAbsolutePath().normalize();
@@ -248,7 +251,11 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
       }
 
       if (configFileChanged) {
-        handleFileChange();
+        long now = System.currentTimeMillis();
+        if (now - lastHandledFileChangeMs >= FILE_CHANGE_DEBOUNCE_MS) {
+          handleFileChange();
+          lastHandledFileChangeMs = now;
+        }
       }
 
       if (!key.reset()) {
