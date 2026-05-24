@@ -24,7 +24,7 @@ public final class MetaConfig {
   // region Codec Methods
 
   private MetaConfig(Map<String, PerScopeConfig> scopes) {
-    this.scopesConfig = scopes;
+    this.scopesConfig = new HashMap<>(scopes);
   }
 
   private Map<String, PerScopeConfig> getScopesConfig() {

@@ -260,7 +260,7 @@ public class SystemStorageLibImplTest {
       // Set up custom dir for DATA store type in scope "my-scope"
       Path customDataDir = tempDir.resolve("custom-data");
       MetaConfig config = MetaConfig.getDefault();
-      config.getOrCreateScopeConfig("my-scope").customDirs().put(StoreType.DATA, customDataDir);
+      config.getOrCreateScopeConfig("my-scope").setCustomDir(StoreType.DATA, customDataDir);
       impl.metaConfig().set(config);
 
       // Create scope — it should use the custom dir for DATA
@@ -293,7 +293,7 @@ public class SystemStorageLibImplTest {
       // Only configure custom dir for DATA
       Path customDataDir = tempDir.resolve("custom-data");
       MetaConfig config = MetaConfig.getDefault();
-      config.getOrCreateScopeConfig("my-scope").customDirs().put(StoreType.DATA, customDataDir);
+      config.getOrCreateScopeConfig("my-scope").setCustomDir(StoreType.DATA, customDataDir);
       impl.metaConfig().set(config);
 
       ScopeStorage storage = impl.scope("my-scope");
@@ -321,7 +321,7 @@ public class SystemStorageLibImplTest {
       // Set a custom dir via set() — this should trigger onChanged and update existing scope
       Path customDataDir = tempDir.resolve("custom-data");
       MetaConfig newConfig = MetaConfig.getDefault();
-      newConfig.getOrCreateScopeConfig("my-scope").customDirs().put(StoreType.DATA, customDataDir);
+      newConfig.getOrCreateScopeConfig("my-scope").setCustomDir(StoreType.DATA, customDataDir);
       impl.metaConfig().set(newConfig);
 
       assertEquals(
@@ -337,10 +337,7 @@ public class SystemStorageLibImplTest {
       // First set up a custom dir
       Path customDataDir = tempDir.resolve("custom-data");
       MetaConfig customConfig = MetaConfig.getDefault();
-      customConfig
-          .getOrCreateScopeConfig("my-scope")
-          .customDirs()
-          .put(StoreType.DATA, customDataDir);
+      customConfig.getOrCreateScopeConfig("my-scope").setCustomDir(StoreType.DATA, customDataDir);
 
       ScopeStorage storage = impl.scope("my-scope");
       StorageManager dataManager = storage.storage(StoreType.DATA);
@@ -373,7 +370,7 @@ public class SystemStorageLibImplTest {
       // Set custom dir only for DATA
       Path customDataDir = tempDir.resolve("custom-data");
       MetaConfig newConfig = MetaConfig.getDefault();
-      newConfig.getOrCreateScopeConfig("my-scope").customDirs().put(StoreType.DATA, customDataDir);
+      newConfig.getOrCreateScopeConfig("my-scope").setCustomDir(StoreType.DATA, customDataDir);
 
       impl.metaConfig().set(newConfig);
 
@@ -395,10 +392,7 @@ public class SystemStorageLibImplTest {
       // Set a config change for a different scope
       Path customDataDir = tempDir.resolve("custom-data");
       MetaConfig newConfig = MetaConfig.getDefault();
-      newConfig
-          .getOrCreateScopeConfig("other-scope")
-          .customDirs()
-          .put(StoreType.DATA, customDataDir);
+      newConfig.getOrCreateScopeConfig("other-scope").setCustomDir(StoreType.DATA, customDataDir);
 
       impl.metaConfig().set(newConfig);
 
@@ -410,7 +404,7 @@ public class SystemStorageLibImplTest {
     }
 
     @Test
-    void setDoesNotUpdateNonCustomizableStoreTypes() throws IOException {
+    void setDoesNotUpdateNonCustomizableStoreTypes() {
       SystemStorageLibImpl impl = createImpl();
 
       // Create scope with default dirs
@@ -420,18 +414,13 @@ public class SystemStorageLibImplTest {
       // Try to set a custom dir for CREDENTIALS (non-customizable)
       Path customCredentialsDir = tempDir.resolve("custom-credentials");
       MetaConfig config = MetaConfig.getDefault();
-      config
-          .getOrCreateScopeConfig("my-scope")
-          .customDirs()
-          .put(StoreType.CREDENTIALS, customCredentialsDir);
 
-      impl.metaConfig().set(config);
-
-      // CREDENTIALS path should NOT change — CREDENTIALS is not customizable
-      assertEquals(
-          originalCredentialsPath,
-          storage.storage(StoreType.CREDENTIALS).getDirPath(),
-          "CREDENTIALS path should not be updated because it is not customizable");
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              config
+                  .getOrCreateScopeConfig("my-scope")
+                  .setCustomDir(StoreType.CREDENTIALS, customCredentialsDir));
     }
   }
 }

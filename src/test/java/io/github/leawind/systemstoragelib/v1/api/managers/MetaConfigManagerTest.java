@@ -61,8 +61,7 @@ public class MetaConfigManagerTest {
     MetaConfig config = MetaConfig.getDefault();
     config
         .getOrCreateScopeConfig("scope1")
-        .customDirs()
-        .put(StoreType.CREDENTIALS, tempDir.resolve("custom/credentials"));
+        .setCustomDir(StoreType.CONFIG, tempDir.resolve("custom/config"));
     return config;
   }
 
@@ -70,8 +69,7 @@ public class MetaConfigManagerTest {
     MetaConfig config = MetaConfig.getDefault();
     config
         .getOrCreateScopeConfig("scope2")
-        .customDirs()
-        .put(StoreType.CREDENTIALS, tempDir.resolve("custom/credentials2"));
+        .setCustomDir(StoreType.CONFIG, tempDir.resolve("custom/config2"));
     return config;
   }
 
