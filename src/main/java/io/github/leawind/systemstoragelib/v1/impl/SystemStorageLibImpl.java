@@ -85,62 +85,60 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   }
 
   private void onUpdateMetaConfig(MetaConfig newConfig) {
-    // for each scope we have
-    for (Map.Entry<String, Optional<ScopeStorage>> scopeEntry : scopes.entrySet()) {
-      String scope = scopeEntry.getKey();
-      Optional<ScopeStorage> scopeOpt = scopeEntry.getValue();
-      if (scopeOpt.isEmpty()) {
-        continue;
-      }
-      ScopeStorage scopeStorage = scopeOpt.get();
-
-      PerScopeConfig perScopeConfig = newConfig.getScopeConfig(scope);
-      Map<StoreType<?>, Path> customDirs =
-          (perScopeConfig != null) ? perScopeConfig.customDirs() : null;
-
-      // for each store type
-      for (StoreType<?> storeType : StoreType.values()) {
-        Path newDirPath = (customDirs != null) ? customDirs.get(storeType) : null;
-
-        // Non-customizable store types ignore custom path configurations
-        if (newDirPath != null && !storeType.customizable()) {
-          logger()
-              .error(
-                  "Path of store type {} is not customizable, ignoring custom dir in MetaConfig update",
-                  storeType.identifier());
-          continue;
-        }
-
-        if (newDirPath == null) {
-          // Not in config, use default
-          newDirPath = defaultScopedDirs.get(storeType);
-        }
-
-        try {
-          StorageManager manager = scopeStorage.storage(storeType);
-          if (manager.getDirPath().equals(newDirPath)) {
-            continue;
+    scopes.forEach(
+        (scope, scopeOpt) -> {
+          if (scopeOpt.isEmpty()) {
+            return;
           }
+          ScopeStorage scopeStorage = scopeOpt.get();
 
-          logger()
-              .info(
-                  "Updating dir path for scope `{}`, store type `{}` from `{}` to `{}`",
-                  scope,
-                  storeType,
-                  manager.getDirPath(),
-                  newDirPath.resolve(scope));
+          PerScopeConfig perScopeConfig = newConfig.getScopeConfig(scope);
+          Map<StoreType<?>, Path> customDirs =
+              (perScopeConfig != null) ? perScopeConfig.customDirs() : null;
 
-          manager.setDirPath(newDirPath.resolve(scope));
-        } catch (Exception e) {
-          logger()
-              .warn(
-                  "Failed to update dir path for scope `{}`, store type `{}`: `{}`",
-                  scope,
-                  storeType,
-                  e.getMessage());
-        }
-      }
-    }
+          // for each store type
+          for (StoreType<?> storeType : StoreType.values()) {
+            Path newDirPath = (customDirs != null) ? customDirs.get(storeType) : null;
+
+            // Non-customizable store types ignore custom path configurations
+            if (newDirPath != null && !storeType.customizable()) {
+              logger()
+                  .error(
+                      "Path of store type {} is not customizable, ignoring custom dir in MetaConfig update",
+                      storeType.identifier());
+              continue;
+            }
+
+            if (newDirPath == null) {
+              // Not in config, use default
+              newDirPath = defaultScopedDirs.get(storeType).resolve(scope);
+            }
+
+            try {
+              StorageManager manager = scopeStorage.storage(storeType);
+              if (manager.getDirPath().equals(newDirPath)) {
+                continue;
+              }
+
+              logger()
+                  .info(
+                      "Updating dir path for scope `{}`, store type `{}` from `{}` to `{}`",
+                      scope,
+                      storeType,
+                      manager.getDirPath(),
+                      newDirPath);
+
+              manager.setDirPath(newDirPath);
+            } catch (Exception e) {
+              logger()
+                  .warn(
+                      "Failed to update dir path for scope `{}`, store type `{}`: `{}`",
+                      scope,
+                      storeType,
+                      e.getMessage());
+            }
+          }
+        });
   }
 
   private static void validateDirs(Map<StoreType<?>, Path> scopedDirs)

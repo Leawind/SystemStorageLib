@@ -325,7 +325,7 @@ public class SystemStorageLibImplTest {
       impl.metaConfig().set(newConfig);
 
       assertEquals(
-          customDataDir.resolve("my-scope"),
+          customDataDir,
           dataManager.getDirPath(),
           "DATA path should be updated after MetaConfig set()");
     }
@@ -345,7 +345,7 @@ public class SystemStorageLibImplTest {
       impl.metaConfig().set(customConfig);
 
       assertEquals(
-          customDataDir.resolve("my-scope"),
+          customDataDir,
           dataManager.getDirPath(),
           "DATA path should use custom dir after first update");
 
