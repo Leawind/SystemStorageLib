@@ -408,5 +408,30 @@ public class SystemStorageLibImplTest {
           dataManager.getDirPath(),
           "DATA path for my-scope should not change when a different scope is configured");
     }
+
+    @Test
+    void setDoesNotUpdateNonCustomizableStoreTypes() throws IOException {
+      SystemStorageLibImpl impl = createImpl();
+
+      // Create scope with default dirs
+      ScopeStorage storage = impl.scope("my-scope");
+      Path originalCredentialsPath = storage.storage(StoreType.CREDENTIALS).getDirPath();
+
+      // Try to set a custom dir for CREDENTIALS (non-customizable)
+      Path customCredentialsDir = tempDir.resolve("custom-credentials");
+      MetaConfig config = MetaConfig.getDefault();
+      config
+          .getOrCreateScopeConfig("my-scope")
+          .customDirs()
+          .put(StoreType.CREDENTIALS, customCredentialsDir);
+
+      impl.metaConfig().set(config);
+
+      // CREDENTIALS path should NOT change — CREDENTIALS is not customizable
+      assertEquals(
+          originalCredentialsPath,
+          storage.storage(StoreType.CREDENTIALS).getDirPath(),
+          "CREDENTIALS path should not be updated because it is not customizable");
+    }
   }
 }

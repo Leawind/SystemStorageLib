@@ -102,6 +102,15 @@ public class SystemStorageLibImpl implements SystemStorageLib {
       for (StoreType<?> storeType : StoreType.values()) {
         Path newDirPath = (customDirs != null) ? customDirs.get(storeType) : null;
 
+        // Non-customizable store types ignore custom path configurations
+        if (newDirPath != null && !storeType.customizable()) {
+          logger()
+              .error(
+                  "Path of store type {} is not customizable, ignoring custom dir in MetaConfig update",
+                  storeType.identifier());
+          continue;
+        }
+
         if (newDirPath == null) {
           // Not in config, use default
           newDirPath = defaultScopedDirs.get(storeType);
