@@ -10,6 +10,7 @@ import io.github.leawind.systemstoragelib.v1.api.metaconfig.PerScopeConfig;
 import io.github.leawind.systemstoragelib.v1.impl.log.LogManager;
 import io.github.leawind.systemstoragelib.v1.impl.log.SystemLogger;
 import io.github.leawind.systemstoragelib.v1.impl.managers.MetaConfigManagerImpl;
+import io.github.leawind.systemstoragelib.v1.utils.MapUtils;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -120,12 +121,14 @@ public class SystemStorageLibImpl implements SystemStorageLib {
           }
 
           // Validate that all store type dirs are unique
-          long distinctCount = newDirMap.values().stream().distinct().count();
-          if (distinctCount != newDirMap.size()) {
+          try {
+            MapUtils.requireUniqueValues(newDirMap, "dir path for each StoreType");
+          } catch (IllegalArgumentException e) {
             logger()
                 .warn(
-                    "MetaConfig update contains duplicate dir paths for scope `{}`, ignoring",
-                    scope);
+                    "MetaConfig update contains duplicate dir paths for scope `{}`, ignoring: {}",
+                    scope,
+                    e.getMessage());
             return;
           }
 
@@ -169,20 +172,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
       throw new IllegalArgumentException("Missing StoreTypes: " + missingTypes);
     }
 
-    // Check for unique scopedDirs for each StoreType.
-    for (Map.Entry<StoreType<?>, Path> entry : scopedDirs.entrySet()) {
-      for (Map.Entry<StoreType<?>, Path> other : scopedDirs.entrySet()) {
-        if (!entry.getKey().equals(other.getKey()) && entry.getValue().equals(other.getValue())) {
-          throw new IllegalArgumentException(
-              "dir for each StoreType must be unique, but "
-                  + entry.getKey()
-                  + " and "
-                  + other.getKey()
-                  + " are the same: "
-                  + entry.getValue());
-        }
-      }
-    }
+    MapUtils.requireUniqueValues(scopedDirs, "dir for each StoreType");
   }
 
   @Override

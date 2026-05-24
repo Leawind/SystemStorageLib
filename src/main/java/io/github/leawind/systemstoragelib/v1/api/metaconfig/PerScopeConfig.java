@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.utils.Codecs;
+import io.github.leawind.systemstoragelib.v1.utils.MapUtils;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
@@ -81,10 +82,7 @@ public final class PerScopeConfig {
           }
         });
 
-    long distinctCount = dirs.values().stream().map(Path::normalize).distinct().count();
-    if (distinctCount != dirs.size()) {
-      throw new IllegalArgumentException("Custom directory paths must be unique");
-    }
+    MapUtils.requireUniqueValues(dirs, (k, v) -> v.normalize(), "custom directory path");
 
     customDirs.clear();
     dirs.forEach((storeType, path) -> customDirs.put(storeType, path.normalize()));

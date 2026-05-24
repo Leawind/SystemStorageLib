@@ -4,6 +4,7 @@ import io.github.leawind.inventory.type.UnsafeTypeUtils;
 import io.github.leawind.systemstoragelib.v1.api.ScopeStorage;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
+import io.github.leawind.systemstoragelib.v1.utils.MapUtils;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
@@ -43,21 +44,7 @@ public final class ScopeStorageImpl implements ScopeStorage {
       throw new IllegalArgumentException("Missing StoreTypes: " + missingTypes);
     }
 
-    // Check for unique manager dir path
-    for (Map.Entry<StoreType<?>, ? extends StorageManager> entry : managers.entrySet()) {
-      for (Map.Entry<StoreType<?>, ? extends StorageManager> other : managers.entrySet()) {
-        if (!entry.getKey().equals(other.getKey())
-            && entry.getValue().getDirPath().equals(other.getValue().getDirPath())) {
-          throw new IllegalArgumentException(
-              "dirPath for each StoreType must be unique, but "
-                  + entry.getKey()
-                  + " and "
-                  + other.getKey()
-                  + " are the same: "
-                  + entry.getValue().getDirPath());
-        }
-      }
-    }
+    MapUtils.requireUniqueValues(managers, (k, v) -> v.getDirPath(), "dirPath for each StoreType");
   }
 
   @Override
