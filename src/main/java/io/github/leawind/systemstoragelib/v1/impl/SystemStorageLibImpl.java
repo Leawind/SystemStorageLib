@@ -184,16 +184,16 @@ public class SystemStorageLibImpl implements SystemStorageLib {
       throw new IllegalArgumentException("Invalid scope: " + err);
     }
 
-    if (scopes.containsKey(scope)) {
-      Optional<ScopeStorage> optional = scopes.get(scope);
-      if (optional.isPresent()) {
-        return optional.get();
-      }
-    }
-
-    ScopeStorage storage = createScopeStorage(scope);
-    scopes.put(scope, Optional.of(storage));
-    return storage;
+    return scopes
+        .compute(
+            scope,
+            (k, v) -> {
+              if (v != null && v.isPresent()) {
+                return v;
+              }
+              return Optional.of(createScopeStorage(k));
+            })
+        .get();
   }
 
   @Override
