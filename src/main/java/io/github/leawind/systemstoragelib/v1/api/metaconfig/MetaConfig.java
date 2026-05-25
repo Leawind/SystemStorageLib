@@ -2,6 +2,7 @@ package io.github.leawind.systemstoragelib.v1.api.metaconfig;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import io.github.leawind.systemstoragelib.v1.impl.metaconfig.PerScopeConfigImpl;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,7 +15,7 @@ public final class MetaConfig {
       RecordCodecBuilder.create(
           inst ->
               inst.group(
-                      Codec.unboundedMap(Codec.STRING, PerScopeConfig.CODEC)
+                      Codec.unboundedMap(Codec.STRING, PerScopeConfigImpl.CODEC)
                           .fieldOf("scopes")
                           .forGetter(MetaConfig::getScopesConfig))
                   .apply(inst, MetaConfig::new));
@@ -46,7 +47,7 @@ public final class MetaConfig {
   }
 
   public PerScopeConfig getOrCreateScopeConfig(String scopeName) {
-    return scopesConfig.computeIfAbsent(scopeName, ignored -> PerScopeConfig.getDefault());
+    return scopesConfig.computeIfAbsent(scopeName, ignored -> PerScopeConfig.createDefault());
   }
 
   public void removeScopeConfig(String scopeName) {

@@ -1,41 +1,21 @@
 package io.github.leawind.systemstoragelib.v1.api.metaconfig;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
-import io.github.leawind.systemstoragelib.v1.utils.Codecs;
-import io.github.leawind.systemstoragelib.v1.utils.MapUtils;
+import io.github.leawind.systemstoragelib.v1.impl.metaconfig.PerScopeConfigImpl;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
-public final class PerScopeConfig {
-  public static final Codec<PerScopeConfig> CODEC =
-      RecordCodecBuilder.create(
-          inst ->
-              inst.group(
-                      Codec.unboundedMap(StoreType.CODEC, Codecs.PATH)
-                          .fieldOf("custom_dirs")
-                          .forGetter(PerScopeConfig::customDirs))
-                  .apply(inst, PerScopeConfig::new));
-  private final Map<StoreType<?>, Path> customDirs;
+public interface PerScopeConfig {
 
-  PerScopeConfig(Map<StoreType<?>, Path> customDirs) {
-    this.customDirs = new HashMap<>(customDirs);
-  }
-
-  public static PerScopeConfig getDefault() {
-    return new PerScopeConfig(new HashMap<>());
+  static PerScopeConfig createDefault() {
+    return new PerScopeConfigImpl(new HashMap<>());
   }
 
   // region customDirs
 
   /// Returns an unmodifiable view of the custom directory mappings.
-  public Map<StoreType<?>, Path> customDirs() {
-    return Collections.unmodifiableMap(customDirs);
-  }
+  Map<StoreType<?>, Path> customDirs();
 
   /// Associates a custom directory path with a store type.
   ///
@@ -44,25 +24,7 @@ public final class PerScopeConfig {
   /// @throws NullPointerException if {@code path} is null
   /// @throws IllegalArgumentException if {@code path} is not absolute, {@code storeType} is not
   ///     customizable, or the path is already assigned to another store type
-  public void setCustomDir(StoreType<?> storeType, Path path) {
-    Objects.requireNonNull(path, "custom directory path must not be null");
-    if (!storeType.customizable()) {
-      throw new IllegalArgumentException(
-          "Store type is not customizable: " + storeType.identifier());
-    }
-    if (!path.isAbsolute()) {
-      throw new IllegalArgumentException("Custom directory path must be absolute: " + path);
-    }
-    Path normalized = path.normalize();
-    boolean conflict =
-        customDirs.entrySet().stream()
-            .anyMatch(e -> !e.getKey().equals(storeType) && e.getValue().equals(normalized));
-    if (conflict) {
-      throw new IllegalArgumentException(
-          "Custom directory path is already assigned to another store type: " + normalized);
-    }
-    customDirs.put(storeType, normalized);
-  }
+  void setCustomDir(StoreType<?> storeType, Path path);
 
   /// Replaces all custom directory mappings with the given entries.
   ///
@@ -72,52 +34,13 @@ public final class PerScopeConfig {
   /// @throws NullPointerException if {@code dirs} or any path value is null
   /// @throws IllegalArgumentException if any path is not absolute, any store type is not
   ///     customizable, or any two store types share the same path
-  public void setCustomDirs(Map<StoreType<?>, Path> dirs) {
-    Objects.requireNonNull(dirs, "dirs must not be null");
-    // Validate all entries first
-    dirs.forEach(
-        (storeType, path) -> {
-          Objects.requireNonNull(path, "custom directory path must not be null");
-          if (!storeType.customizable()) {
-            throw new IllegalArgumentException(
-                "Store type is not customizable: " + storeType.identifier());
-          }
-          if (!path.isAbsolute()) {
-            throw new IllegalArgumentException("Custom directory path must be absolute: " + path);
-          }
-        });
-
-    MapUtils.requireUniqueValues(dirs, (k, v) -> v.normalize(), "custom directory path");
-
-    customDirs.clear();
-    dirs.forEach((storeType, path) -> customDirs.put(storeType, path.normalize()));
-  }
+  void setCustomDirs(Map<StoreType<?>, Path> dirs);
 
   /// Removes the custom directory mapping for a store type, reverting to the default.
-  public void unsetCustomDir(StoreType<?> storeType) {
-    customDirs.remove(storeType);
-  }
+  void unsetCustomDir(StoreType<?> storeType);
 
   /// Removes all custom directory mappings.
-  public void resetCustomDirs() {
-    customDirs.clear();
-  }
+  void resetCustomDirs();
 
   // endregion
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (!(o instanceof PerScopeConfig)) {
-      return false;
-    }
-    return Objects.equals(customDirs, ((PerScopeConfig) o).customDirs);
-  }
-
-  @Override
-  public String toString() {
-    return "PerScopeConfig[" + "customDirs=" + customDirs + ']';
-  }
 }
