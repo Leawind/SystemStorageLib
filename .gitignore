@@ -34,12 +34,14 @@ run/
 
 # AI tools
 /.ai/
+.claude/
 .clinerules/
 .codebuddy/
 .cursorrules/
 .kilocode/
 .lingma/
 .marscode/
+.opencode/
 .trae/
 
 # logs
