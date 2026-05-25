@@ -5,8 +5,8 @@ import io.github.leawind.inventory.misc.UncheckedCloseable;
 import io.github.leawind.systemstoragelib.v1.api.exception.CredentialIntegrityException;
 import io.github.leawind.systemstoragelib.v1.api.managers.CredentialStore;
 import io.github.leawind.systemstoragelib.v1.utils.AtomicFileWriter;
-import io.github.leawind.systemstoragelib.v1.utils.machineid.MachineIdProvider;
 import io.github.leawind.systemstoragelib.v1.utils.machineid.MachineIdResolutionException;
+import io.github.leawind.systemstoragelib.v1.utils.machineid.MachineIdUtil;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -184,7 +184,7 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
     try {
       String machineId = "";
       try {
-        machineId = MachineIdProvider.getMachineId();
+        machineId = MachineIdUtil.getMachineId();
       } catch (MachineIdResolutionException e) {
         logger().error("Failed to get machine id", e);
       }

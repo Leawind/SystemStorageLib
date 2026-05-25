@@ -2,22 +2,6 @@ package io.github.leawind.systemstoragelib.v1.utils.machineid;
 
 import java.io.IOException;
 
-public interface MachineIdProvider {
+interface MachineIdProvider {
   String get() throws IOException, MachineIdResolutionException;
-
-  static String getMachineId() throws MachineIdResolutionException {
-    String cached = MachineIdCache.VALUE.get();
-    if (cached != null) {
-      return cached;
-    }
-
-    synchronized (MachineIdCache.class) {
-      cached = MachineIdCache.VALUE.get();
-      if (cached == null) {
-        cached = MachineIdProviderImpl.resolve();
-        MachineIdCache.VALUE.set(cached);
-      }
-    }
-    return cached;
-  }
 }

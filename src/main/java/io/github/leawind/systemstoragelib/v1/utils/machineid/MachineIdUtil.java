@@ -1,5 +1,6 @@
 package io.github.leawind.systemstoragelib.v1.utils.machineid;
 
+import io.github.leawind.inventory.misc.Lazy;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -12,11 +13,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-final class MachineIdProviderImpl {
+public final class MachineIdUtil {
+  private MachineIdUtil() {}
 
-  private static void bootstrap() {
-    MachineIdProviderRegistry registry = MachineIdProviderRegistry.getInstance();
-
+  private static void bootstrap(MachineIdProviderRegistry registry) {
     registry
         .forKeywords("windows")
         .register(
@@ -34,7 +34,7 @@ final class MachineIdProviderImpl {
               try {
                 process = pb.start();
 
-                if (!process.waitFor(3, TimeUnit.SECONDS)) {
+                if (!process.waitFor(3000, TimeUnit.MILLISECONDS)) {
                   process.destroyForcibly();
                   throw new IOException("Registry query timed out");
                 }
@@ -53,7 +53,9 @@ final class MachineIdProviderImpl {
                     }
                   }
                 }
+
                 throw new IOException("MachineGuid value not found in registry output");
+
               } catch (InterruptedException e) {
                 throw new MachineIdResolutionException("Machine ID retrieval interrupted", e);
               } finally {
@@ -99,7 +101,7 @@ final class MachineIdProviderImpl {
               Process process = pb.start();
 
               try {
-                if (!process.waitFor(3, TimeUnit.SECONDS)) {
+                if (!process.waitFor(3000, TimeUnit.MILLISECONDS)) {
                   process.destroyForcibly();
                   throw new IOException("ioreg command timed out");
                 }
@@ -124,16 +126,23 @@ final class MachineIdProviderImpl {
   }
 
   static {
-    bootstrap();
+    bootstrap(MachineIdProviderRegistry.getInstance());
   }
 
-  public static String resolve() {
-    try {
-      return MachineIdProviderRegistry.getInstance()
-          .getProvider(System.getProperty("os.name", ""))
-          .get();
-    } catch (IOException e) {
-      throw new MachineIdResolutionException("Failed to resolve machine ID", e);
-    }
+  private static final Lazy<String> value =
+      new Lazy<>(
+          () -> {
+            try {
+              return MachineIdProviderRegistry.getInstance()
+                  .getProvider(System.getProperty("os.name", ""))
+                  .get();
+            } catch (IOException e) {
+              throw new MachineIdResolutionException(
+                  "IO Exception occurred while resolving machine ID", e);
+            }
+          });
+
+  public static String getMachineId() {
+    return value.get();
   }
 }

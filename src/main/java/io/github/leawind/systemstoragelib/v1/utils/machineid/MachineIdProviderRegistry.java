@@ -3,14 +3,18 @@ package io.github.leawind.systemstoragelib.v1.utils.machineid;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MachineIdProviderRegistry {
+class MachineIdProviderRegistry {
   private static final MachineIdProviderRegistry INSTANCE = new MachineIdProviderRegistry();
+
+  static MachineIdProviderRegistry getInstance() {
+    return INSTANCE;
+  }
 
   private final Map<String, MachineIdProvider> providers = new HashMap<>();
 
-  public MachineIdProviderRegistry() {}
+  MachineIdProviderRegistry() {}
 
-  public Registrar forKeywords(String... keyword) {
+  Registrar forKeywords(String... keyword) {
     return provider -> {
       for (String k : keyword) {
         providers.put(k, provider);
@@ -18,7 +22,7 @@ public class MachineIdProviderRegistry {
     };
   }
 
-  public MachineIdProvider getProvider(String os) {
+  MachineIdProvider getProvider(String os) {
     os = os.toLowerCase();
     for (Map.Entry<String, MachineIdProvider> entry : providers.entrySet()) {
       if (os.contains(entry.getKey())) {
@@ -28,11 +32,7 @@ public class MachineIdProviderRegistry {
     throw new MachineIdResolutionException("Unsupported OS: " + os);
   }
 
-  public interface Registrar {
+  interface Registrar {
     void register(MachineIdProvider provider);
-  }
-
-  public static MachineIdProviderRegistry getInstance() {
-    return INSTANCE;
   }
 }
