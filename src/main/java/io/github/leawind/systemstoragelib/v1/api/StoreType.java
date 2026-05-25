@@ -40,6 +40,8 @@ public final class StoreType<S extends StorageManager> {
   public static final StoreType<StorageManager> DATA_LOCAL =
       new StoreType<>(StorageManager.class, "data_local", true, StorageManagerImpl::new);
 
+  private static final StoreType<?>[] ALL_VALUES = {CREDENTIALS, CONFIG, DATA, CACHE, DATA_LOCAL};
+
   private final Class<S> clazz;
   private final String identifier;
   private final boolean customizable;
@@ -73,7 +75,7 @@ public final class StoreType<S extends StorageManager> {
   }
 
   public static StoreType<?>[] values() {
-    return new StoreType<?>[] {CREDENTIALS, CONFIG, DATA, CACHE, DATA_LOCAL};
+    return ALL_VALUES.clone();
   }
 
   public static StoreType<?> of(String identifier) {
