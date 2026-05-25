@@ -66,6 +66,8 @@ public interface SystemStorageLib {
 
   /// Creates a {@link SystemStorageLib} instance with the given configuration.
   ///
+  /// Usually for testing.
+  ///
   /// @param config the configuration
   /// @return a new instance
   /// @throws SystemStorageLibException if initialization fails
