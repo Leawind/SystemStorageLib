@@ -120,7 +120,8 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
 
   @Override
   public void delete() throws IOException {
-    MetaConfigManager.super.delete();
+    stopWatching();
+    super.delete();
   }
 
   @Override

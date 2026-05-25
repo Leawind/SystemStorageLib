@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.common.jimfs.Configuration;
@@ -236,9 +235,13 @@ public class MetaConfigManagerTest {
     }
 
     @Test
-    void deleteIsUnsupported() throws IOException {
+    void deleteRemovesDirectory() throws IOException {
       manager.set(createNonDefaultConfig());
-      assertThrows(UnsupportedOperationException.class, () -> manager.delete());
+      assertTrue(Files.isDirectory(manager.getDirPath()));
+
+      manager.delete();
+
+      assertFalse(Files.exists(manager.getDirPath()));
     }
 
     @Test

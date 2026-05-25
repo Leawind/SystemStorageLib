@@ -17,10 +17,4 @@ public interface MetaConfigManager extends StorageManager {
   /// Fired when the configuration value changes.
   /// Either by {@link #set(MetaConfig)} or file changed by external process.
   EventEmitter<MetaConfig> onChanged();
-
-  /// Not supported — always throws `UnsupportedOperationException`.
-  default void delete() throws IOException {
-    throw new UnsupportedOperationException(
-        "Delete meta config directory is unsupported: " + getDirPath());
-  }
 }
