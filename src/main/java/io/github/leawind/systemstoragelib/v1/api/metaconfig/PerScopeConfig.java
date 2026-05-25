@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public record PerScopeConfig(Map<StoreType<?>, Path> customDirs) {
+public final class PerScopeConfig {
   public static final Codec<PerScopeConfig> CODEC =
       RecordCodecBuilder.create(
           inst ->
@@ -20,13 +20,19 @@ public record PerScopeConfig(Map<StoreType<?>, Path> customDirs) {
                           .fieldOf("custom_dirs")
                           .forGetter(PerScopeConfig::customDirs))
                   .apply(inst, PerScopeConfig::new));
+  private final Map<StoreType<?>, Path> customDirs;
 
-  public PerScopeConfig(Map<StoreType<?>, Path> customDirs) {
+  PerScopeConfig(Map<StoreType<?>, Path> customDirs) {
     this.customDirs = new HashMap<>(customDirs);
   }
 
+  public static PerScopeConfig getDefault() {
+    return new PerScopeConfig(new HashMap<>());
+  }
+
+  // region customDirs
+
   /// Returns an unmodifiable view of the custom directory mappings.
-  @Override
   public Map<StoreType<?>, Path> customDirs() {
     return Collections.unmodifiableMap(customDirs);
   }
@@ -97,6 +103,8 @@ public record PerScopeConfig(Map<StoreType<?>, Path> customDirs) {
     customDirs.clear();
   }
 
+  // endregion
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -108,7 +116,8 @@ public record PerScopeConfig(Map<StoreType<?>, Path> customDirs) {
     return Objects.equals(customDirs, ((PerScopeConfig) o).customDirs);
   }
 
-  public static PerScopeConfig getDefault() {
-    return new PerScopeConfig(new HashMap<>());
+  @Override
+  public String toString() {
+    return "PerScopeConfig[" + "customDirs=" + customDirs + ']';
   }
 }
