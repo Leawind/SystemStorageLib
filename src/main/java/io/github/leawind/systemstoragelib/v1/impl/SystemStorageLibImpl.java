@@ -110,7 +110,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
           PerScopeConfig perScopeConfig = newConfig.scopes().get(scope);
           Map<StoreType<?>, Path> customDirs =
-              (perScopeConfig != null) ? perScopeConfig.customDirs() : null;
+              (perScopeConfig != null) ? perScopeConfig.getCustomDirs() : null;
 
           Map<StoreType<?>, Path> newDirMap = new HashMap<>();
           for (StoreType<?> storeType : StoreType.values()) {
@@ -286,7 +286,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
       if (perScope != null) {
         // Override default directories with any custom paths defined for this scope.
         perScope
-            .customDirs()
+            .getCustomDirs()
             .forEach(
                 (storeType, path) -> {
                   if (storeType.customizable()) {

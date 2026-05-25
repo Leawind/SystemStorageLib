@@ -13,6 +13,7 @@ import com.google.gson.JsonElement;
 import com.mojang.serialization.JsonOps;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
+import io.github.leawind.systemstoragelib.v1.api.metaconfig.PerScopeConfig;
 import io.github.leawind.systemstoragelib.v1.impl.SystemStorageLibImpl;
 import io.github.leawind.systemstoragelib.v1.impl.managers.MetaConfigManagerImpl;
 import io.github.leawind.systemstoragelib.v1.impl.metaconfig.MetaConfigImpl;
@@ -61,17 +62,15 @@ public class MetaConfigManagerTest {
 
   private MetaConfig createNonDefaultConfig() {
     MetaConfig config = MetaConfig.getDefault();
-    config
-        .getOrCreateScopeConfig("scope1")
-        .setCustomDir(StoreType.CONFIG, tempDir.resolve("custom/config"));
+    PerScopeConfig perScopeConfig = config.getOrCreateScopeConfig("scope1");
+    perScopeConfig.getCustomDirs().put(StoreType.CONFIG, tempDir.resolve("custom/config"));
     return config;
   }
 
   private MetaConfig createNonDefaultConfig2() {
     MetaConfig config = MetaConfig.getDefault();
-    config
-        .getOrCreateScopeConfig("scope2")
-        .setCustomDir(StoreType.CONFIG, tempDir.resolve("custom/config2"));
+    PerScopeConfig perScopeConfig = config.getOrCreateScopeConfig("scope2");
+    perScopeConfig.getCustomDirs().put(StoreType.CONFIG, tempDir.resolve("custom/config2"));
     return config;
   }
 

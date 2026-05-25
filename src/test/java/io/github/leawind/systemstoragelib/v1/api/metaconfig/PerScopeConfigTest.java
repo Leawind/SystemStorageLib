@@ -30,51 +30,61 @@ public class PerScopeConfigTest {
     @Test
     void storesAndRetrievesViaCustomDirs() {
       PerScopeConfig config = PerScopeConfig.createDefault();
-      config.setCustomDir(StoreType.DATA, FOO);
+      config.getCustomDirs().put(StoreType.DATA, FOO);
 
-      assertEquals(FOO, config.customDirs().get(StoreType.DATA));
+      assertEquals(FOO, config.getCustomDirs().get(StoreType.DATA));
     }
 
     @Test
     void overwritesExistingMapping() {
       PerScopeConfig config = PerScopeConfig.createDefault();
-      config.setCustomDir(StoreType.DATA, FOO);
-      config.setCustomDir(StoreType.DATA, BAR);
+      config.getCustomDirs().put(StoreType.DATA, FOO);
+      config.getCustomDirs().put(StoreType.DATA, BAR);
 
-      assertEquals(BAR, config.customDirs().get(StoreType.DATA));
+      assertEquals(BAR, config.getCustomDirs().get(StoreType.DATA));
     }
 
     @Test
     void throwsForNonCustomizableStoreType() {
       assertThrows(
           IllegalArgumentException.class,
-          () -> PerScopeConfig.createDefault().setCustomDir(StoreType.CREDENTIALS, FOO));
+          () -> {
+            PerScopeConfig perScopeConfig = PerScopeConfig.createDefault();
+            perScopeConfig.getCustomDirs().put(StoreType.CREDENTIALS, FOO);
+          });
     }
 
     @Test
     void throwsForDuplicatePathWithAnotherStoreType() {
       PerScopeConfig config = PerScopeConfig.createDefault();
-      config.setCustomDir(StoreType.DATA, FOO);
+      config.getCustomDirs().put(StoreType.DATA, FOO);
 
       assertThrows(
-          IllegalArgumentException.class, () -> config.setCustomDir(StoreType.CONFIG, FOO));
+          IllegalArgumentException.class, () -> config.getCustomDirs().put(StoreType.CONFIG, FOO));
     }
 
     @Test
     void throwsForDuplicatePathAfterNormalization() {
       PerScopeConfig config = PerScopeConfig.createDefault();
-      config.setCustomDir(StoreType.DATA, FS.getPath("/foo"));
+      Path path1 = FS.getPath("/foo");
+      config.getCustomDirs().put(StoreType.DATA, path1);
 
       assertThrows(
           IllegalArgumentException.class,
-          () -> config.setCustomDir(StoreType.CONFIG, FS.getPath("/bar/../foo")));
+          () -> {
+            Path path = FS.getPath("/bar/../foo");
+            config.getCustomDirs().put(StoreType.CONFIG, path);
+          });
     }
 
     @Test
     void throwsForNullPath() {
       assertThrows(
           NullPointerException.class,
-          () -> PerScopeConfig.createDefault().setCustomDir(StoreType.DATA, null));
+          () -> {
+            PerScopeConfig perScopeConfig = PerScopeConfig.createDefault();
+            perScopeConfig.getCustomDirs().put(StoreType.DATA, null);
+          });
     }
 
     @Test
@@ -82,14 +92,18 @@ public class PerScopeConfigTest {
       Path relative = FS.getPath("relative/path");
       assertThrows(
           IllegalArgumentException.class,
-          () -> PerScopeConfig.createDefault().setCustomDir(StoreType.DATA, relative));
+          () -> {
+            PerScopeConfig perScopeConfig = PerScopeConfig.createDefault();
+            perScopeConfig.getCustomDirs().put(StoreType.DATA, relative);
+          });
     }
 
     @Test
     void normalizesPath() {
       PerScopeConfig config = PerScopeConfig.createDefault();
-      config.setCustomDir(StoreType.DATA, FS.getPath("/foo/../foo"));
-      assertEquals(FS.getPath("/foo"), config.customDirs().get(StoreType.DATA));
+      Path path = FS.getPath("/foo/../foo");
+      config.getCustomDirs().put(StoreType.DATA, path);
+      assertEquals(FS.getPath("/foo"), config.getCustomDirs().get(StoreType.DATA));
     }
   }
 
@@ -105,42 +119,42 @@ public class PerScopeConfigTest {
 
       config.setCustomDirs(dirs);
 
-      assertEquals(2, config.customDirs().size());
-      assertEquals(FOO, config.customDirs().get(StoreType.DATA));
-      assertEquals(BAR, config.customDirs().get(StoreType.CONFIG));
+      assertEquals(2, config.getCustomDirs().size());
+      assertEquals(FOO, config.getCustomDirs().get(StoreType.DATA));
+      assertEquals(BAR, config.getCustomDirs().get(StoreType.CONFIG));
     }
 
     @Test
     void overwritesExistingMappings() {
       PerScopeConfig config = PerScopeConfig.createDefault();
-      config.setCustomDir(StoreType.DATA, FOO);
-      config.setCustomDir(StoreType.CONFIG, BAR);
+      config.getCustomDirs().put(StoreType.DATA, FOO);
+      config.getCustomDirs().put(StoreType.CONFIG, BAR);
 
       Map<StoreType<?>, Path> dirs = new HashMap<>();
       dirs.put(StoreType.DATA, BAR);
       config.setCustomDirs(dirs);
 
-      assertEquals(1, config.customDirs().size());
-      assertEquals(BAR, config.customDirs().get(StoreType.DATA));
+      assertEquals(1, config.getCustomDirs().size());
+      assertEquals(BAR, config.getCustomDirs().get(StoreType.DATA));
     }
 
     @Test
     void replacesAllMappings() {
       PerScopeConfig config = PerScopeConfig.createDefault();
-      config.setCustomDir(StoreType.DATA, FOO);
+      config.getCustomDirs().put(StoreType.DATA, FOO);
 
       Map<StoreType<?>, Path> dirs = new HashMap<>();
       dirs.put(StoreType.CONFIG, BAR);
       config.setCustomDirs(dirs);
 
-      assertEquals(1, config.customDirs().size());
-      assertFalse(config.customDirs().containsKey(StoreType.DATA));
+      assertEquals(1, config.getCustomDirs().size());
+      assertFalse(config.getCustomDirs().containsKey(StoreType.DATA));
     }
 
     @Test
     void isAtomicOnFailure() {
       PerScopeConfig config = PerScopeConfig.createDefault();
-      config.setCustomDir(StoreType.DATA, FOO);
+      config.getCustomDirs().put(StoreType.DATA, FOO);
 
       Map<StoreType<?>, Path> dirs = new HashMap<>();
       dirs.put(StoreType.CONFIG, BAR);
@@ -148,8 +162,8 @@ public class PerScopeConfigTest {
 
       assertThrows(IllegalArgumentException.class, () -> config.setCustomDirs(dirs));
       // DATA should retain its original value, CONFIG should not have been set
-      assertEquals(FOO, config.customDirs().get(StoreType.DATA));
-      assertFalse(config.customDirs().containsKey(StoreType.CONFIG));
+      assertEquals(FOO, config.getCustomDirs().get(StoreType.DATA));
+      assertFalse(config.getCustomDirs().containsKey(StoreType.CONFIG));
     }
 
     @Test
@@ -188,18 +202,18 @@ public class PerScopeConfigTest {
     @Test
     void removesMapping() {
       PerScopeConfig config = PerScopeConfig.createDefault();
-      config.setCustomDir(StoreType.DATA, FOO);
-      config.unsetCustomDir(StoreType.DATA);
+      config.getCustomDirs().put(StoreType.DATA, FOO);
+      config.getCustomDirs().remove(StoreType.DATA);
 
-      assertFalse(config.customDirs().containsKey(StoreType.DATA));
+      assertFalse(config.getCustomDirs().containsKey(StoreType.DATA));
     }
 
     @Test
     void doesNothingForNonExistentMapping() {
       PerScopeConfig config = PerScopeConfig.createDefault();
-      config.unsetCustomDir(StoreType.DATA);
+      config.getCustomDirs().remove(StoreType.DATA);
 
-      assertTrue(config.customDirs().isEmpty());
+      assertTrue(config.getCustomDirs().isEmpty());
     }
   }
 
@@ -209,11 +223,11 @@ public class PerScopeConfigTest {
     @Test
     void clearsAllMappings() {
       PerScopeConfig config = PerScopeConfig.createDefault();
-      config.setCustomDir(StoreType.DATA, FOO);
-      config.setCustomDir(StoreType.CONFIG, BAR);
-      config.resetCustomDirs();
+      config.getCustomDirs().put(StoreType.DATA, FOO);
+      config.getCustomDirs().put(StoreType.CONFIG, BAR);
+      config.getCustomDirs().clear();
 
-      assertTrue(config.customDirs().isEmpty());
+      assertTrue(config.getCustomDirs().isEmpty());
     }
   }
 
@@ -221,15 +235,8 @@ public class PerScopeConfigTest {
   class CustomDirs {
 
     @Test
-    void returnsUnmodifiableMap() {
-      PerScopeConfig config = PerScopeConfig.createDefault();
-      assertThrows(
-          UnsupportedOperationException.class, () -> config.customDirs().put(StoreType.DATA, FOO));
-    }
-
-    @Test
     void emptyByDefault() {
-      assertTrue(PerScopeConfig.createDefault().customDirs().isEmpty());
+      assertTrue(PerScopeConfig.createDefault().getCustomDirs().isEmpty());
     }
   }
 
@@ -244,7 +251,7 @@ public class PerScopeConfigTest {
 
       mutableMap.put(StoreType.DATA, BAR);
 
-      assertEquals(FOO, config.customDirs().get(StoreType.DATA));
+      assertEquals(FOO, config.getCustomDirs().get(StoreType.DATA));
     }
   }
 
@@ -254,9 +261,9 @@ public class PerScopeConfigTest {
     @Test
     void equalWhenCustomDirsEqual() {
       PerScopeConfig a = PerScopeConfig.createDefault();
-      a.setCustomDir(StoreType.DATA, FOO);
+      a.getCustomDirs().put(StoreType.DATA, FOO);
       PerScopeConfig b = PerScopeConfig.createDefault();
-      b.setCustomDir(StoreType.DATA, FOO);
+      b.getCustomDirs().put(StoreType.DATA, FOO);
 
       assertEquals(a, b);
       assertEquals(a.hashCode(), b.hashCode());
@@ -265,9 +272,9 @@ public class PerScopeConfigTest {
     @Test
     void notEqualWhenCustomDirsDiffer() {
       PerScopeConfig a = PerScopeConfig.createDefault();
-      a.setCustomDir(StoreType.DATA, FOO);
+      a.getCustomDirs().put(StoreType.DATA, FOO);
       PerScopeConfig b = PerScopeConfig.createDefault();
-      b.setCustomDir(StoreType.DATA, BAR);
+      b.getCustomDirs().put(StoreType.DATA, BAR);
 
       assertNotEquals(a, b);
     }
@@ -275,7 +282,7 @@ public class PerScopeConfigTest {
     @Test
     void notEqualWhenOneHasMoreMappings() {
       PerScopeConfig a = PerScopeConfig.createDefault();
-      a.setCustomDir(StoreType.DATA, FOO);
+      a.getCustomDirs().put(StoreType.DATA, FOO);
       PerScopeConfig b = PerScopeConfig.createDefault();
 
       assertNotEquals(a, b);
@@ -289,7 +296,7 @@ public class PerScopeConfigTest {
     void returnsConfigWithEmptyCustomDirs() {
       PerScopeConfig config = PerScopeConfig.createDefault();
       assertNotNull(config);
-      assertTrue(config.customDirs().isEmpty());
+      assertTrue(config.getCustomDirs().isEmpty());
     }
 
     @Test

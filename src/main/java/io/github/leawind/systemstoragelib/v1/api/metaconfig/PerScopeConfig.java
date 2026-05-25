@@ -14,17 +14,22 @@ public interface PerScopeConfig {
 
   // region customDirs
 
-  /// Returns an unmodifiable view of the custom directory mappings.
-  Map<StoreType<?>, Path> customDirs();
-
-  /// Associates a custom directory path with a store type.
+  /// Returns the custom directory mappings for this scope.
   ///
-  /// @param storeType the store type to configure
-  /// @param path the custom directory path, must be non-null and absolute
-  /// @throws NullPointerException if {@code path} is null
-  /// @throws IllegalArgumentException if {@code path} is not absolute, {@code storeType} is not
-  ///     customizable, or the path is already assigned to another store type
-  void setCustomDir(StoreType<?> storeType, Path path);
+  /// The returned map is mutable and can be modified directly. However, it differs
+  /// from a regular `Map` in the following ways:
+  ///
+  /// - `put(StoreType, Path)` throws `IllegalArgumentException` if:
+  ///   - the store type is not customizable (e.g., `StoreType.CREDENTIALS`)
+  ///   - the path is not absolute
+  ///   - the path is already assigned to another store type (after normalization)
+  /// - `put(StoreType, Path)` throws `NullPointerException` if the path is null
+  /// - `putAll(Map)` validates all entries first and applies them atomically;
+  ///   if any entry fails validation, none are applied
+  /// - Paths are normalized before being stored
+  ///
+  /// @return the custom directory mappings
+  Map<StoreType<?>, Path> getCustomDirs();
 
   /// Replaces all custom directory mappings with the given entries.
   ///
@@ -35,12 +40,6 @@ public interface PerScopeConfig {
   /// @throws IllegalArgumentException if any path is not absolute, any store type is not
   ///     customizable, or any two store types share the same path
   void setCustomDirs(Map<StoreType<?>, Path> dirs);
-
-  /// Removes the custom directory mapping for a store type, reverting to the default.
-  void unsetCustomDir(StoreType<?> storeType);
-
-  /// Removes all custom directory mappings.
-  void resetCustomDirs();
 
   // endregion
 }
