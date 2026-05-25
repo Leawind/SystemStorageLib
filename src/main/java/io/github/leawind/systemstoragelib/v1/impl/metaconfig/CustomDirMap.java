@@ -1,5 +1,6 @@
 package io.github.leawind.systemstoragelib.v1.impl.metaconfig;
 
+import io.github.leawind.inventory.util.ValidatingHashMap;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.utils.MapUtils;
 import java.nio.file.Path;
@@ -7,10 +8,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class CustomDirMap extends HashMap<StoreType<?>, Path> {
+public class CustomDirMap extends ValidatingHashMap<StoreType<?>, Path> {
+
   @Override
-  public Path put(StoreType<?> storeType, Path path)
-      throws IllegalArgumentException, NullPointerException {
+  public void validateEntry(StoreType<?> storeType, Path path) {
     Objects.requireNonNull(path, "custom directory path must not be null");
 
     if (!storeType.customizable()) {
@@ -20,42 +21,28 @@ public class CustomDirMap extends HashMap<StoreType<?>, Path> {
     if (!path.isAbsolute()) {
       throw new IllegalArgumentException("Custom directory path must be absolute: " + path);
     }
+  }
 
+  @Override
+  public void validateMap(Map<? extends StoreType<?>, ? extends Path> m) {
+    super.validateMap(m);
+    MapUtils.requireUniqueValues(m, (k, v) -> v.normalize(), "custom directory path");
+  }
+
+  @Override
+  public Path put(StoreType<?> storeType, Path path) {
     Path normalized = path.normalize();
-
-    boolean conflict =
-        entrySet().stream()
-            .anyMatch(e -> !e.getKey().equals(storeType) && e.getValue().equals(normalized));
-    if (conflict) {
-      throw new IllegalArgumentException(
-          "Custom directory path is already assigned to another store type: " + normalized);
+    if (containsValue(normalized)) {
+      throw new IllegalArgumentException("Custom directory path must be unique: " + path);
     }
 
     return super.put(storeType, normalized);
   }
 
   @Override
-  public void putAll(Map<? extends StoreType<?>, ? extends Path> dirs)
-      throws IllegalArgumentException, NullPointerException {
-    Objects.requireNonNull(dirs, "dirs must not be null");
-
-    Map<StoreType<?>, Path> tempMap = new HashMap<>(this);
-    tempMap.putAll(dirs);
-    tempMap.forEach(
-        (storeType, path) -> {
-          Objects.requireNonNull(path, "custom directory path must not be null");
-
-          if (!storeType.customizable()) {
-            throw new IllegalArgumentException(
-                "Store type is not customizable: " + storeType.identifier());
-          }
-          if (!path.isAbsolute()) {
-            throw new IllegalArgumentException("Custom directory path must be absolute: " + path);
-          }
-        });
-
-    MapUtils.requireUniqueValues(tempMap, (k, v) -> v.normalize(), "custom directory path");
-
-    super.putAll(dirs);
+  public void putAll(Map<? extends StoreType<?>, ? extends Path> m) {
+    var mutable = new HashMap<StoreType<?>, Path>(m);
+    mutable.replaceAll((storeType, path) -> (path).normalize());
+    super.putAll(mutable);
   }
 }

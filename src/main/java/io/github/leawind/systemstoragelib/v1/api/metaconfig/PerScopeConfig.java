@@ -16,16 +16,14 @@ public interface PerScopeConfig {
 
   /// Returns the custom directory mappings for this scope.
   ///
-  /// The returned map is mutable and can be modified directly. However, it differs
-  /// from a regular `Map` in the following ways:
+  /// The returned map is mutable and can be modified directly.
   ///
-  /// - `put(StoreType, Path)` throws `IllegalArgumentException` if:
-  ///   - the store type is not customizable (e.g., `StoreType.CREDENTIALS`)
-  ///   - the path is not absolute
-  ///   - the path is already assigned to another store type (after normalization)
-  /// - `put(StoreType, Path)` throws `NullPointerException` if the path is null
-  /// - `putAll(Map)` validates all entries first and applies them atomically;
-  ///   if any entry fails validation, none are applied
+  /// However, it differs from a regular `Map`, it validates all entries atomically.
+  ///
+  /// - the store type must be customizable ({@link StoreType#customizable()})
+  /// - the path must be absolute ({@link Path#isAbsolute()})
+  /// - the path must be unique in the map
+  ///
   /// - Paths are normalized before being stored
   ///
   /// @return the custom directory mappings

@@ -66,8 +66,7 @@ public class PerScopeConfigTest {
     @Test
     void throwsForDuplicatePathAfterNormalization() {
       PerScopeConfig config = PerScopeConfig.createDefault();
-      Path path1 = FS.getPath("/foo");
-      config.getCustomDirs().put(StoreType.DATA, path1);
+      config.getCustomDirs().put(StoreType.DATA, FS.getPath("/foo"));
 
       assertThrows(
           IllegalArgumentException.class,
@@ -156,11 +155,10 @@ public class PerScopeConfigTest {
       PerScopeConfig config = PerScopeConfig.createDefault();
       config.getCustomDirs().put(StoreType.DATA, FOO);
 
-      Map<StoreType<?>, Path> dirs = new HashMap<>();
-      dirs.put(StoreType.CONFIG, BAR);
-      dirs.put(StoreType.CREDENTIALS, BAR); // not customizable
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> config.setCustomDirs(Map.of(StoreType.CONFIG, BAR, StoreType.DATA_LOCAL, BAR)));
 
-      assertThrows(IllegalArgumentException.class, () -> config.setCustomDirs(dirs));
       // DATA should retain its original value, CONFIG should not have been set
       assertEquals(FOO, config.getCustomDirs().get(StoreType.DATA));
       assertFalse(config.getCustomDirs().containsKey(StoreType.CONFIG));

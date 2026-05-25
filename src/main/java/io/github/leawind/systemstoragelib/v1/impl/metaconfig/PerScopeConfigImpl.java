@@ -19,7 +19,7 @@ public final class PerScopeConfigImpl implements PerScopeConfig {
                           .forGetter(PerScopeConfig::getCustomDirs))
                   .apply(inst, PerScopeConfigImpl::new));
 
-  private final Map<StoreType<?>, Path> customDirs = new CustomDirMap();
+  private final CustomDirMap customDirs = new CustomDirMap();
 
   public PerScopeConfigImpl(Map<StoreType<?>, Path> customDirs) {
     this.customDirs.putAll(customDirs);
@@ -33,9 +33,10 @@ public final class PerScopeConfigImpl implements PerScopeConfig {
   }
 
   @Override
-  public void setCustomDirs(Map<StoreType<?>, Path> dirs) {
+  public void setCustomDirs(Map<StoreType<?>, Path> m) {
+    customDirs.validateMap(m);
     customDirs.clear();
-    customDirs.putAll(dirs);
+    customDirs.putAll(m);
   }
 
   // endregion
