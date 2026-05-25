@@ -108,10 +108,14 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
     }
   }
 
-  /// @throws CredentialIntegrityException if the file is corrupted
+  /// Retrieves the decrypted value for the given key.
+  ///
+  /// @param key the key to look up
+  /// @return the decrypted value, or `null` if the key does not exist
+  /// @throws CredentialIntegrityException if the credential file is corrupted,
+  ///         tampered with, or an I/O error occurs during reading
   @Override
-  public @Nullable String get(@NonNull String key)
-      throws CredentialIntegrityException, IOException {
+  public @Nullable String get(@NonNull String key) throws CredentialIntegrityException {
     validateKey(key);
     Path filePath = keyToFilePath(key);
     if (!Files.exists(filePath)) {
@@ -121,15 +125,17 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
     try (UncheckedCloseable ignored = LockUtils.lock(getLock().readLock())) {
       byte[] fileContent = Files.readAllBytes(filePath);
       validateFileSize(fileContent, filePath);
-      byte[] plaintext = decryptFileContent(fileContent, filePath);
+      byte[] plaintext = decryptFileContent(fileContent);
       return new String(plaintext, StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      throw new CredentialIntegrityException("Failed to read credential file: " + filePath, e);
     } catch (InvalidAlgorithmParameterException
         | NoSuchPaddingException
         | IllegalBlockSizeException
         | NoSuchAlgorithmException
         | BadPaddingException
         | InvalidKeyException e) {
-      throw new RuntimeException(e);
+      throw new CredentialIntegrityException("Failed to decrypt credential file: " + filePath, e);
     }
   }
 
@@ -231,7 +237,7 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
   }
 
   /// @throws CredentialIntegrityException if the version is unsupported
-  private byte[] decryptFileContent(byte[] fileContent, Path filePath)
+  private byte[] decryptFileContent(byte[] fileContent)
       throws CredentialIntegrityException,
           NoSuchPaddingException,
           NoSuchAlgorithmException,
@@ -241,8 +247,7 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
           BadPaddingException {
     byte version = fileContent[0];
     if (version != FORMAT_VERSION) {
-      throw new CredentialIntegrityException(
-          "Unsupported format version: " + version + " in file: " + filePath);
+      throw new CredentialIntegrityException("Unsupported format version: " + version);
     }
 
     byte[] iv = new byte[IV_LENGTH];

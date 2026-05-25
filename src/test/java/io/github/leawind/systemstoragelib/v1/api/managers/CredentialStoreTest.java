@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.github.leawind.systemstoragelib.v1.api.exception.CredentialIntegrityException;
 import io.github.leawind.systemstoragelib.v1.impl.managers.CredentialStoreImpl;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -39,7 +40,7 @@ public class CredentialStoreTest {
   }
 
   @Test
-  void testGetNonExistent() throws IOException {
+  void testGetNonExistent() {
     assertNull(store.get("non_existent_key"));
   }
 
@@ -163,7 +164,7 @@ public class CredentialStoreTest {
                 }
               });
     }
-    assertThrows(RuntimeException.class, () -> store.get("corrupt_key"));
+    assertThrows(CredentialIntegrityException.class, () -> store.get("corrupt_key"));
   }
 
   @Test
