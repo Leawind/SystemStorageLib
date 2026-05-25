@@ -80,12 +80,12 @@ public class SystemStorageLibImpl implements SystemStorageLib {
     logger = new SystemLogger(logManager, "");
     metaConfig = new MetaConfigManagerImpl(logger, metaConfigDir);
     // Listen for external changes to meta config and update scope storage paths accordingly.
-    metaConfig.onChanged().on(this::onUpdateMetaConfig);
+    metaConfig.onChanged().on(this::handleMetaConfigChanged);
 
     detectScopes();
   }
 
-  private void onUpdateMetaConfig(MetaConfig newConfig) {
+  private void handleMetaConfigChanged(MetaConfig newConfig) {
     // Phase 1: Compute and validate all changes across all scopes.
     Map<ScopeStorage, Map<StoreType<?>, Path>> pendingChanges = new HashMap<>();
 
