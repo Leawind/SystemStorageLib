@@ -74,6 +74,11 @@ public final class StoreType<S extends StorageManager> {
     return customizable;
   }
 
+  @Override
+  public String toString() {
+    return identifier;
+  }
+
   public static StoreType<?>[] values() {
     return ALL_VALUES.clone();
   }
