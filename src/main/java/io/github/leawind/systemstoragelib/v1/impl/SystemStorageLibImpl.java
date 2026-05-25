@@ -86,6 +86,9 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   }
 
   private void onUpdateMetaConfig(MetaConfig newConfig) {
+    // Phase 1: Compute and validate all changes across all scopes.
+    Map<ScopeStorage, Map<StoreType<?>, Path>> pendingChanges = new HashMap<>();
+
     scopes.forEach(
         (scope, scopeOpt) -> {
           if (scopeOpt.isEmpty()) {
@@ -97,12 +100,10 @@ public class SystemStorageLibImpl implements SystemStorageLib {
           Map<StoreType<?>, Path> customDirs =
               (perScopeConfig != null) ? perScopeConfig.customDirs() : null;
 
-          // First pass: compute all new paths and validate uniqueness
           Map<StoreType<?>, Path> newDirMap = new HashMap<>();
           for (StoreType<?> storeType : StoreType.values()) {
             Path newDirPath = (customDirs != null) ? customDirs.get(storeType) : null;
 
-            // Non-customizable store types ignore custom path configurations
             if (newDirPath != null && !storeType.customizable()) {
               logger()
                   .error(
@@ -113,14 +114,12 @@ public class SystemStorageLibImpl implements SystemStorageLib {
             }
 
             if (newDirPath == null) {
-              // Not in config, use default
               newDirPath = defaultScopedDirs.get(storeType).resolve(scope);
             }
 
             newDirMap.put(storeType, newDirPath);
           }
 
-          // Validate that all store type dirs are unique
           try {
             MapUtils.requireUniqueValues(newDirMap, "dir path for each StoreType");
           } catch (IllegalArgumentException e) {
@@ -132,36 +131,38 @@ public class SystemStorageLibImpl implements SystemStorageLib {
             return;
           }
 
-          // Second pass: apply changes
-          for (Map.Entry<StoreType<?>, Path> entry : newDirMap.entrySet()) {
-            StoreType<?> storeType = entry.getKey();
-            Path newDirPath = entry.getValue();
-
-            try {
-              StorageManager manager = scopeStorage.storage(storeType);
-              if (manager.getDirPath().equals(newDirPath)) {
-                continue;
-              }
-
-              logger()
-                  .info(
-                      "Updating dir path for scope `{}`, store type `{}` from `{}` to `{}`",
-                      scope,
-                      storeType,
-                      manager.getDirPath(),
-                      newDirPath);
-
-              manager.setDirPath(newDirPath);
-            } catch (Exception e) {
-              logger()
-                  .warn(
-                      "Failed to update dir path for scope `{}`, store type `{}`: `{}`",
-                      scope,
-                      storeType,
-                      e.getMessage());
-            }
-          }
+          pendingChanges.put(scopeStorage, newDirMap);
         });
+
+    // Phase 2: Apply all validated changes.
+    pendingChanges.forEach(
+        (scopeStorage, newDirMap) ->
+            newDirMap.forEach(
+                (storeType, newDirPath) -> {
+                  try {
+                    StorageManager manager = scopeStorage.storage(storeType);
+                    if (manager.getDirPath().equals(newDirPath)) {
+                      return;
+                    }
+
+                    logger()
+                        .info(
+                            "Updating dir path for scope `{}`, store type `{}` from `{}` to `{}`",
+                            scopeStorage.scope(),
+                            storeType,
+                            manager.getDirPath(),
+                            newDirPath);
+
+                    manager.setDirPath(newDirPath);
+                  } catch (Exception e) {
+                    logger()
+                        .warn(
+                            "Failed to update dir path for scope `{}`, store type `{}`: `{}`",
+                            scopeStorage.scope(),
+                            storeType,
+                            e.getMessage());
+                  }
+                }));
   }
 
   private static void validateDirs(Map<StoreType<?>, Path> scopedDirs)
