@@ -108,7 +108,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
           }
           ScopeStorage scopeStorage = scopeOpt.get();
 
-          PerScopeConfig perScopeConfig = newConfig.getScopeConfig(scope);
+          PerScopeConfig perScopeConfig = newConfig.scopes().get(scope);
           Map<StoreType<?>, Path> customDirs =
               (perScopeConfig != null) ? perScopeConfig.customDirs() : null;
 
@@ -282,7 +282,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
     try {
       // Load meta configuration which may contain per‑scope custom directory mappings.
       MetaConfig meta = metaConfig.get();
-      PerScopeConfig perScope = meta.getScopeConfig(scope);
+      PerScopeConfig perScope = meta.scopes().get(scope);
       if (perScope != null) {
         // Override default directories with any custom paths defined for this scope.
         perScope

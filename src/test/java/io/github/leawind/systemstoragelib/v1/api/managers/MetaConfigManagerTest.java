@@ -15,6 +15,7 @@ import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
 import io.github.leawind.systemstoragelib.v1.impl.SystemStorageLibImpl;
 import io.github.leawind.systemstoragelib.v1.impl.managers.MetaConfigManagerImpl;
+import io.github.leawind.systemstoragelib.v1.impl.metaconfig.MetaConfigImpl;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
@@ -184,7 +185,7 @@ public class MetaConfigManagerTest {
 
     private String toJson(MetaConfig config) {
       JsonElement element =
-          MetaConfig.CODEC.encodeStart(JsonOps.INSTANCE, config).result().orElseThrow();
+          MetaConfigImpl.CODEC.encodeStart(JsonOps.INSTANCE, config).result().orElseThrow();
       return GSON.toJson(element);
     }
 

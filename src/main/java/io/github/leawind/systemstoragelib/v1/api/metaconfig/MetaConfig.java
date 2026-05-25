@@ -1,76 +1,19 @@
 package io.github.leawind.systemstoragelib.v1.api.metaconfig;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
-import io.github.leawind.systemstoragelib.v1.impl.metaconfig.PerScopeConfigImpl;
-import java.util.Collections;
+import io.github.leawind.systemstoragelib.v1.impl.metaconfig.MetaConfigImpl;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import org.jspecify.annotations.Nullable;
 
-public final class MetaConfig {
-
-  public static final Codec<MetaConfig> CODEC =
-      RecordCodecBuilder.create(
-          inst ->
-              inst.group(
-                      Codec.unboundedMap(Codec.STRING, PerScopeConfigImpl.CODEC)
-                          .fieldOf("scopes")
-                          .forGetter(MetaConfig::getScopesConfig))
-                  .apply(inst, MetaConfig::new));
-
-  private final Map<String, PerScopeConfig> scopesConfig;
-
-  // region Codec Methods
-
-  private MetaConfig(Map<String, PerScopeConfig> scopes) {
-    this.scopesConfig = new HashMap<>(scopes);
+public interface MetaConfig {
+  static MetaConfig getDefault() {
+    return new MetaConfigImpl(new HashMap<>());
   }
 
-  private Map<String, PerScopeConfig> getScopesConfig() {
-    return scopesConfig;
-  }
+  // region scopes
+
+  Map<String, PerScopeConfig> scopes();
+
+  PerScopeConfig getOrCreateScopeConfig(String scopeName);
 
   // endregion
-
-  public Set<String> scopeSet() {
-    return Collections.unmodifiableSet(scopesConfig.keySet());
-  }
-
-  public Set<Map.Entry<String, PerScopeConfig>> entrySet() {
-    return Collections.unmodifiableSet(scopesConfig.entrySet());
-  }
-
-  public @Nullable PerScopeConfig getScopeConfig(String scopeName) {
-    return scopesConfig.get(scopeName);
-  }
-
-  public PerScopeConfig getOrCreateScopeConfig(String scopeName) {
-    return scopesConfig.computeIfAbsent(scopeName, ignored -> PerScopeConfig.createDefault());
-  }
-
-  public void removeScopeConfig(String scopeName) {
-    scopesConfig.remove(scopeName);
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (!(o instanceof MetaConfig)) {
-      return false;
-    }
-    return scopesConfig.equals(((MetaConfig) o).scopesConfig);
-  }
-
-  @Override
-  public int hashCode() {
-    return scopesConfig.hashCode();
-  }
-
-  public static MetaConfig getDefault() {
-    return new MetaConfig(new HashMap<>());
-  }
 }

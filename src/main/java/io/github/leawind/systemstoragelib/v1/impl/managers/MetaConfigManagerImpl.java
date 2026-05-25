@@ -11,6 +11,7 @@ import io.github.leawind.inventory.lock.LockUtils;
 import io.github.leawind.inventory.misc.UncheckedCloseable;
 import io.github.leawind.systemstoragelib.v1.api.managers.MetaConfigManager;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
+import io.github.leawind.systemstoragelib.v1.impl.metaconfig.MetaConfigImpl;
 import io.github.leawind.systemstoragelib.v1.utils.AtomicFileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -97,7 +98,7 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
       this.config = config;
       Files.createDirectories(getDirPath());
 
-      DataResult<JsonElement> result = MetaConfig.CODEC.encodeStart(JsonOps.INSTANCE, config);
+      DataResult<JsonElement> result = MetaConfigImpl.CODEC.encodeStart(JsonOps.INSTANCE, config);
       Optional<JsonElement> encoded = result.result();
       if (encoded.isEmpty()) {
         logger().warn("Failed to encode meta config: {}", result.error().orElse(null));
@@ -171,7 +172,8 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
         return null;
       }
 
-      DataResult<MetaConfig> parsedResult = MetaConfig.CODEC.parse(JsonOps.INSTANCE, jsonElement);
+      DataResult<MetaConfig> parsedResult =
+          MetaConfigImpl.CODEC.parse(JsonOps.INSTANCE, jsonElement);
       Optional<MetaConfig> parsed = parsedResult.result();
       if (parsed.isPresent()) {
         config = parsed.get();
