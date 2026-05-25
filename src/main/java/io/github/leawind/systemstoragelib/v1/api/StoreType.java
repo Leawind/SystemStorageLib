@@ -79,20 +79,14 @@ public final class StoreType<S extends StorageManager> {
   }
 
   public static StoreType<?> of(String identifier) {
-    switch (identifier) {
-      case "credentials":
-        return CREDENTIALS;
-      case "config":
-        return CONFIG;
-      case "data":
-        return DATA;
-      case "cache":
-        return CACHE;
-      case "data_local":
-        return DATA_LOCAL;
-      default:
-        throw new IllegalArgumentException("Unknown store type: " + identifier);
-    }
+    return switch (identifier) {
+      case "credentials" -> CREDENTIALS;
+      case "config" -> CONFIG;
+      case "data" -> DATA;
+      case "cache" -> CACHE;
+      case "data_local" -> DATA_LOCAL;
+      default -> throw new IllegalArgumentException("Unknown store type: " + identifier);
+    };
   }
 
   public static final class Utils {

@@ -72,10 +72,10 @@ final class MachineIdProviderImpl {
 
               String id = "";
               if (Files.exists(primary)) {
-                id = new String(Files.readAllBytes(primary), StandardCharsets.UTF_8).trim();
+                id = Files.readString(primary).trim();
               }
               if (id.isEmpty() && Files.exists(fallback)) {
-                id = new String(Files.readAllBytes(fallback), StandardCharsets.UTF_8).trim();
+                id = Files.readString(fallback).trim();
               }
 
               if (id.isEmpty()) {
