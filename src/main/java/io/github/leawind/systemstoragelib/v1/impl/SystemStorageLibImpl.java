@@ -65,18 +65,30 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   /// - config: `/home/Steve/.config/mc_system_storage/config`.
   /// - data: `/home/Steve/.local/share/mc_system_storage/data`.
   ///
+  /// #### `maxLogFileSize`
+  ///
+  /// Maximum size of a log file in bytes before rotation.
+  ///
+  /// #### `maxLogArchiveFiles`
+  ///
+  /// Maximum number of rotated archive log files.
+  ///
   /// ### Throws {@link IllegalArgumentException}
   ///
   /// - If `scopedDirs` does not contain all {@link StoreType}.
   /// - If any value in `scopedDirs` is not unique.
   public SystemStorageLibImpl(
-      Path logsDir, Path metaConfigDir, Map<StoreType<?>, Path> defaultScopedDirs) {
+      Path logsDir,
+      Path metaConfigDir,
+      Map<StoreType<?>, Path> defaultScopedDirs,
+      long maxLogFileSize,
+      int maxLogArchiveFiles) {
     validateDirs(defaultScopedDirs);
 
     this.logsDir = logsDir;
     this.defaultScopedDirs = new HashMap<>(defaultScopedDirs);
 
-    logManager = new LogManager(logsDir, 10 * 1024 * 1024, 10);
+    logManager = new LogManager(logsDir, maxLogFileSize, maxLogArchiveFiles);
     logger = new SystemLogger(logManager, "");
     metaConfig = new MetaConfigManagerImpl(logger, metaConfigDir);
     // Listen for external changes to meta config and update scope storage paths accordingly.

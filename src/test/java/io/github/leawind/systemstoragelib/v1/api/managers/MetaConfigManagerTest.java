@@ -50,7 +50,9 @@ public class MetaConfigManagerTest {
   }
 
   private MetaConfigManager createManager(Path metaConfigDir) {
-    return new SystemStorageLibImpl(tempDir.resolve("logs"), metaConfigDir, allDirs()).metaConfig();
+    return new SystemStorageLibImpl(
+            tempDir.resolve("logs"), metaConfigDir, allDirs(), 10 * 1024 * 1024, 10)
+        .metaConfig();
   }
 
   private Path configFilePath() {

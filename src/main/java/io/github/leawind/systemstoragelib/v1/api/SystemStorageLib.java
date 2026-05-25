@@ -1,6 +1,8 @@
 package io.github.leawind.systemstoragelib.v1.api;
 
+import io.github.leawind.systemstoragelib.v1.api.exception.SystemStorageLibException;
 import io.github.leawind.systemstoragelib.v1.api.managers.MetaConfigManager;
+import io.github.leawind.systemstoragelib.v1.impl.SystemStorageLibImpl;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 import org.jspecify.annotations.Nullable;
@@ -53,15 +55,27 @@ public interface SystemStorageLib {
   /// @return the absolute path to the logs directory
   Path getLogsDir();
 
-  /// Returns the singleton {@link SystemStorageLib} instance.
+  /// Returns the singleton {@link SystemStorageLib} instance
+  /// using platform-default directories.
   ///
   /// @return the singleton instance
-  /// @throws IllegalStateException if initialization failed (check previous log output)
+  /// @throws SystemStorageLibException if initialization failed
   static SystemStorageLib getInstance() {
-    if (SystemStorageLibHolder.INSTANCE == null) {
-      throw new IllegalStateException(
-          "SystemStorageLib failed to initialize. Check previous log output for details.");
-    }
-    return SystemStorageLibHolder.INSTANCE;
+    return SystemStorageLibHolder.getInstance();
+  }
+
+  /// Creates a {@link SystemStorageLib} instance with the given configuration.
+  ///
+  /// @param config the configuration
+  /// @return a new instance
+  /// @throws SystemStorageLibException if initialization fails
+  /// @throws IllegalArgumentException if the configuration is invalid
+  static SystemStorageLib create(SystemStorageLibConfig config) {
+    return new SystemStorageLibImpl(
+        config.logsDir(),
+        config.metaConfigDir(),
+        config.scopedDirs(),
+        config.maxLogFileSize(),
+        config.maxLogArchiveFiles());
   }
 }

@@ -39,7 +39,7 @@ public class SystemStorageLibImplTest {
 
   private SystemStorageLibImpl createImpl() {
     return new SystemStorageLibImpl(
-        tempDir.resolve("logs"), tempDir.resolve("metaconfig"), allDirs());
+        tempDir.resolve("logs"), tempDir.resolve("metaconfig"), allDirs(), 10 * 1024 * 1024, 10);
   }
 
   @Nested
@@ -58,7 +58,11 @@ public class SystemStorageLibImplTest {
               IllegalArgumentException.class,
               () ->
                   new SystemStorageLibImpl(
-                      tempDir.resolve("logs"), tempDir.resolve("metaconfig"), dirs));
+                      tempDir.resolve("logs"),
+                      tempDir.resolve("metaconfig"),
+                      dirs,
+                      10 * 1024 * 1024,
+                      10));
       assertTrue(ex.getMessage().contains("Missing StoreTypes"));
     }
 
@@ -76,7 +80,11 @@ public class SystemStorageLibImplTest {
               IllegalArgumentException.class,
               () ->
                   new SystemStorageLibImpl(
-                      tempDir.resolve("logs"), tempDir.resolve("metaconfig"), dirs));
+                      tempDir.resolve("logs"),
+                      tempDir.resolve("metaconfig"),
+                      dirs,
+                      10 * 1024 * 1024,
+                      10));
       assertTrue(ex.getMessage().contains("dir for each StoreType must be unique"));
     }
 
@@ -86,7 +94,11 @@ public class SystemStorageLibImplTest {
           IllegalArgumentException.class,
           () ->
               new SystemStorageLibImpl(
-                  tempDir.resolve("logs"), tempDir.resolve("metaconfig"), Map.of()));
+                  tempDir.resolve("logs"),
+                  tempDir.resolve("metaconfig"),
+                  Map.of(),
+                  10 * 1024 * 1024,
+                  10));
     }
   }
 
@@ -234,7 +246,8 @@ public class SystemStorageLibImplTest {
     void getLogsDirReturnsProvidedPath() {
       Path logsDir = tempDir.resolve("logs");
       SystemStorageLibImpl impl =
-          new SystemStorageLibImpl(logsDir, tempDir.resolve("metaconfig"), allDirs());
+          new SystemStorageLibImpl(
+              logsDir, tempDir.resolve("metaconfig"), allDirs(), 10 * 1024 * 1024, 10);
       assertEquals(logsDir, impl.getLogsDir());
     }
   }
