@@ -29,7 +29,7 @@ dependencies {
     implementation("org.slf4j:slf4j-simple:2.0.17")
 
 
-    shadow("com.github.Leawind:inventory-java:46400162ee")
+    shadow("com.github.Leawind:inventory-java:0.1.1")
     shadow("dev.dirs:directories:26")
 
     compileOnly("org.jspecify:jspecify:1.0.0")
