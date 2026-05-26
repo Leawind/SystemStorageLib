@@ -10,6 +10,7 @@ import io.github.leawind.systemstoragelib.v1.api.metaconfig.PerScopeConfig;
 import io.github.leawind.systemstoragelib.v1.impl.log.LogManager;
 import io.github.leawind.systemstoragelib.v1.impl.log.SystemLogger;
 import io.github.leawind.systemstoragelib.v1.impl.managers.MetaConfigManagerImpl;
+import io.github.leawind.systemstoragelib.v1.utils.ConcurrentScopeHashMap;
 import io.github.leawind.systemstoragelib.v1.utils.MapUtils;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -18,7 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -41,7 +41,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   private final LogManager logManager;
   private final Logger logger;
   private final MetaConfigManager metaConfig;
-  private final Map<String, Optional<ScopeStorage>> scopes = new ConcurrentHashMap<>();
+  private final Map<String, Optional<ScopeStorage>> scopes;
 
   /// ### Args
   ///
@@ -93,6 +93,8 @@ public class SystemStorageLibImpl implements SystemStorageLib {
     metaConfig = new MetaConfigManagerImpl(this, logger, metaConfigDir);
     // Listen for external changes to meta config and update scope storage paths accordingly.
     metaConfig.onChanged().on(this::handleMetaConfigChanged);
+
+    scopes = new ConcurrentScopeHashMap<>(this);
 
     detectScopes();
   }
@@ -200,11 +202,6 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
   @Override
   public ScopeStorage scope(String scopeName) {
-    String err = validateScopeName(scopeName);
-    if (err != null) {
-      throw new IllegalArgumentException("Invalid scope: " + err);
-    }
-
     return scopes
         .compute(
             scopeName,
