@@ -1,29 +1,17 @@
 package io.github.leawind.systemstoragelib.v1.impl.metaconfig;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
+import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.PerScopeConfig;
 import java.util.HashMap;
 import java.util.Map;
 
-public record MetaConfigImpl(Map<String, PerScopeConfig> scopes) implements MetaConfig {
+public record MetaConfigImpl(SystemStorageLib lib, Map<String, PerScopeConfig> scopes)
+    implements MetaConfig {
 
-  public static final Codec<MetaConfig> CODEC =
-      RecordCodecBuilder.create(
-          inst ->
-              inst.group(
-                      Codec.unboundedMap(Codec.STRING, PerScopeConfigImpl.CODEC)
-                          .fieldOf("scopes")
-                          .forGetter(MetaConfig::scopes))
-                  .apply(inst, MetaConfigImpl::new));
-
-  public MetaConfigImpl(Map<String, PerScopeConfig> scopes) {
+  public MetaConfigImpl(SystemStorageLib lib, Map<String, PerScopeConfig> scopes) {
+    this.lib = lib;
     this.scopes = new HashMap<>(scopes);
-  }
-
-  public MetaConfigImpl() {
-    this(new HashMap<>());
   }
 
   // region scopes

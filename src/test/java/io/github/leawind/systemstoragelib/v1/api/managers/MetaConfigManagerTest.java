@@ -13,15 +13,10 @@ import io.github.leawind.systemstoragelib.v1.BaseTest;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.PerScopeConfig;
-import io.github.leawind.systemstoragelib.v1.impl.SystemStorageLibImpl;
 import io.github.leawind.systemstoragelib.v1.impl.managers.MetaConfigManagerImpl;
-import io.github.leawind.systemstoragelib.v1.impl.metaconfig.MetaConfigImpl;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
@@ -30,25 +25,21 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 public class MetaConfigManagerTest extends BaseTest {
-  private static final Random RANDOM = new Random();
   private static final Gson GSON = new Gson();
 
-  private MetaConfigManager manager;
+  private MetaConfigManagerImpl manager;
 
-  private Map<StoreType<?>, Path> allDirs() {
-    Map<StoreType<?>, Path> dirs = new HashMap<>();
-    dirs.put(StoreType.CREDENTIALS, tempDir.resolve("credentials"));
-    dirs.put(StoreType.CONFIG, tempDir.resolve("config"));
-    dirs.put(StoreType.DATA, tempDir.resolve("data"));
-    dirs.put(StoreType.CACHE, tempDir.resolve("cache"));
-    dirs.put(StoreType.DATA_LOCAL, tempDir.resolve("data_local"));
-    return dirs;
+  @BeforeEach
+  void setupEach() {
+    manager = (MetaConfigManagerImpl) lib.metaConfig();
   }
 
-  private MetaConfigManager createManager(Path metaConfigDir) {
-    return new SystemStorageLibImpl(
-            tempDir.resolve("logs"), metaConfigDir, allDirs(), 10 * 1024 * 1024, 10)
-        .metaConfig();
+  @AfterEach
+  void tearDown() {
+    try {
+      manager.stopWatching();
+    } catch (IOException ignored) {
+    }
   }
 
   private Path configFilePath() {
@@ -72,19 +63,6 @@ public class MetaConfigManagerTest extends BaseTest {
   private void registerListener(Runnable onEvent) {
     synchronized (manager.onChanged()) {
       manager.onChanged().on(ignored -> onEvent.run());
-    }
-  }
-
-  @BeforeEach
-  void setupEach() {
-    manager = createManager(tempDir.resolve("meta" + RANDOM.nextInt()));
-  }
-
-  @AfterEach
-  void tearDown() {
-    try {
-      ((MetaConfigManagerImpl) manager).stopWatching();
-    } catch (IOException ignored) {
     }
   }
 
@@ -178,7 +156,7 @@ public class MetaConfigManagerTest extends BaseTest {
 
     private String toJson(MetaConfig config) {
       JsonElement element =
-          MetaConfigImpl.CODEC.encodeStart(JsonOps.INSTANCE, config).result().orElseThrow();
+          manager.CONFIG_CODEC.encodeStart(JsonOps.INSTANCE, config).result().orElseThrow();
       return GSON.toJson(element);
     }
 

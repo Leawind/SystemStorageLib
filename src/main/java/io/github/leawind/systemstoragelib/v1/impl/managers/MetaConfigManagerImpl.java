@@ -4,8 +4,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonSyntaxException;
+import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.leawind.inventory.event.EventEmitter;
 import io.github.leawind.inventory.lock.LockUtils;
 import io.github.leawind.inventory.misc.UncheckedCloseable;
@@ -13,6 +15,7 @@ import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
 import io.github.leawind.systemstoragelib.v1.api.managers.MetaConfigManager;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
 import io.github.leawind.systemstoragelib.v1.impl.metaconfig.MetaConfigImpl;
+import io.github.leawind.systemstoragelib.v1.impl.metaconfig.PerScopeConfigImpl;
 import io.github.leawind.systemstoragelib.v1.utils.AtomicFileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -23,6 +26,7 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
@@ -36,6 +40,16 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
     implements MetaConfigManager, AutoCloseable {
   private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
   private static final String CONFIG_FILE_NAME = "config.json";
+  private static final long FILE_CHANGE_DEBOUNCE_MS = 100;
+
+  public final Codec<MetaConfig> CONFIG_CODEC =
+      RecordCodecBuilder.create(
+          inst ->
+              inst.group(
+                      Codec.unboundedMap(Codec.STRING, PerScopeConfigImpl.CODEC)
+                          .fieldOf("scopes")
+                          .forGetter(MetaConfig::scopes))
+                  .apply(inst, (map) -> new MetaConfigImpl(lib, map)));
 
   private Path configFilePath;
   private final EventEmitter<MetaConfig> onChanged = new EventEmitter<>();
@@ -46,7 +60,6 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
   private final Object watchStartLock = new Object();
 
   private long lastHandledFileChangeMs = 0;
-  private static final long FILE_CHANGE_DEBOUNCE_MS = 100;
 
   public MetaConfigManagerImpl(SystemStorageLib lib, Logger logger, Path dirPath) {
     super(lib, logger, dirPath);
@@ -101,7 +114,7 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
       this.config = config;
       Files.createDirectories(getDirPath());
 
-      DataResult<JsonElement> result = MetaConfigImpl.CODEC.encodeStart(JsonOps.INSTANCE, config);
+      DataResult<JsonElement> result = CONFIG_CODEC.encodeStart(JsonOps.INSTANCE, config);
       Optional<JsonElement> encoded = result.result();
       if (encoded.isEmpty()) {
         logger().warn("Failed to encode meta config: {}", result.error().orElse(null));
@@ -124,7 +137,7 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
 
   @Override
   public MetaConfig createConfig() {
-    return new MetaConfigImpl();
+    return new MetaConfigImpl(lib, Collections.emptyMap());
   }
 
   @Override
@@ -180,8 +193,7 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
         return null;
       }
 
-      DataResult<MetaConfig> parsedResult =
-          MetaConfigImpl.CODEC.parse(JsonOps.INSTANCE, jsonElement);
+      DataResult<MetaConfig> parsedResult = CONFIG_CODEC.parse(JsonOps.INSTANCE, jsonElement);
       Optional<MetaConfig> parsed = parsedResult.result();
       if (parsed.isPresent()) {
         config = parsed.get();
