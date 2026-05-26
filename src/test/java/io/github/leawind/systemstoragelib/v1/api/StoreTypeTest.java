@@ -17,12 +17,8 @@ import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class StoreTypeTest extends BaseTest {
-
-  private static final Logger TEST_LOGGER = LoggerFactory.getLogger(StoreTypeTest.class);
 
   @Nested
   class Constants {
@@ -89,35 +85,36 @@ public class StoreTypeTest extends BaseTest {
 
     @Test
     void credentialsManagerFactoryCreatesCredentialStore() {
-      CredentialStore store = StoreType.CREDENTIALS.manager(TEST_LOGGER, tempDir.resolve("cred"));
+      CredentialStore store =
+          StoreType.CREDENTIALS.manager(lib, lib.logger(), tempDir.resolve("cred"));
       assertNotNull(store);
       assertEquals(tempDir.resolve("cred"), store.getDirPath());
     }
 
     @Test
     void configManagerFactoryCreatesStorageManager() {
-      StorageManager mgr = StoreType.CONFIG.manager(TEST_LOGGER, tempDir.resolve("cfg"));
+      StorageManager mgr = StoreType.CONFIG.manager(lib, lib.logger(), tempDir.resolve("cfg"));
       assertNotNull(mgr);
       assertEquals(tempDir.resolve("cfg"), mgr.getDirPath());
     }
 
     @Test
     void dataManagerFactoryCreatesStorageManager() {
-      StorageManager mgr = StoreType.DATA.manager(TEST_LOGGER, tempDir.resolve("dat"));
+      StorageManager mgr = StoreType.DATA.manager(lib, lib.logger(), tempDir.resolve("dat"));
       assertNotNull(mgr);
       assertEquals(tempDir.resolve("dat"), mgr.getDirPath());
     }
 
     @Test
     void cacheManagerFactoryCreatesStorageManager() {
-      StorageManager mgr = StoreType.CACHE.manager(TEST_LOGGER, tempDir.resolve("cch"));
+      StorageManager mgr = StoreType.CACHE.manager(lib, lib.logger(), tempDir.resolve("cch"));
       assertNotNull(mgr);
       assertEquals(tempDir.resolve("cch"), mgr.getDirPath());
     }
 
     @Test
     void dataLocalManagerFactoryCreatesStorageManager() {
-      StorageManager mgr = StoreType.DATA_LOCAL.manager(TEST_LOGGER, tempDir.resolve("dl"));
+      StorageManager mgr = StoreType.DATA_LOCAL.manager(lib, lib.logger(), tempDir.resolve("dl"));
       assertNotNull(mgr);
       assertEquals(tempDir.resolve("dl"), mgr.getDirPath());
     }

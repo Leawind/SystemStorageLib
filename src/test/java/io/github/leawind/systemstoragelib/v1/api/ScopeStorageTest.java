@@ -33,7 +33,7 @@ public class ScopeStorageTest extends BaseTest {
 
   @Test
   void notNull() {
-    ScopeStorage storage = new ScopeStorageImpl("test_scope", TEST_LOGGER, dirs);
+    ScopeStorage storage = new ScopeStorageImpl(lib, "test_scope", TEST_LOGGER, dirs);
 
     assertNotNull(storage.logger());
     assertNotNull(storage.storage(StoreType.CACHE));
@@ -47,7 +47,7 @@ public class ScopeStorageTest extends BaseTest {
 
   @Test
   void ofCreatesScopedPaths() {
-    ScopeStorage storage = new ScopeStorageImpl("my_scope", TEST_LOGGER, dirs);
+    ScopeStorage storage = new ScopeStorageImpl(lib, "my_scope", TEST_LOGGER, dirs);
     assertNotNull(storage);
     assertEquals("my_scope", storage.name());
 
@@ -63,7 +63,7 @@ public class ScopeStorageTest extends BaseTest {
       IllegalArgumentException ex =
           assertThrows(
               IllegalArgumentException.class,
-              () -> new ScopeStorageImpl("scope", TEST_LOGGER, incomplete));
+              () -> new ScopeStorageImpl(lib, "scope", TEST_LOGGER, incomplete));
       assertTrue(ex.getMessage().contains("Missing StoreTypes"));
     }
   }
@@ -81,7 +81,7 @@ public class ScopeStorageTest extends BaseTest {
     IllegalArgumentException ex =
         assertThrows(
             IllegalArgumentException.class,
-            () -> new ScopeStorageImpl("scope", TEST_LOGGER, duplicateDirs));
+            () -> new ScopeStorageImpl(lib, "scope", TEST_LOGGER, duplicateDirs));
     assertTrue(ex.getMessage().contains("dirPath for each StoreType must be unique"));
   }
 }

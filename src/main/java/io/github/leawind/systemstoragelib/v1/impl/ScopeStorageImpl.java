@@ -3,6 +3,7 @@ package io.github.leawind.systemstoragelib.v1.impl;
 import io.github.leawind.inventory.type.UnsafeTypeUtils;
 import io.github.leawind.systemstoragelib.v1.api.ScopeStorage;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
+import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
 import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
 import io.github.leawind.systemstoragelib.v1.utils.MapUtils;
 import java.nio.file.Path;
@@ -20,14 +21,15 @@ public final class ScopeStorageImpl implements ScopeStorage {
   ///
   /// - If any StoreType is missing.
   /// - If any dirPath is not unique.
-  public ScopeStorageImpl(String name, Logger logger, Map<StoreType<?>, Path> dirs) {
+  public ScopeStorageImpl(
+      SystemStorageLib lib, String name, Logger logger, Map<StoreType<?>, Path> dirs) {
     Map<StoreType<?>, ? extends StorageManager> managers = new HashMap<>();
 
     for (Map.Entry<StoreType<?>, Path> entry : dirs.entrySet()) {
       StoreType<?> type = entry.getKey();
       Path scopedPath = entry.getValue().resolve(name);
 
-      managers.put(type, UnsafeTypeUtils.cast(type.manager(logger, scopedPath)));
+      managers.put(type, UnsafeTypeUtils.cast(type.manager(lib, logger, scopedPath)));
     }
     validateManagers(managers);
 

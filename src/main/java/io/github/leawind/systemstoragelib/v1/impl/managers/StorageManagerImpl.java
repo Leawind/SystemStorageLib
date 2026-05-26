@@ -5,6 +5,7 @@ import io.github.leawind.inventory.lock.FileBasedReentrantReadWriteLock;
 import io.github.leawind.inventory.lock.LockUtils;
 import io.github.leawind.inventory.misc.Lazy;
 import io.github.leawind.inventory.misc.UncheckedCloseable;
+import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
 import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -18,7 +19,10 @@ import org.slf4j.Logger;
 public class StorageManagerImpl implements StorageManager {
   public static final String LOCK_FILE_NAME = ".lock";
 
+  protected final SystemStorageLib lib;
+
   private final Logger logger;
+
   private Path dirPath;
   private Path lockPath;
   private final Lazy<Result<FileBasedReentrantReadWriteLock, IOException>> lockLazy =
@@ -32,7 +36,8 @@ public class StorageManagerImpl implements StorageManager {
             }
           });
 
-  public StorageManagerImpl(Logger logger, Path dirPath) {
+  public StorageManagerImpl(SystemStorageLib lib, Logger logger, Path dirPath) {
+    this.lib = lib;
     this.logger = logger;
     this.dirPath = dirPath.toAbsolutePath().normalize();
     this.lockPath = this.dirPath.resolve(LOCK_FILE_NAME);

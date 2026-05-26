@@ -1,6 +1,7 @@
 package io.github.leawind.systemstoragelib.v1.api;
 
 import com.mojang.serialization.Codec;
+import io.github.leawind.inventory.util.function.TriFunction;
 import io.github.leawind.systemstoragelib.v1.api.managers.CredentialStore;
 import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
 import io.github.leawind.systemstoragelib.v1.impl.managers.CredentialStoreImpl;
@@ -9,7 +10,6 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.BiFunction;
 import org.slf4j.Logger;
 
 /// Defines storage locations for different types of data within a specific scope.
@@ -45,13 +45,13 @@ public final class StoreType<S extends StorageManager> {
   private final Class<S> clazz;
   private final String identifier;
   private final boolean customizable;
-  private final BiFunction<Logger, Path, S> managerFactory;
+  private final TriFunction<SystemStorageLib, Logger, Path, S> managerFactory;
 
   private StoreType(
       Class<S> clazz,
       String identifier,
       boolean customizable,
-      BiFunction<Logger, Path, S> managerFactory) {
+      TriFunction<SystemStorageLib, Logger, Path, S> managerFactory) {
     this.clazz = clazz;
     this.identifier = identifier;
     this.customizable = customizable;
@@ -62,8 +62,8 @@ public final class StoreType<S extends StorageManager> {
     return clazz;
   }
 
-  public S manager(Logger logger, Path dirPath) {
-    return managerFactory.apply(logger, dirPath);
+  public S manager(SystemStorageLib lib, Logger logger, Path dirPath) {
+    return managerFactory.apply(lib, logger, dirPath);
   }
 
   public String identifier() {

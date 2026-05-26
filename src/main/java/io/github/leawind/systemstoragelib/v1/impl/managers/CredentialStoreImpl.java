@@ -2,6 +2,7 @@ package io.github.leawind.systemstoragelib.v1.impl.managers;
 
 import io.github.leawind.inventory.lock.LockUtils;
 import io.github.leawind.inventory.misc.UncheckedCloseable;
+import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
 import io.github.leawind.systemstoragelib.v1.api.exception.CredentialIntegrityException;
 import io.github.leawind.systemstoragelib.v1.api.managers.CredentialStore;
 import io.github.leawind.systemstoragelib.v1.utils.AtomicFileWriter;
@@ -76,8 +77,8 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
 
   private volatile SecretKey aesKey;
 
-  public CredentialStoreImpl(Logger logger, Path dirPath) {
-    super(logger, dirPath);
+  public CredentialStoreImpl(SystemStorageLib lib, Logger logger, Path dirPath) {
+    super(lib, logger, dirPath);
   }
 
   @Override

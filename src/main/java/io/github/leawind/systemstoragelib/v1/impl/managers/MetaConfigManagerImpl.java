@@ -9,6 +9,7 @@ import com.mojang.serialization.JsonOps;
 import io.github.leawind.inventory.event.EventEmitter;
 import io.github.leawind.inventory.lock.LockUtils;
 import io.github.leawind.inventory.misc.UncheckedCloseable;
+import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
 import io.github.leawind.systemstoragelib.v1.api.managers.MetaConfigManager;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
 import io.github.leawind.systemstoragelib.v1.impl.metaconfig.MetaConfigImpl;
@@ -47,8 +48,8 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
   private long lastHandledFileChangeMs = 0;
   private static final long FILE_CHANGE_DEBOUNCE_MS = 100;
 
-  public MetaConfigManagerImpl(Logger logger, Path dirPath) {
-    super(logger, dirPath);
+  public MetaConfigManagerImpl(SystemStorageLib lib, Logger logger, Path dirPath) {
+    super(lib, logger, dirPath);
     this.configFilePath = dirPath.resolve(CONFIG_FILE_NAME).toAbsolutePath().normalize();
     ensureWatchStarted();
   }

@@ -2,6 +2,7 @@ package io.github.leawind.systemstoragelib.v1.impl.log;
 
 import io.github.leawind.inventory.lock.LockUtils;
 import io.github.leawind.inventory.misc.UncheckedCloseable;
+import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
 import io.github.leawind.systemstoragelib.v1.impl.managers.StorageManagerImpl;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -18,8 +19,8 @@ public class LogManager extends StorageManagerImpl implements AutoCloseable {
   private final long maxFileSize;
   private final int maxArchiveFiles;
 
-  public LogManager(Path logDir, long maxFileSize, int maxArchiveFiles) {
-    super(LoggerFactory.getLogger(LogManager.class), logDir);
+  public LogManager(SystemStorageLib lib, Path logDir, long maxFileSize, int maxArchiveFiles) {
+    super(lib, LoggerFactory.getLogger(LogManager.class), logDir);
     this.logFilePath = logDir.resolve(LOG_FILE_NAME);
     this.maxFileSize = maxFileSize;
     this.maxArchiveFiles = maxArchiveFiles;

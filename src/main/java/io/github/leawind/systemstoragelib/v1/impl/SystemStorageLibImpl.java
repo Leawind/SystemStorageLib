@@ -88,9 +88,9 @@ public class SystemStorageLibImpl implements SystemStorageLib {
     this.logsDir = logsDir;
     this.defaultScopedDirs = new HashMap<>(defaultScopedDirs);
 
-    logManager = new LogManager(logsDir, maxLogFileSize, maxLogArchiveFiles);
+    logManager = new LogManager(this, logsDir, maxLogFileSize, maxLogArchiveFiles);
     logger = new SystemLogger(logManager, "");
-    metaConfig = new MetaConfigManagerImpl(logger, metaConfigDir);
+    metaConfig = new MetaConfigManagerImpl(this, logger, metaConfigDir);
     // Listen for external changes to meta config and update scope storage paths accordingly.
     metaConfig.onChanged().on(this::handleMetaConfigChanged);
 
@@ -276,13 +276,13 @@ public class SystemStorageLibImpl implements SystemStorageLib {
     return logsDir;
   }
 
-  private ScopeStorage createScopeStorage(String name) {
+  private ScopeStorage createScopeStorage(String scopeName) {
     // Build a directory map for the given scope, preferring custom directories from MetaConfig.
     Map<StoreType<?>, Path> dirsForScope = new HashMap<>(defaultScopedDirs);
     try {
       // Load meta configuration which may contain per‑scope custom directory mappings.
       MetaConfig meta = metaConfig.get();
-      PerScopeConfig perScope = meta.scopes().get(name);
+      PerScopeConfig perScope = meta.scopes().get(scopeName);
       if (perScope != null) {
         // Override default directories with any custom paths defined for this scope.
         perScope
@@ -299,9 +299,10 @@ public class SystemStorageLibImpl implements SystemStorageLib {
       }
     } catch (IOException e) {
       // If we cannot read the meta config, fall back to the default scoped directories.
-      logger().warn("Failed to load meta config for scope {}: {}", name, e.getMessage());
+      logger().warn("Failed to load meta config for scope {}: {}", scopeName, e.getMessage());
     }
-    return new ScopeStorageImpl(name, new SystemLogger(logManager, name), dirsForScope);
+    return new ScopeStorageImpl(
+        this, scopeName, new SystemLogger(logManager, scopeName), dirsForScope);
   }
 
   private void detectScopes() {

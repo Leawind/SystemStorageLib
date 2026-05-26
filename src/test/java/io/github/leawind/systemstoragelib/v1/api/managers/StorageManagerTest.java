@@ -21,18 +21,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class StorageManagerTest extends BaseTest {
-
-  private static final Logger TEST_LOGGER = LoggerFactory.getLogger(StorageManagerTest.class);
 
   private StorageManager manager;
 
   @BeforeEach
-  void setupEach() throws IOException {
-    manager = new StorageManagerImpl(TEST_LOGGER, tempDir.resolve("storage"));
+  void setupEach() {
+    manager = new StorageManagerImpl(lib, lib.logger(), tempDir.resolve("storage"));
   }
 
   @Test
@@ -43,7 +39,7 @@ public class StorageManagerTest extends BaseTest {
   @Test
   void testDirPathIsAbsoluteAndNormalized() {
     Path relativePath = tempDir.resolve("storage/../storage");
-    StorageManager mgr = new StorageManagerImpl(TEST_LOGGER, relativePath);
+    StorageManager mgr = new StorageManagerImpl(lib, lib.logger(), relativePath);
     assertEquals(relativePath.toAbsolutePath().normalize(), mgr.getDirPath());
   }
 

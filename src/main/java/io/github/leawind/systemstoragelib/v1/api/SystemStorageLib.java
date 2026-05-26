@@ -31,7 +31,6 @@ public interface SystemStorageLib {
   /// detected on disk.
   ///
   /// @return a stream of scope names
-  @Deprecated
   Stream<String> streamScopes();
 
   /// Validates a scope name.
