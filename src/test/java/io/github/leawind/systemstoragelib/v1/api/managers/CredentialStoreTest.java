@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.leawind.systemstoragelib.v1.BaseTest;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
-import io.github.leawind.systemstoragelib.v1.impl.exception.CredentialIntegrityException;
+import io.github.leawind.systemstoragelib.v1.api.exception.CredentialIntegrityException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,13 +28,13 @@ public class CredentialStoreTest extends BaseTest {
   }
 
   @Test
-  void testSetAndGet() throws IOException {
+  void testSetAndGet() throws IOException, CredentialIntegrityException {
     store.set("github_token", "secret_value_123");
     assertEquals("secret_value_123", store.get("github_token"));
   }
 
   @Test
-  void testGetNonExistent() {
+  void testGetNonExistent() throws CredentialIntegrityException {
     assertNull(store.get("non_existent_key"));
   }
 
@@ -59,7 +59,7 @@ public class CredentialStoreTest extends BaseTest {
   }
 
   @Test
-  void testOverwrite() throws IOException {
+  void testOverwrite() throws IOException, CredentialIntegrityException {
     store.set("key", "old_value");
     assertEquals("old_value", store.get("key"));
     store.set("key", "new_value");
@@ -67,13 +67,13 @@ public class CredentialStoreTest extends BaseTest {
   }
 
   @Test
-  void testEmptyValue() throws IOException {
+  void testEmptyValue() throws IOException, CredentialIntegrityException {
     store.set("empty_key", "");
     assertEquals("", store.get("empty_key"));
   }
 
   @Test
-  void testUnicodeValue() throws IOException {
+  void testUnicodeValue() throws IOException, CredentialIntegrityException {
     String unicode = "密码🔑セキュリティ";
     store.set("unicode_key", unicode);
     assertEquals(unicode, store.get("unicode_key"));
@@ -162,7 +162,7 @@ public class CredentialStoreTest extends BaseTest {
   }
 
   @Test
-  void testMultipleKeysIsolation() throws IOException {
+  void testMultipleKeysIsolation() throws IOException, CredentialIntegrityException {
     store.set("key_a", "value_a");
     store.set("key_b", "value_b");
     assertEquals("value_a", store.get("key_a"));
@@ -184,7 +184,7 @@ public class CredentialStoreTest extends BaseTest {
   }
 
   @Test
-  void testLongValue() throws IOException {
+  void testLongValue() throws IOException, CredentialIntegrityException {
     String longValue = "A".repeat(10000);
     store.set("long_key", longValue);
     assertEquals(longValue, store.get("long_key"));
