@@ -112,7 +112,7 @@ public class ScopeMetaConfigTest {
     @Test
     void storesMultipleCustomDirs() {
       ScopeMetaConfig config = new ScopeMetaConfigImpl();
-      Map<StoreType<?>, Path> dirs = new HashMap<>();
+      Map<StoreType, Path> dirs = new HashMap<>();
       dirs.put(StoreType.DATA, FOO);
       dirs.put(StoreType.CONFIG, BAR);
 
@@ -129,7 +129,7 @@ public class ScopeMetaConfigTest {
       config.getCustomDirs().put(StoreType.DATA, FOO);
       config.getCustomDirs().put(StoreType.CONFIG, BAR);
 
-      Map<StoreType<?>, Path> dirs = new HashMap<>();
+      Map<StoreType, Path> dirs = new HashMap<>();
       dirs.put(StoreType.DATA, BAR);
       config.setCustomDirs(dirs);
 
@@ -142,7 +142,7 @@ public class ScopeMetaConfigTest {
       ScopeMetaConfig config = new ScopeMetaConfigImpl();
       config.getCustomDirs().put(StoreType.DATA, FOO);
 
-      Map<StoreType<?>, Path> dirs = new HashMap<>();
+      Map<StoreType, Path> dirs = new HashMap<>();
       dirs.put(StoreType.CONFIG, BAR);
       config.setCustomDirs(dirs);
 
@@ -166,7 +166,7 @@ public class ScopeMetaConfigTest {
 
     @Test
     void throwsForDuplicatePaths() {
-      Map<StoreType<?>, Path> dirs = new HashMap<>();
+      Map<StoreType, Path> dirs = new HashMap<>();
       dirs.put(StoreType.DATA, FOO);
       dirs.put(StoreType.CONFIG, FOO); // same path
 
@@ -176,7 +176,7 @@ public class ScopeMetaConfigTest {
 
     @Test
     void throwsForDuplicatePathsAfterNormalization() {
-      Map<StoreType<?>, Path> dirs = new HashMap<>();
+      Map<StoreType, Path> dirs = new HashMap<>();
       dirs.put(StoreType.DATA, FS.getPath("/foo"));
       dirs.put(StoreType.CONFIG, FS.getPath("/bar/../foo")); // normalizes to same path
 
@@ -186,7 +186,7 @@ public class ScopeMetaConfigTest {
 
     @Test
     void throwsForNullPathInEntries() {
-      Map<StoreType<?>, Path> dirs = new HashMap<>();
+      Map<StoreType, Path> dirs = new HashMap<>();
       dirs.put(StoreType.DATA, null);
 
       assertThrows(NullPointerException.class, () -> new ScopeMetaConfigImpl().setCustomDirs(dirs));
@@ -242,7 +242,7 @@ public class ScopeMetaConfigTest {
 
     @Test
     void defensiveCopyPreventsExternalMutation() {
-      Map<StoreType<?>, Path> mutableMap = new HashMap<>();
+      Map<StoreType, Path> mutableMap = new HashMap<>();
       mutableMap.put(StoreType.DATA, FOO);
       ScopeMetaConfig config = new ScopeMetaConfigImpl(mutableMap);
 

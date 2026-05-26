@@ -39,7 +39,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   ///
   /// - config: `/home/Steve/.config/<root_name>/config`.
   /// - data: `/home/Steve/.local/share/<root_name>/data`.
-  private final Map<StoreType<?>, Path> defaultScopedDirs;
+  private final Map<StoreType, Path> defaultScopedDirs;
 
   private final LogManager logManager;
   private final Logger logger;
@@ -74,7 +74,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   public SystemStorageLibImpl(
       @NonNull Path logsDir,
       @NonNull Path metaConfigDir,
-      @NonNull Map<StoreType<?>, Path> defaultScopedDirs,
+      @NonNull Map<StoreType, Path> defaultScopedDirs,
       long maxLogFileSize,
       int maxLogArchiveFiles) {
 
@@ -116,7 +116,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
   private void handleMetaConfigChanged(MetaConfig newConfig) {
     // Phase 1: Compute and validate all changes across all scopes.
-    Map<ScopeStorage, Map<StoreType<?>, Path>> pendingChanges = new HashMap<>();
+    Map<ScopeStorage, Map<StoreType, Path>> pendingChanges = new HashMap<>();
 
     scopes.forEach(
         (scope, scopeOpt) -> {
@@ -126,11 +126,11 @@ public class SystemStorageLibImpl implements SystemStorageLib {
           ScopeStorage scopeStorage = scopeOpt.get();
 
           ScopeMetaConfig scopeMetaConfig = newConfig.scopes().get(scope);
-          Map<StoreType<?>, Path> customDirs =
+          Map<StoreType, Path> customDirs =
               (scopeMetaConfig != null) ? scopeMetaConfig.getCustomDirs() : null;
 
-          Map<StoreType<?>, Path> newDirMap = new HashMap<>();
-          for (StoreType<?> storeType : StoreType.values()) {
+          Map<StoreType, Path> newDirMap = new HashMap<>();
+          for (StoreType storeType : StoreType.values()) {
             Path newDirPath = (customDirs != null) ? customDirs.get(storeType) : null;
 
             if (newDirPath != null && !storeType.allowCustomDir()) {
@@ -194,10 +194,10 @@ public class SystemStorageLibImpl implements SystemStorageLib {
                 }));
   }
 
-  private static void validateDirs(Map<StoreType<?>, Path> scopedDirs)
+  private static void validateDirs(Map<StoreType, Path> scopedDirs)
       throws IllegalArgumentException {
     // Check for missing StoreTypes.
-    List<StoreType<?>> missingTypes = StoreType.Utils.missingTypes(scopedDirs.keySet());
+    List<StoreType> missingTypes = StoreType.Utils.missingTypes(scopedDirs.keySet());
     if (!missingTypes.isEmpty()) {
       throw new IllegalArgumentException("Missing StoreTypes: " + missingTypes);
     }
@@ -291,7 +291,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
   private ScopeStorage createScopeStorage(String scopeName) {
     // Build a directory map for the given scope, preferring custom directories from MetaConfig.
-    Map<StoreType<?>, Path> dirsForScope = new HashMap<>(defaultScopedDirs);
+    Map<StoreType, Path> dirsForScope = new HashMap<>(defaultScopedDirs);
     try {
       // Load meta configuration which may contain per‑scope custom directory mappings.
       MetaConfig meta = metaConfig.get();
@@ -341,7 +341,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
     private Path logsDir;
     private Path metaConfigDir;
-    private final Map<StoreType<?>, Path> scopedDirs = new HashMap<>();
+    private final Map<StoreType, Path> scopedDirs = new HashMap<>();
     private long maxLogFileSize = 10 * 1024 * 1024;
     private int maxLogArchiveFiles = 10;
 
@@ -377,7 +377,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
     /// Set the root directory for a store type.
     /// The scoped directory will be `rootDir / <scope>`.
     @Override
-    public BuilderImpl storeDir(StoreType<?> storeType, Path rootDir) {
+    public BuilderImpl storeDir(StoreType storeType, Path rootDir) {
       scopedDirs.put(storeType, rootDir);
       return this;
     }

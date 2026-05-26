@@ -2,9 +2,9 @@ package io.github.leawind.systemstoragelib.v1.impl.managers;
 
 import io.github.leawind.inventory.lock.LockUtils;
 import io.github.leawind.inventory.misc.UncheckedCloseable;
-import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
 import io.github.leawind.systemstoragelib.v1.api.exception.CredentialIntegrityException;
 import io.github.leawind.systemstoragelib.v1.api.managers.CredentialStore;
+import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
 import io.github.leawind.systemstoragelib.v1.utils.AtomicFileWriter;
 import io.github.leawind.systemstoragelib.v1.utils.machineid.MachineIdResolutionException;
 import io.github.leawind.systemstoragelib.v1.utils.machineid.MachineIdUtil;
@@ -39,7 +39,6 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
 
 /// AES-256-GCM encrypted credential storage with environment-bound key derivation.
 ///
@@ -54,7 +53,7 @@ import org.slf4j.Logger;
 /// | EOF-16 | 16B | GCM Auth Tag |
 ///
 /// AES key derived via PBKDF2 from `user.name:user.home:machineId`.
-public class CredentialStoreImpl extends StorageManagerImpl implements CredentialStore {
+public class CredentialStoreImpl implements CredentialStore {
 
   private static final byte FORMAT_VERSION = 0x01;
   private static final int IV_LENGTH = 12;
@@ -75,10 +74,16 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
 
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
+  private final StorageManager storageManager;
   private volatile SecretKey aesKey;
 
-  public CredentialStoreImpl(SystemStorageLib lib, Logger logger, Path dirPath) {
-    super(lib, logger, dirPath);
+  public CredentialStoreImpl(StorageManager storageManager) {
+    this.storageManager = storageManager;
+  }
+
+  @Override
+  public StorageManager storageManager() {
+    return storageManager;
   }
 
   @Override
@@ -91,7 +96,7 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
     validateKey(key);
     Path filePath = keyToFilePath(key);
 
-    try (UncheckedCloseable ignored = LockUtils.lock(getLock().writeLock())) {
+    try (UncheckedCloseable ignored = LockUtils.lock(storageManager.getLock().writeLock())) {
       ensureDirectoryExists();
 
       byte[] plaintext = value.getBytes(StandardCharsets.UTF_8);
@@ -123,7 +128,7 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
       return null;
     }
 
-    try (UncheckedCloseable ignored = LockUtils.lock(getLock().readLock())) {
+    try (UncheckedCloseable ignored = LockUtils.lock(storageManager.getLock().readLock())) {
       byte[] fileContent = Files.readAllBytes(filePath);
       validateFileSize(fileContent, filePath);
       byte[] plaintext = decryptFileContent(fileContent);
@@ -155,7 +160,7 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
   }
 
   private Path keyToFilePath(String key) {
-    return getDirPath().resolve(sha256Hex(key) + FILE_SUFFIX);
+    return storageManager.getDirPath().resolve(sha256Hex(key) + FILE_SUFFIX);
   }
 
   private static String sha256Hex(String input) {
@@ -193,7 +198,7 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
       try {
         machineId = MachineIdUtil.getMachineId();
       } catch (MachineIdResolutionException e) {
-        logger().error("Failed to get machine id", e);
+        storageManager.logger().error("Failed to get machine id", e);
       }
 
       String keyMaterial =
@@ -271,11 +276,11 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
 
   private void ensureDirectoryExists() throws IOException {
     try {
-      Files.createDirectories(getDirPath(), DIR_ATTRIBUTE);
+      Files.createDirectories(storageManager.getDirPath(), DIR_ATTRIBUTE);
     } catch (UnsupportedOperationException e) {
-      Files.createDirectories(getDirPath());
+      Files.createDirectories(storageManager.getDirPath());
     }
-    applyDirPermissions(getDirPath());
+    applyDirPermissions(storageManager.getDirPath());
   }
 
   private static void validateFileSize(byte[] fileContent, Path filePath)

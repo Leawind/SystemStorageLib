@@ -1,7 +1,6 @@
 package io.github.leawind.systemstoragelib.v1.api;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -12,66 +11,30 @@ import com.mojang.serialization.JsonOps;
 import io.github.leawind.systemstoragelib.v1.BaseTest;
 import io.github.leawind.systemstoragelib.v1.api.managers.CredentialStore;
 import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
+import io.github.leawind.systemstoragelib.v1.impl.managers.CredentialStoreImpl;
+import io.github.leawind.systemstoragelib.v1.impl.managers.StorageManagerImpl;
 import io.github.leawind.systemstoragelib.v1.utils.Codecs;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
 
 public class StoreTypeTest extends BaseTest {
-
-  @Nested
-  class Constants {
-
-    @Test
-    void credentialsType() {
-      assertEquals(CredentialStore.class, StoreType.CREDENTIALS.managerClass());
-      assertEquals("credentials", StoreType.CREDENTIALS.identifier());
-      assertFalse(StoreType.CREDENTIALS.allowCustomDir());
-    }
-
-    @Test
-    void configType() {
-      assertEquals(StorageManager.class, StoreType.CONFIG.managerClass());
-      assertEquals("config", StoreType.CONFIG.identifier());
-      assertTrue(StoreType.CONFIG.allowCustomDir());
-    }
-
-    @Test
-    void dataType() {
-      assertEquals(StorageManager.class, StoreType.DATA.managerClass());
-      assertEquals("data", StoreType.DATA.identifier());
-      assertTrue(StoreType.DATA.allowCustomDir());
-    }
-
-    @Test
-    void cacheType() {
-      assertEquals(StorageManager.class, StoreType.CACHE.managerClass());
-      assertEquals("cache", StoreType.CACHE.identifier());
-      assertTrue(StoreType.CACHE.allowCustomDir());
-    }
-
-    @Test
-    void dataLocalType() {
-      assertEquals(StorageManager.class, StoreType.DATA_LOCAL.managerClass());
-      assertEquals("data_local", StoreType.DATA_LOCAL.identifier());
-      assertTrue(StoreType.DATA_LOCAL.allowCustomDir());
-    }
-  }
 
   @Nested
   class Values {
 
     @Test
     void valuesReturnsAllFiveTypes() {
-      StoreType<?>[] values = StoreType.values();
+      StoreType[] values = StoreType.values();
       assertEquals(5, values.length);
     }
 
     @Test
     void valuesContainsAllConstants() {
-      Set<StoreType<?>> values = new HashSet<>();
+      Set<StoreType> values = new HashSet<>();
       java.util.Collections.addAll(values, StoreType.values());
       assertTrue(values.contains(StoreType.CREDENTIALS));
       assertTrue(values.contains(StoreType.CONFIG));
@@ -82,51 +45,11 @@ public class StoreTypeTest extends BaseTest {
   }
 
   @Nested
-  class Manager {
-
-    @Test
-    void credentialsManagerFactoryCreatesCredentialStore() {
-      CredentialStore store =
-          StoreType.CREDENTIALS.manager(lib, lib.logger(), tempDir.resolve("cred"));
-      assertNotNull(store);
-      assertEquals(tempDir.resolve("cred"), store.getDirPath());
-    }
-
-    @Test
-    void configManagerFactoryCreatesStorageManager() {
-      StorageManager mgr = StoreType.CONFIG.manager(lib, lib.logger(), tempDir.resolve("cfg"));
-      assertNotNull(mgr);
-      assertEquals(tempDir.resolve("cfg"), mgr.getDirPath());
-    }
-
-    @Test
-    void dataManagerFactoryCreatesStorageManager() {
-      StorageManager mgr = StoreType.DATA.manager(lib, lib.logger(), tempDir.resolve("dat"));
-      assertNotNull(mgr);
-      assertEquals(tempDir.resolve("dat"), mgr.getDirPath());
-    }
-
-    @Test
-    void cacheManagerFactoryCreatesStorageManager() {
-      StorageManager mgr = StoreType.CACHE.manager(lib, lib.logger(), tempDir.resolve("cch"));
-      assertNotNull(mgr);
-      assertEquals(tempDir.resolve("cch"), mgr.getDirPath());
-    }
-
-    @Test
-    void dataLocalManagerFactoryCreatesStorageManager() {
-      StorageManager mgr = StoreType.DATA_LOCAL.manager(lib, lib.logger(), tempDir.resolve("dl"));
-      assertNotNull(mgr);
-      assertEquals(tempDir.resolve("dl"), mgr.getDirPath());
-    }
-  }
-
-  @Nested
   class UtilsTest {
 
     @Test
     void missingTypesReturnsEmptyWhenAllPresent() {
-      List<StoreType<?>> missing =
+      List<StoreType> missing =
           StoreType.Utils.missingTypes(
               Set.of(
                   StoreType.CREDENTIALS,
@@ -139,7 +62,7 @@ public class StoreTypeTest extends BaseTest {
 
     @Test
     void missingTypesDetectsSingleMissing() {
-      List<StoreType<?>> missing =
+      List<StoreType> missing =
           StoreType.Utils.missingTypes(
               Set.of(StoreType.CONFIG, StoreType.DATA, StoreType.CACHE, StoreType.DATA_LOCAL));
       assertEquals(1, missing.size());
@@ -148,7 +71,7 @@ public class StoreTypeTest extends BaseTest {
 
     @Test
     void missingTypesDetectsMultipleMissing() {
-      List<StoreType<?>> missing =
+      List<StoreType> missing =
           StoreType.Utils.missingTypes(Set.of(StoreType.CONFIG, StoreType.DATA));
       assertEquals(3, missing.size());
       assertTrue(missing.contains(StoreType.CREDENTIALS));
@@ -158,7 +81,7 @@ public class StoreTypeTest extends BaseTest {
 
     @Test
     void missingTypesReturnsAllWhenNonePresent() {
-      List<StoreType<?>> missing = StoreType.Utils.missingTypes(Set.of());
+      List<StoreType> missing = StoreType.Utils.missingTypes(Set.of());
       assertEquals(5, missing.size());
     }
   }
@@ -215,7 +138,7 @@ public class StoreTypeTest extends BaseTest {
 
     @Test
     void codecDecodesIdentifier() {
-      DataResult<StoreType<?>> result =
+      DataResult<StoreType> result =
           Codecs.STORE_TYPE.parse(JsonOps.INSTANCE, new com.google.gson.JsonPrimitive("data"));
       assertTrue(result.result().isPresent());
       assertEquals(StoreType.DATA, result.result().get());
@@ -223,10 +146,10 @@ public class StoreTypeTest extends BaseTest {
 
     @Test
     void codecRoundTripAllTypes() {
-      for (StoreType<?> type : StoreType.values()) {
+      for (StoreType type : StoreType.values()) {
         DataResult<JsonElement> encoded = Codecs.STORE_TYPE.encodeStart(JsonOps.INSTANCE, type);
         assertTrue(encoded.result().isPresent());
-        DataResult<StoreType<?>> decoded =
+        DataResult<StoreType> decoded =
             Codecs.STORE_TYPE.parse(JsonOps.INSTANCE, encoded.result().get());
         assertTrue(decoded.result().isPresent());
         assertEquals(type, decoded.result().get());
@@ -239,7 +162,7 @@ public class StoreTypeTest extends BaseTest {
 
     @Test
     void allIdentifiersAreUnique() {
-      StoreType<?>[] values = StoreType.values();
+      StoreType[] values = StoreType.values();
       long distinctCount =
           java.util.Arrays.stream(values).map(StoreType::identifier).distinct().count();
       assertEquals(values.length, distinctCount, "All StoreType identifiers must be unique");

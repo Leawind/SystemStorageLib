@@ -21,7 +21,7 @@ public interface ScopeMetaConfig {
   /// - Paths are normalized before being stored
   ///
   /// @return the custom directory mappings
-  Map<StoreType<?>, Path> getCustomDirs();
+  Map<StoreType, Path> getCustomDirs();
 
   /// Replaces all custom directory mappings with the given entries.
   ///
@@ -31,7 +31,7 @@ public interface ScopeMetaConfig {
   /// @throws NullPointerException if {@code dirs} or any path value is null
   /// @throws IllegalArgumentException if any path is not absolute, any store type is not
   ///     customizable, or any two store types share the same path
-  void setCustomDirs(Map<StoreType<?>, Path> dirs);
+  void setCustomDirs(Map<StoreType, Path> dirs);
 
   // endregion
 }

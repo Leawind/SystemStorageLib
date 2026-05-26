@@ -21,7 +21,7 @@ public final class ScopeMetaConfigImpl implements ScopeMetaConfig {
 
   private final CustomDirMap customDirs = new CustomDirMap();
 
-  public ScopeMetaConfigImpl(Map<StoreType<?>, Path> customDirs) {
+  public ScopeMetaConfigImpl(Map<StoreType, Path> customDirs) {
     this.customDirs.putAll(customDirs);
   }
 
@@ -30,12 +30,12 @@ public final class ScopeMetaConfigImpl implements ScopeMetaConfig {
   // region customDirs
 
   @Override
-  public Map<StoreType<?>, Path> getCustomDirs() {
+  public Map<StoreType, Path> getCustomDirs() {
     return customDirs;
   }
 
   @Override
-  public void setCustomDirs(Map<StoreType<?>, Path> m) {
+  public void setCustomDirs(Map<StoreType, Path> m) {
     customDirs.validateMap(m);
     customDirs.clear();
     customDirs.putAll(m);

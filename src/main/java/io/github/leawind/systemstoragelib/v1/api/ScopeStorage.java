@@ -1,6 +1,7 @@
 package io.github.leawind.systemstoragelib.v1.api;
 
 import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
+import java.util.function.Function;
 import org.slf4j.Logger;
 
 public interface ScopeStorage {
@@ -17,8 +18,7 @@ public interface ScopeStorage {
 
   /// Returns the {@link StorageManager} for the given store type within this scope.
   ///
-  /// @param <S> the type of storage manager
   /// @param storeType the category of storage to access
   /// @return the storage manager for this store type
-  <S extends StorageManager> S storage(StoreType<S> storeType);
+  StorageManager storage(StoreType storeType);
 }

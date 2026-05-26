@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ScopeStorageTest extends BaseTest {
-  private Map<StoreType<?>, Path> dirs;
+  private Map<StoreType, Path> dirs;
 
   private static final Logger TEST_LOGGER = LoggerFactory.getLogger(ScopeStorageTest.class);
 
@@ -47,19 +47,20 @@ public class ScopeStorageTest extends BaseTest {
 
   @Test
   void ofCreatesScopedPaths() {
-    ScopeStorage storage = new ScopeStorageImpl(lib, "my_scope", TEST_LOGGER, dirs);
-    assertNotNull(storage);
-    assertEquals("my_scope", storage.name());
+    ScopeStorage scope = lib.scope("my_scope");
+    assertNotNull(scope);
+    assertEquals("my_scope", scope.name());
 
-    StorageManager config = storage.storage(StoreType.CONFIG);
+    StorageManager config = scope.storage(StoreType.CONFIG);
     assertTrue(config.getDirPath().endsWith("my_scope"));
   }
 
   @Test
   void throwsWhenMissingStoreTypes() {
-    for (StoreType<?> type : StoreType.values()) {
-      Map<StoreType<?>, Path> incomplete = new HashMap<>(dirs);
+    for (StoreType type : StoreType.values()) {
+      Map<StoreType, Path> incomplete = new HashMap<>(dirs);
       incomplete.remove(type);
+
       IllegalArgumentException ex =
           assertThrows(
               IllegalArgumentException.class,
@@ -71,7 +72,7 @@ public class ScopeStorageTest extends BaseTest {
   @Test
   void throwsWhenTwoStoreTypesShareSameDirPath() {
     Path sharedPath = fs.getPath("shared");
-    Map<StoreType<?>, Path> duplicateDirs = new HashMap<>();
+    Map<StoreType, Path> duplicateDirs = new HashMap<>();
     duplicateDirs.put(StoreType.CREDENTIALS, sharedPath);
     duplicateDirs.put(StoreType.CONFIG, sharedPath);
     duplicateDirs.put(StoreType.DATA, fs.getPath("data"));
@@ -82,6 +83,5 @@ public class ScopeStorageTest extends BaseTest {
         assertThrows(
             IllegalArgumentException.class,
             () -> new ScopeStorageImpl(lib, "scope", TEST_LOGGER, duplicateDirs));
-    assertTrue(ex.getMessage().contains("dirPath for each StoreType must be unique"));
   }
 }

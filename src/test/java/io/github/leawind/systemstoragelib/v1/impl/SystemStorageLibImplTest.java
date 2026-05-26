@@ -32,8 +32,8 @@ public class SystemStorageLibImplTest extends BaseTest {
     manager = lib.metaConfig();
   }
 
-  private Map<StoreType<?>, Path> allDirs() {
-    Map<StoreType<?>, Path> dirs = new HashMap<>();
+  private Map<StoreType, Path> allDirs() {
+    Map<StoreType, Path> dirs = new HashMap<>();
     dirs.put(StoreType.CREDENTIALS, tempDir.resolve("credentials"));
     dirs.put(StoreType.CONFIG, tempDir.resolve("config"));
     dirs.put(StoreType.DATA, tempDir.resolve("data"));
@@ -56,7 +56,7 @@ public class SystemStorageLibImplTest extends BaseTest {
 
     @Test
     void throwsWhenMissingStoreType() {
-      Map<StoreType<?>, Path> dirs = allDirs();
+      Map<StoreType, Path> dirs = allDirs();
       dirs.remove(StoreType.CREDENTIALS);
       IllegalArgumentException ex =
           assertThrows(
@@ -73,7 +73,7 @@ public class SystemStorageLibImplTest extends BaseTest {
 
     @Test
     void throwsWhenDuplicateDirPaths() {
-      Map<StoreType<?>, Path> dirs = new HashMap<>();
+      Map<StoreType, Path> dirs = new HashMap<>();
       Path shared = tempDir.resolve("shared");
       dirs.put(StoreType.CREDENTIALS, shared);
       dirs.put(StoreType.CONFIG, shared);

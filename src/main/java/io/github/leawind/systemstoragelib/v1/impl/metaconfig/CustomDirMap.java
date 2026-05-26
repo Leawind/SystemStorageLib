@@ -8,10 +8,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class CustomDirMap extends ValidatingHashMap<StoreType<?>, Path> {
+public class CustomDirMap extends ValidatingHashMap<StoreType, Path> {
 
   @Override
-  public void validateEntry(StoreType<?> storeType, Path path) {
+  public void validateEntry(StoreType storeType, Path path) {
     Objects.requireNonNull(path, "custom directory path must not be null");
 
     if (!storeType.allowCustomDir()) {
@@ -24,13 +24,13 @@ public class CustomDirMap extends ValidatingHashMap<StoreType<?>, Path> {
   }
 
   @Override
-  public void validateMap(Map<? extends StoreType<?>, ? extends Path> m) {
+  public void validateMap(Map<? extends StoreType, ? extends Path> m) {
     super.validateMap(m);
     MapUtils.requireUniqueValues(m, (k, v) -> v.normalize(), "custom directory path");
   }
 
   @Override
-  public Path put(StoreType<?> storeType, Path path) {
+  public Path put(StoreType storeType, Path path) {
     Path normalized = path.normalize();
     if (containsValue(normalized)) {
       throw new IllegalArgumentException("Custom directory path must be unique: " + path);
@@ -40,8 +40,8 @@ public class CustomDirMap extends ValidatingHashMap<StoreType<?>, Path> {
   }
 
   @Override
-  public void putAll(Map<? extends StoreType<?>, ? extends Path> m) {
-    var mutable = new HashMap<StoreType<?>, Path>(m);
+  public void putAll(Map<? extends StoreType, ? extends Path> m) {
+    var mutable = new HashMap<StoreType, Path>(m);
     mutable.replaceAll((storeType, path) -> (path).normalize());
     super.putAll(mutable);
   }
