@@ -1,6 +1,5 @@
 package io.github.leawind.systemstoragelib.v1.api.managers;
 
-import io.github.leawind.systemstoragelib.v1.api.exception.CredentialIntegrityException;
 import java.io.IOException;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -32,9 +31,7 @@ public interface CredentialStore extends StorageManager {
   ///
   /// @param key the key to look up
   /// @return the decrypted value, or `null` if the key does not exist
-  /// @throws CredentialIntegrityException if the credential file is corrupted,
-  ///         tampered with, or an I/O error occurs during reading
-  @Nullable String get(@NonNull String key) throws CredentialIntegrityException;
+  @Nullable String get(@NonNull String key);
 
   /// Remove the entry for the given key if it exists. Do nothing if it does not exist.
   void remove(@NonNull String key) throws IOException;

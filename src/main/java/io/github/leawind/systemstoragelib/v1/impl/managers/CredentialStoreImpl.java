@@ -3,8 +3,8 @@ package io.github.leawind.systemstoragelib.v1.impl.managers;
 import io.github.leawind.inventory.lock.LockUtils;
 import io.github.leawind.inventory.misc.UncheckedCloseable;
 import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
-import io.github.leawind.systemstoragelib.v1.api.exception.CredentialIntegrityException;
 import io.github.leawind.systemstoragelib.v1.api.managers.CredentialStore;
+import io.github.leawind.systemstoragelib.v1.impl.exception.CredentialIntegrityException;
 import io.github.leawind.systemstoragelib.v1.utils.AtomicFileWriter;
 import io.github.leawind.systemstoragelib.v1.utils.machineid.MachineIdResolutionException;
 import io.github.leawind.systemstoragelib.v1.utils.machineid.MachineIdUtil;
@@ -116,7 +116,7 @@ public class CredentialStoreImpl extends StorageManagerImpl implements Credentia
   /// @throws CredentialIntegrityException if the credential file is corrupted,
   ///         tampered with, or an I/O error occurs during reading
   @Override
-  public @Nullable String get(@NonNull String key) throws CredentialIntegrityException {
+  public @Nullable String get(@NonNull String key) {
     validateKey(key);
     Path filePath = keyToFilePath(key);
     if (!Files.exists(filePath)) {

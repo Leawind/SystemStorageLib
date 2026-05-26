@@ -2,8 +2,8 @@ package io.github.leawind.systemstoragelib.v1.api;
 
 import dev.dirs.BaseDirectories;
 import io.github.leawind.inventory.misc.Lazy;
-import io.github.leawind.systemstoragelib.v1.api.exception.SystemStorageLibException;
 import io.github.leawind.systemstoragelib.v1.impl.SystemStorageLibImpl;
+import io.github.leawind.systemstoragelib.v1.impl.exception.SystemStorageLibException;
 import java.nio.file.Path;
 
 final class SystemStorageLibHolder {

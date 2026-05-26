@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.leawind.systemstoragelib.v1.BaseTest;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
-import io.github.leawind.systemstoragelib.v1.api.exception.CredentialIntegrityException;
+import io.github.leawind.systemstoragelib.v1.impl.exception.CredentialIntegrityException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

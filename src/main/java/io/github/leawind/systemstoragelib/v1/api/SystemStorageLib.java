@@ -1,6 +1,5 @@
 package io.github.leawind.systemstoragelib.v1.api;
 
-import io.github.leawind.systemstoragelib.v1.api.exception.SystemStorageLibException;
 import io.github.leawind.systemstoragelib.v1.api.managers.MetaConfigManager;
 import io.github.leawind.systemstoragelib.v1.impl.SystemStorageLibImpl;
 import java.nio.file.Path;
@@ -55,7 +54,6 @@ public interface SystemStorageLib {
   /// using platform-default directories.
   ///
   /// @return the singleton instance
-  /// @throws SystemStorageLibException if initialization failed
   static SystemStorageLib getInstance() {
     return SystemStorageLibHolder.getInstance();
   }
