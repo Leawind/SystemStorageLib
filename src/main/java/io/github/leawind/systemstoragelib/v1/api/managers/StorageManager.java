@@ -17,11 +17,6 @@ public interface StorageManager {
   /// The path is automatically converted to absolute and normalized form.
   /// Also resets the file-based lock so that the next {@link #getLock()} call creates a new lock
   /// file under the updated path. The old lock file is deleted if possible.
-  ///
-  /// ### Warning
-  ///
-  /// Must not be called while any thread is holding the lock or performing I/O on the old
-  /// directory.
   void setDirPath(Path dirPath);
 
   /// Get the read-write lock for the storage directory.
