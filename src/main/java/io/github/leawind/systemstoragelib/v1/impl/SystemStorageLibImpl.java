@@ -37,8 +37,8 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
   /// ### Examples
   ///
-  /// - config: `/home/Steve/.config/mc_system_storage/config`.
-  /// - data: `/home/Steve/.local/share/mc_system_storage/data`.
+  /// - config: `/home/Steve/.config/<root_name>/config`.
+  /// - data: `/home/Steve/.local/share/<root_name>/data`.
   private final Map<StoreType<?>, Path> defaultScopedDirs;
 
   private final LogManager logManager;
@@ -46,40 +46,31 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   private final MetaConfigManager metaConfig;
   private final Map<String, Optional<ScopeStorage>> scopes;
 
-  /// ### Args
+  /// ## Args
   ///
-  /// #### `logsDir`
+  /// All paths will be converted to absolute and normalized.
   ///
-  /// Directory to store logs.
+  /// - `logsDir` Directory to store logs.
+  /// - `metaConfigDir` Directory to store meta configuration.
+  /// - `defaultScopedDirs` Map from {@link StoreType} to default directory.
+  ///   - Must contain all {@link StoreType}.
+  ///   - Path must be unique.
   ///
-  /// #### `metaConfigDir`
+  ///   Example:
   ///
-  /// Directory to store meta configuration.
+  ///   - config: `/home/Steve/.config/<root_name>/config`.
+  ///   - data: `/home/Steve/.local/share/<root_name>/data`.
+  /// - `maxLogFileSize` Maximum size of a log file in bytes before rotation.
+  /// - `maxLogArchiveFiles` Maximum number of rotated archive log files.
   ///
-  /// #### `scopedDirs`
+  /// ## Throws
   ///
-  /// Map of {@link StoreType} to {@link Path} of directory.
-  ///
-  /// - Must contain all {@link StoreType}.
-  /// - Must be unique for each {@link StoreType}.
-  ///
-  /// Example:
-  ///
-  /// - config: `/home/Steve/.config/mc_system_storage/config`.
-  /// - data: `/home/Steve/.local/share/mc_system_storage/data`.
-  ///
-  /// #### `maxLogFileSize`
-  ///
-  /// Maximum size of a log file in bytes before rotation.
-  ///
-  /// #### `maxLogArchiveFiles`
-  ///
-  /// Maximum number of rotated archive log files.
-  ///
-  /// ### Throws {@link IllegalArgumentException}
-  ///
-  /// - If `scopedDirs` does not contain all {@link StoreType}.
-  /// - If any value in `scopedDirs` is not unique.
+  /// - {@link IllegalArgumentException} if:
+  ///   - `maxLogFileSize` <= 1
+  ///   - `maxLogArchiveFiles` <= 1
+  ///   - any of logs`logsDir`, `metaConfigDir`, or value in `defaultScopedDirs` is null.
+  ///   - `defaultScopedDirs` does not contain all {@link StoreType}.
+  ///   - any directory path is not unique.
   public SystemStorageLibImpl(
       @NonNull Path logsDir,
       @NonNull Path metaConfigDir,
