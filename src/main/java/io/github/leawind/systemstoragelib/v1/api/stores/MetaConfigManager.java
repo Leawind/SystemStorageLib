@@ -5,7 +5,8 @@ import io.github.leawind.systemstoragelib.v1.api.Storage;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
 import java.io.IOException;
 
-public interface MetaConfigManager extends Storage {
+public interface MetaConfigManager {
+  Storage storage();
 
   /// Get the current configuration.
   ///

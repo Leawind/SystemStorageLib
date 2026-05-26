@@ -1,5 +1,6 @@
 package io.github.leawind.systemstoragelib.v1.impl;
 
+import io.github.leawind.inventory.event.EventEmitter;
 import io.github.leawind.inventory.just.Result;
 import io.github.leawind.inventory.lock.FileBasedReentrantReadWriteLock;
 import io.github.leawind.inventory.lock.LockUtils;
@@ -36,6 +37,8 @@ public class StorageImpl implements Storage {
             }
           });
 
+  private final EventEmitter<Path> onDirUpdated = new EventEmitter<>();
+
   public StorageImpl(SystemStorageLib lib, Logger logger, Path dirPath) {
     this.lib = lib;
     this.logger = logger;
@@ -60,6 +63,9 @@ public class StorageImpl implements Storage {
       Files.deleteIfExists(lockPath);
     } catch (IOException ignored) {
     }
+
+    onDirUpdated.emit(this.dirPath);
+
     this.dirPath = dirPath.toAbsolutePath().normalize();
     this.lockPath = this.dirPath.resolve(LOCK_FILE_NAME);
     lockLazy.reset();
@@ -100,5 +106,10 @@ public class StorageImpl implements Storage {
     }
     Files.deleteIfExists(lockPath);
     Files.deleteIfExists(dirPath);
+  }
+
+  @Override
+  public EventEmitter<Path> onDirUpdated() {
+    return onDirUpdated;
   }
 }

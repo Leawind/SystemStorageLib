@@ -105,7 +105,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
     logManager = new LogManager(this, logsDir, maxLogFileSize, maxLogArchiveFiles);
     logger = new SystemLogger(logManager, "");
-    metaConfig = new MetaConfigManagerImpl(this, logger, metaConfigDir);
+    metaConfig = new MetaConfigManagerImpl(this, new StorageImpl(this, logger, metaConfigDir));
     // Listen for external changes to meta config and update scope storage paths accordingly.
     metaConfig.onChanged().on(this::handleMetaConfigChanged);
 

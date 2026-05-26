@@ -1,5 +1,6 @@
 package io.github.leawind.systemstoragelib.v1.api;
 
+import io.github.leawind.inventory.event.EventEmitter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -39,4 +40,6 @@ public interface Storage {
 
   /// Deletes the entire storage directory and all contents.
   void delete() throws IOException;
+
+  EventEmitter<Path> onDirUpdated();
 }

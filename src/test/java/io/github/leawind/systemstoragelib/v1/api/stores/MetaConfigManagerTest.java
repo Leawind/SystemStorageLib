@@ -43,7 +43,7 @@ public class MetaConfigManagerTest extends BaseTest {
   }
 
   private Path configFilePath() {
-    return manager.getDirPath().resolve("config.json");
+    return manager.storage().getDirPath().resolve("config.json");
   }
 
   private MetaConfig createNonDefaultConfig() {
@@ -86,7 +86,7 @@ public class MetaConfigManagerTest extends BaseTest {
 
     @Test
     void getReturnsConfigFromExistingValidFile() throws IOException {
-      Files.createDirectories(manager.getDirPath());
+      Files.createDirectories(manager.storage().getDirPath());
       Files.writeString(configFilePath(), "{\"custom_dirs\":{}}");
 
       MetaConfig result = manager.get();
@@ -95,14 +95,14 @@ public class MetaConfigManagerTest extends BaseTest {
 
     @Test
     void getReturnsDefaultWhenConfigFileIsEmpty() throws IOException {
-      Files.createDirectories(manager.getDirPath());
+      Files.createDirectories(manager.storage().getDirPath());
       Files.createFile(configFilePath());
       assertNotNull(manager.get());
     }
 
     @Test
     void getReturnsDefaultWhenConfigFileIsMalformed() throws IOException {
-      Files.createDirectories(manager.getDirPath());
+      Files.createDirectories(manager.storage().getDirPath());
       Files.writeString(configFilePath(), "{invalid json content");
       assertNotNull(manager.get());
     }
@@ -112,7 +112,7 @@ public class MetaConfigManagerTest extends BaseTest {
   class SetConfig {
     @Test
     void setDoesNotThrowWhenDirExists() throws IOException {
-      Files.createDirectories(manager.getDirPath());
+      Files.createDirectories(manager.storage().getDirPath());
       assertDoesNotThrow(() -> manager.set(manager.createConfig()));
     }
 
@@ -206,16 +206,6 @@ public class MetaConfigManagerTest extends BaseTest {
       assertFalse(
           latch.await(500, TimeUnit.MILLISECONDS),
           "onChanged should NOT be triggered when set() is called with the same config");
-    }
-
-    @Test
-    void deleteRemovesDirectory() throws IOException {
-      manager.set(createNonDefaultConfig());
-      assertTrue(Files.isDirectory(manager.getDirPath()));
-
-      manager.delete();
-
-      assertFalse(Files.exists(manager.getDirPath()));
     }
 
     @Test
