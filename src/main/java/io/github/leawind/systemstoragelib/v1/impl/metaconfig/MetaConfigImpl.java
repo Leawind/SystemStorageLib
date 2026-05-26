@@ -18,7 +18,7 @@ public record MetaConfigImpl(SystemStorageLib lib, Map<String, PerScopeConfig> s
 
   @Override
   public PerScopeConfig getScopeConfig(String scopeName) {
-
+    lib.validateScopeName(scopeName);
     return scopes.computeIfAbsent(scopeName, ignored -> PerScopeConfig.createDefault());
   }
 
