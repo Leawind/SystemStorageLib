@@ -1,10 +1,9 @@
 package io.github.leawind.systemstoragelib.v1.impl;
 
-import io.github.leawind.systemstoragelib.v1.api.ScopeStorage;
+import io.github.leawind.systemstoragelib.v1.api.Scope;
+import io.github.leawind.systemstoragelib.v1.api.Storage;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
-import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
-import io.github.leawind.systemstoragelib.v1.impl.managers.StorageManagerImpl;
 import io.github.leawind.systemstoragelib.v1.utils.MapUtils;
 import java.nio.file.Path;
 import java.util.List;
@@ -12,21 +11,20 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 
-public final class ScopeStorageImpl implements ScopeStorage {
+public final class ScopeImpl implements Scope {
 
   private final SystemStorageLib lib;
   private final String name;
   private final Logger logger;
   private final Map<StoreType, Path> dirs;
 
-  private final Map<StoreType, StorageManager> managers = new ConcurrentHashMap<>();
+  private final Map<StoreType, Storage> storages = new ConcurrentHashMap<>();
 
   /// ### Throws {@link IllegalArgumentException}
   ///
   /// - If any StoreType is missing.
   /// - If any dirPath is not unique.
-  public ScopeStorageImpl(
-      SystemStorageLib lib, String name, Logger logger, Map<StoreType, Path> dirs) {
+  public ScopeImpl(SystemStorageLib lib, String name, Logger logger, Map<StoreType, Path> dirs) {
 
     List<StoreType> missingTypes = StoreType.Utils.missingTypes(dirs.keySet());
     if (!missingTypes.isEmpty()) {
@@ -52,8 +50,8 @@ public final class ScopeStorageImpl implements ScopeStorage {
   }
 
   @Override
-  public StorageManager storage(StoreType storeType) {
-    return managers.computeIfAbsent(
-        storeType, key -> new StorageManagerImpl(lib, logger, dirs.get(key).resolve(name)));
+  public Storage storage(StoreType storeType) {
+    return storages.computeIfAbsent(
+        storeType, key -> new StorageImpl(lib, logger, dirs.get(key).resolve(name)));
   }
 }

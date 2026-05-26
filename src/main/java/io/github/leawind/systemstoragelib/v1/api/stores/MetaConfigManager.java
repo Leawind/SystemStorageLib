@@ -1,10 +1,11 @@
-package io.github.leawind.systemstoragelib.v1.api.managers;
+package io.github.leawind.systemstoragelib.v1.api.stores;
 
 import io.github.leawind.inventory.event.EventEmitter;
+import io.github.leawind.systemstoragelib.v1.api.Storage;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
 import java.io.IOException;
 
-public interface MetaConfigManager extends StorageManager {
+public interface MetaConfigManager extends Storage {
 
   /// Get the current configuration.
   ///

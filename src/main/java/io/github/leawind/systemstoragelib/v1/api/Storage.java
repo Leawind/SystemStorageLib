@@ -1,11 +1,11 @@
-package io.github.leawind.systemstoragelib.v1.api.managers;
+package io.github.leawind.systemstoragelib.v1.api;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.locks.ReadWriteLock;
 import org.slf4j.Logger;
 
-public interface StorageManager {
+public interface Storage {
 
   /// Returns the logger for this storage manager.
   Logger logger();

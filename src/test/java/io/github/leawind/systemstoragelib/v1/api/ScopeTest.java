@@ -6,8 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.leawind.systemstoragelib.v1.BaseTest;
-import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
-import io.github.leawind.systemstoragelib.v1.impl.ScopeStorageImpl;
+import io.github.leawind.systemstoragelib.v1.impl.ScopeImpl;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,10 +15,10 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ScopeStorageTest extends BaseTest {
+public class ScopeTest extends BaseTest {
   private Map<StoreType, Path> dirs;
 
-  private static final Logger TEST_LOGGER = LoggerFactory.getLogger(ScopeStorageTest.class);
+  private static final Logger TEST_LOGGER = LoggerFactory.getLogger(ScopeTest.class);
 
   @BeforeEach
   void setupEach() {
@@ -33,7 +32,7 @@ public class ScopeStorageTest extends BaseTest {
 
   @Test
   void notNull() {
-    ScopeStorage storage = new ScopeStorageImpl(lib, "test_scope", TEST_LOGGER, dirs);
+    Scope storage = new ScopeImpl(lib, "test_scope", TEST_LOGGER, dirs);
 
     assertNotNull(storage.logger());
     assertNotNull(storage.storage(StoreType.CACHE));
@@ -47,11 +46,11 @@ public class ScopeStorageTest extends BaseTest {
 
   @Test
   void ofCreatesScopedPaths() {
-    ScopeStorage scope = lib.scope("my_scope");
+    Scope scope = lib.scope("my_scope");
     assertNotNull(scope);
     assertEquals("my_scope", scope.name());
 
-    StorageManager config = scope.storage(StoreType.CONFIG);
+    Storage config = scope.storage(StoreType.CONFIG);
     assertTrue(config.getDirPath().endsWith("my_scope"));
   }
 
@@ -64,7 +63,7 @@ public class ScopeStorageTest extends BaseTest {
       IllegalArgumentException ex =
           assertThrows(
               IllegalArgumentException.class,
-              () -> new ScopeStorageImpl(lib, "scope", TEST_LOGGER, incomplete));
+              () -> new ScopeImpl(lib, "scope", TEST_LOGGER, incomplete));
       assertTrue(ex.getMessage().contains("Missing StoreTypes"));
     }
   }
@@ -82,6 +81,6 @@ public class ScopeStorageTest extends BaseTest {
     IllegalArgumentException ex =
         assertThrows(
             IllegalArgumentException.class,
-            () -> new ScopeStorageImpl(lib, "scope", TEST_LOGGER, duplicateDirs));
+            () -> new ScopeImpl(lib, "scope", TEST_LOGGER, duplicateDirs));
   }
 }

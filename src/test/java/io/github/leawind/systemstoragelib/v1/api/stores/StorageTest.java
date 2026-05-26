@@ -1,4 +1,4 @@
-package io.github.leawind.systemstoragelib.v1.api.managers;
+package io.github.leawind.systemstoragelib.v1.api.stores;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -9,7 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import io.github.leawind.inventory.lock.LockUtils;
 import io.github.leawind.inventory.misc.UncheckedCloseable;
 import io.github.leawind.systemstoragelib.v1.BaseTest;
-import io.github.leawind.systemstoragelib.v1.impl.managers.StorageManagerImpl;
+import io.github.leawind.systemstoragelib.v1.api.Storage;
+import io.github.leawind.systemstoragelib.v1.impl.StorageImpl;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,13 +23,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-public class StorageManagerTest extends BaseTest {
+public class StorageTest extends BaseTest {
 
-  private StorageManager manager;
+  private Storage manager;
 
   @BeforeEach
   void setupEach() {
-    manager = new StorageManagerImpl(lib, lib.logger(), tempDir.resolve("storage"));
+    manager = new StorageImpl(lib, lib.logger(), tempDir.resolve("storage"));
   }
 
   @Test
@@ -39,7 +40,7 @@ public class StorageManagerTest extends BaseTest {
   @Test
   void testDirPathIsAbsoluteAndNormalized() {
     Path relativePath = tempDir.resolve("storage/../storage");
-    StorageManager mgr = new StorageManagerImpl(lib, lib.logger(), relativePath);
+    Storage mgr = new StorageImpl(lib, lib.logger(), relativePath);
     assertEquals(relativePath.toAbsolutePath().normalize(), mgr.getDirPath());
   }
 

@@ -9,12 +9,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.leawind.systemstoragelib.v1.BaseTest;
-import io.github.leawind.systemstoragelib.v1.api.ScopeStorage;
+import io.github.leawind.systemstoragelib.v1.api.Scope;
+import io.github.leawind.systemstoragelib.v1.api.Storage;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
-import io.github.leawind.systemstoragelib.v1.api.managers.MetaConfigManager;
-import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.ScopeMetaConfig;
+import io.github.leawind.systemstoragelib.v1.api.stores.MetaConfigManager;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -215,7 +215,7 @@ public class SystemStorageLibImplTest extends BaseTest {
     @Test
     void scopeReturnsScopeStorage() {
       SystemStorageLibImpl impl = createImpl();
-      ScopeStorage storage = impl.scope("test_scope");
+      Scope storage = impl.scope("test_scope");
       assertNotNull(storage);
       assertEquals("test_scope", storage.name());
     }
@@ -223,16 +223,16 @@ public class SystemStorageLibImplTest extends BaseTest {
     @Test
     void sameScopeReturnsSameInstance() {
       SystemStorageLibImpl impl = createImpl();
-      ScopeStorage storage1 = impl.scope("test_scope");
-      ScopeStorage storage2 = impl.scope("test_scope");
+      Scope storage1 = impl.scope("test_scope");
+      Scope storage2 = impl.scope("test_scope");
       assertEquals(storage1, storage2);
     }
 
     @Test
     void differentScopesReturnDifferentInstances() {
       SystemStorageLibImpl impl = createImpl();
-      ScopeStorage storage1 = impl.scope("scope_a");
-      ScopeStorage storage2 = impl.scope("scope_b");
+      Scope storage1 = impl.scope("scope_a");
+      Scope storage2 = impl.scope("scope_b");
       assertNotEquals(storage1, storage2);
     }
   }
@@ -277,8 +277,8 @@ public class SystemStorageLibImplTest extends BaseTest {
       impl.metaConfig().set(config);
 
       // Create scope — it should use the custom dir for DATA
-      ScopeStorage storage = impl.scope("my-scope");
-      StorageManager dataManager = storage.storage(StoreType.DATA);
+      Scope storage = impl.scope("my-scope");
+      Storage dataManager = storage.storage(StoreType.DATA);
 
       assertEquals(
           customDataDir.resolve("my-scope"),
@@ -289,8 +289,8 @@ public class SystemStorageLibImplTest extends BaseTest {
     @Test
     void scopeUsesDefaultDirsWhenNoCustomConfig() {
       SystemStorageLibImpl impl = createImpl();
-      ScopeStorage storage = impl.scope("my-scope");
-      StorageManager dataManager = storage.storage(StoreType.DATA);
+      Scope storage = impl.scope("my-scope");
+      Storage dataManager = storage.storage(StoreType.DATA);
 
       // Should fall back to defaultScopedDirs
       assertEquals(
@@ -311,8 +311,8 @@ public class SystemStorageLibImplTest extends BaseTest {
       scopeMetaConfig.getCustomDirs().put(StoreType.DATA, customDataDir);
       impl.metaConfig().set(config);
 
-      ScopeStorage storage = impl.scope("my-scope");
-      StorageManager configManager = storage.storage(StoreType.CONFIG);
+      Scope storage = impl.scope("my-scope");
+      Storage configManager = storage.storage(StoreType.CONFIG);
 
       // CONFIG should still use default
       assertEquals(
@@ -330,8 +330,8 @@ public class SystemStorageLibImplTest extends BaseTest {
       SystemStorageLibImpl impl = createImpl();
 
       // Create scope first with default dirs
-      ScopeStorage storage = impl.scope("my-scope");
-      StorageManager dataManager = storage.storage(StoreType.DATA);
+      Scope storage = impl.scope("my-scope");
+      Storage dataManager = storage.storage(StoreType.DATA);
 
       // Set a custom dir via set() — this should trigger onChanged and update existing scope
       Path customDataDir = tempDir.resolve("custom-data");
@@ -360,8 +360,8 @@ public class SystemStorageLibImplTest extends BaseTest {
               .computeIfAbsent("my-scope", ignored -> customConfig.createScopeConfig());
       scopeMetaConfig.getCustomDirs().put(StoreType.DATA, customDataDir);
 
-      ScopeStorage storage = impl.scope("my-scope");
-      StorageManager dataManager = storage.storage(StoreType.DATA);
+      Scope storage = impl.scope("my-scope");
+      Storage dataManager = storage.storage(StoreType.DATA);
 
       impl.metaConfig().set(customConfig);
 
@@ -384,8 +384,8 @@ public class SystemStorageLibImplTest extends BaseTest {
     void setOnlyAffectsConfiguredStoreTypes() throws IOException {
       SystemStorageLibImpl impl = createImpl();
 
-      ScopeStorage storage = impl.scope("my-scope");
-      StorageManager configManager = storage.storage(StoreType.CONFIG);
+      Scope storage = impl.scope("my-scope");
+      Storage configManager = storage.storage(StoreType.CONFIG);
       Path originalConfigPath = configManager.getDirPath();
 
       // Set custom dir only for DATA
@@ -408,8 +408,8 @@ public class SystemStorageLibImplTest extends BaseTest {
     void setForDifferentScopeDoesNotAffectCurrentScope() throws IOException {
       SystemStorageLibImpl impl = createImpl();
 
-      ScopeStorage storage = impl.scope("my-scope");
-      StorageManager dataManager = storage.storage(StoreType.DATA);
+      Scope storage = impl.scope("my-scope");
+      Storage dataManager = storage.storage(StoreType.DATA);
       Path originalPath = dataManager.getDirPath();
 
       // Set a config change for a different scope
@@ -435,7 +435,7 @@ public class SystemStorageLibImplTest extends BaseTest {
       SystemStorageLibImpl impl = createImpl();
 
       // Create scope with default dirs
-      ScopeStorage storage = impl.scope("my-scope");
+      Scope storage = impl.scope("my-scope");
       Path originalCredentialsPath = storage.storage(StoreType.CREDENTIALS).getDirPath();
 
       // Try to set a custom dir for CREDENTIALS (non-customizable)

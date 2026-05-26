@@ -3,7 +3,7 @@ package io.github.leawind.systemstoragelib.v1.impl.log;
 import io.github.leawind.inventory.lock.LockUtils;
 import io.github.leawind.inventory.misc.UncheckedCloseable;
 import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
-import io.github.leawind.systemstoragelib.v1.impl.managers.StorageManagerImpl;
+import io.github.leawind.systemstoragelib.v1.impl.StorageImpl;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,7 +12,7 @@ import java.time.Instant;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
-public class LogManager extends StorageManagerImpl implements AutoCloseable {
+public class LogManager extends StorageImpl implements AutoCloseable {
   private static final String LOG_FILE_NAME = "latest.log";
 
   private final Path logFilePath;

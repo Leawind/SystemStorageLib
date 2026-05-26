@@ -1,6 +1,6 @@
 package io.github.leawind.systemstoragelib.v1.api;
 
-import io.github.leawind.systemstoragelib.v1.api.managers.MetaConfigManager;
+import io.github.leawind.systemstoragelib.v1.api.stores.MetaConfigManager;
 import io.github.leawind.systemstoragelib.v1.impl.SystemStorageLibImpl;
 import java.nio.file.Path;
 import java.util.stream.Stream;
@@ -19,12 +19,12 @@ public interface SystemStorageLib {
   /// @return the {@link MetaConfigManager} for reading and writing configuration
   MetaConfigManager metaConfig();
 
-  /// Creates or retrieves a {@link ScopeStorage} for the given scope name.
+  /// Creates or retrieves a {@link Scope} for the given scope name.
   ///
   /// @param scopeName the scope name, must pass {@link #validateScopeName}
   /// @return the name storage instance
   /// @throws IllegalArgumentException if the scope name is invalid
-  ScopeStorage scope(String scopeName);
+  Scope scope(String scopeName);
 
   /// Returns all known scope names, both from the in-memory cache and
   /// detected on disk.

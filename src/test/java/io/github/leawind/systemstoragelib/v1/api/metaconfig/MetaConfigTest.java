@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.leawind.systemstoragelib.v1.BaseTest;
-import io.github.leawind.systemstoragelib.v1.api.managers.MetaConfigManager;
+import io.github.leawind.systemstoragelib.v1.api.stores.MetaConfigManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

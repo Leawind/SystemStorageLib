@@ -1,12 +1,12 @@
-package io.github.leawind.systemstoragelib.v1.impl.managers;
+package io.github.leawind.systemstoragelib.v1.impl;
 
 import io.github.leawind.inventory.just.Result;
 import io.github.leawind.inventory.lock.FileBasedReentrantReadWriteLock;
 import io.github.leawind.inventory.lock.LockUtils;
 import io.github.leawind.inventory.misc.Lazy;
 import io.github.leawind.inventory.misc.UncheckedCloseable;
+import io.github.leawind.systemstoragelib.v1.api.Storage;
 import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
-import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,7 +16,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
 
-public class StorageManagerImpl implements StorageManager {
+public class StorageImpl implements Storage {
   public static final String LOCK_FILE_NAME = ".lock";
 
   protected final SystemStorageLib lib;
@@ -36,7 +36,7 @@ public class StorageManagerImpl implements StorageManager {
             }
           });
 
-  public StorageManagerImpl(SystemStorageLib lib, Logger logger, Path dirPath) {
+  public StorageImpl(SystemStorageLib lib, Logger logger, Path dirPath) {
     this.lib = lib;
     this.logger = logger;
     this.dirPath = dirPath.toAbsolutePath().normalize();

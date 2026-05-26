@@ -2,7 +2,7 @@ package io.github.leawind.systemstoragelib.v1;
 
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
-import io.github.leawind.systemstoragelib.v1.api.ScopeStorage;
+import io.github.leawind.systemstoragelib.v1.api.Scope;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
 import java.io.IOException;
@@ -18,7 +18,7 @@ public abstract class BaseTest {
   protected Path tempDir;
 
   protected SystemStorageLib lib;
-  protected ScopeStorage testScope;
+  protected Scope testScope;
 
   @BeforeEach
   void setup() throws IOException {

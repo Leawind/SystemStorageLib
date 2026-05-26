@@ -1,10 +1,10 @@
-package io.github.leawind.systemstoragelib.v1.impl.managers;
+package io.github.leawind.systemstoragelib.v1.impl.stores;
 
 import io.github.leawind.inventory.lock.LockUtils;
 import io.github.leawind.inventory.misc.UncheckedCloseable;
+import io.github.leawind.systemstoragelib.v1.api.Storage;
 import io.github.leawind.systemstoragelib.v1.api.exception.CredentialIntegrityException;
-import io.github.leawind.systemstoragelib.v1.api.managers.CredentialStore;
-import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
+import io.github.leawind.systemstoragelib.v1.api.stores.CredentialStore;
 import io.github.leawind.systemstoragelib.v1.utils.AtomicFileWriter;
 import io.github.leawind.systemstoragelib.v1.utils.machineid.MachineIdResolutionException;
 import io.github.leawind.systemstoragelib.v1.utils.machineid.MachineIdUtil;
@@ -74,16 +74,16 @@ public class CredentialStoreImpl implements CredentialStore {
 
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
-  private final StorageManager storageManager;
+  private final Storage storage;
   private volatile SecretKey aesKey;
 
-  public CredentialStoreImpl(StorageManager storageManager) {
-    this.storageManager = storageManager;
+  public CredentialStoreImpl(Storage storage) {
+    this.storage = storage;
   }
 
   @Override
-  public StorageManager storageManager() {
-    return storageManager;
+  public Storage storageManager() {
+    return storage;
   }
 
   @Override
@@ -96,7 +96,7 @@ public class CredentialStoreImpl implements CredentialStore {
     validateKey(key);
     Path filePath = keyToFilePath(key);
 
-    try (UncheckedCloseable ignored = LockUtils.lock(storageManager.getLock().writeLock())) {
+    try (UncheckedCloseable ignored = LockUtils.lock(storage.getLock().writeLock())) {
       ensureDirectoryExists();
 
       byte[] plaintext = value.getBytes(StandardCharsets.UTF_8);
@@ -128,7 +128,7 @@ public class CredentialStoreImpl implements CredentialStore {
       return null;
     }
 
-    try (UncheckedCloseable ignored = LockUtils.lock(storageManager.getLock().readLock())) {
+    try (UncheckedCloseable ignored = LockUtils.lock(storage.getLock().readLock())) {
       byte[] fileContent = Files.readAllBytes(filePath);
       validateFileSize(fileContent, filePath);
       byte[] plaintext = decryptFileContent(fileContent);
@@ -160,7 +160,7 @@ public class CredentialStoreImpl implements CredentialStore {
   }
 
   private Path keyToFilePath(String key) {
-    return storageManager.getDirPath().resolve(sha256Hex(key) + FILE_SUFFIX);
+    return storage.getDirPath().resolve(sha256Hex(key) + FILE_SUFFIX);
   }
 
   private static String sha256Hex(String input) {
@@ -198,7 +198,7 @@ public class CredentialStoreImpl implements CredentialStore {
       try {
         machineId = MachineIdUtil.getMachineId();
       } catch (MachineIdResolutionException e) {
-        storageManager.logger().error("Failed to get machine id", e);
+        storage.logger().error("Failed to get machine id", e);
       }
 
       String keyMaterial =
@@ -276,11 +276,11 @@ public class CredentialStoreImpl implements CredentialStore {
 
   private void ensureDirectoryExists() throws IOException {
     try {
-      Files.createDirectories(storageManager.getDirPath(), DIR_ATTRIBUTE);
+      Files.createDirectories(storage.getDirPath(), DIR_ATTRIBUTE);
     } catch (UnsupportedOperationException e) {
-      Files.createDirectories(storageManager.getDirPath());
+      Files.createDirectories(storage.getDirPath());
     }
-    applyDirPermissions(storageManager.getDirPath());
+    applyDirPermissions(storage.getDirPath());
   }
 
   private static void validateFileSize(byte[] fileContent, Path filePath)

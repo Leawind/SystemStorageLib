@@ -12,9 +12,9 @@ public class SystemStorageLibTest extends BaseTest {
 
   @Test
   void test() {
-    ScopeStorage storage = lib.scope("system_storage_lib_test");
-    assertNotNull(storage);
-    assertEquals("system_storage_lib_test", storage.name());
+    Scope scope = lib.scope("system_storage_lib_test");
+    assertNotNull(scope);
+    assertEquals("system_storage_lib_test", scope.name());
   }
 
   @Test

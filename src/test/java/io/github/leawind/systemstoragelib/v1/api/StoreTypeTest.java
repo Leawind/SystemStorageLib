@@ -1,7 +1,6 @@
 package io.github.leawind.systemstoragelib.v1.api;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -9,17 +8,12 @@ import com.google.gson.JsonElement;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import io.github.leawind.systemstoragelib.v1.BaseTest;
-import io.github.leawind.systemstoragelib.v1.api.managers.CredentialStore;
-import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
-import io.github.leawind.systemstoragelib.v1.impl.managers.CredentialStoreImpl;
-import io.github.leawind.systemstoragelib.v1.impl.managers.StorageManagerImpl;
 import io.github.leawind.systemstoragelib.v1.utils.Codecs;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
 
 public class StoreTypeTest extends BaseTest {
 

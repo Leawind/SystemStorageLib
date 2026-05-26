@@ -1,7 +1,8 @@
-package io.github.leawind.systemstoragelib.v1.api.managers;
+package io.github.leawind.systemstoragelib.v1.api.stores;
 
+import io.github.leawind.systemstoragelib.v1.api.Storage;
 import io.github.leawind.systemstoragelib.v1.api.exception.CredentialIntegrityException;
-import io.github.leawind.systemstoragelib.v1.impl.managers.CredentialStoreImpl;
+import io.github.leawind.systemstoragelib.v1.impl.stores.CredentialStoreImpl;
 import java.io.IOException;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -25,11 +26,11 @@ import org.jspecify.annotations.Nullable;
 /// - Integrity verification is enforced — tampered entries MUST be ignored.
 /// - Keys are derived from the local environment.
 public interface CredentialStore {
-  static CredentialStore create(StorageManager storageManager) {
-    return new CredentialStoreImpl(storageManager);
+  static CredentialStore create(Storage storage) {
+    return new CredentialStoreImpl(storage);
   }
 
-  StorageManager storageManager();
+  Storage storageManager();
 
   boolean exists(@NonNull String key);
 

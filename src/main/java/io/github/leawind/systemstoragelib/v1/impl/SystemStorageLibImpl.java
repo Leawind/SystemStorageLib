@@ -1,16 +1,16 @@
 package io.github.leawind.systemstoragelib.v1.impl;
 
 import dev.dirs.BaseDirectories;
-import io.github.leawind.systemstoragelib.v1.api.ScopeStorage;
+import io.github.leawind.systemstoragelib.v1.api.Scope;
+import io.github.leawind.systemstoragelib.v1.api.Storage;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
-import io.github.leawind.systemstoragelib.v1.api.managers.MetaConfigManager;
-import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.ScopeMetaConfig;
+import io.github.leawind.systemstoragelib.v1.api.stores.MetaConfigManager;
 import io.github.leawind.systemstoragelib.v1.impl.log.LogManager;
 import io.github.leawind.systemstoragelib.v1.impl.log.SystemLogger;
-import io.github.leawind.systemstoragelib.v1.impl.managers.MetaConfigManagerImpl;
+import io.github.leawind.systemstoragelib.v1.impl.stores.MetaConfigManagerImpl;
 import io.github.leawind.systemstoragelib.v1.utils.ConcurrentScopeHashMap;
 import io.github.leawind.systemstoragelib.v1.utils.MapUtils;
 import java.io.IOException;
@@ -44,7 +44,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   private final LogManager logManager;
   private final Logger logger;
   private final MetaConfigManager metaConfig;
-  private final Map<String, Optional<ScopeStorage>> scopes;
+  private final Map<String, Optional<Scope>> scopes;
 
   /// ## Args
   ///
@@ -116,16 +116,16 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
   private void handleMetaConfigChanged(MetaConfig newConfig) {
     // Phase 1: Compute and validate all changes across all scopes.
-    Map<ScopeStorage, Map<StoreType, Path>> pendingChanges = new HashMap<>();
+    Map<Scope, Map<StoreType, Path>> pendingChanges = new HashMap<>();
 
     scopes.forEach(
-        (scope, scopeOpt) -> {
+        (scopeName, scopeOpt) -> {
           if (scopeOpt.isEmpty()) {
             return;
           }
-          ScopeStorage scopeStorage = scopeOpt.get();
+          Scope scope = scopeOpt.get();
 
-          ScopeMetaConfig scopeMetaConfig = newConfig.scopes().get(scope);
+          ScopeMetaConfig scopeMetaConfig = newConfig.scopes().get(scopeName);
           Map<StoreType, Path> customDirs =
               (scopeMetaConfig != null) ? scopeMetaConfig.getCustomDirs() : null;
 
@@ -143,7 +143,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
             }
 
             if (newDirPath == null) {
-              newDirPath = defaultScopedDirs.get(storeType).resolve(scope);
+              newDirPath = defaultScopedDirs.get(storeType).resolve(scopeName);
             }
 
             newDirMap.put(storeType, newDirPath);
@@ -155,12 +155,12 @@ public class SystemStorageLibImpl implements SystemStorageLib {
             logger()
                 .warn(
                     "MetaConfig update contains duplicate dir paths for scope `{}`, ignoring: {}",
-                    scope,
+                    scopeName,
                     e.getMessage());
             return;
           }
 
-          pendingChanges.put(scopeStorage, newDirMap);
+          pendingChanges.put(scope, newDirMap);
         });
 
     // Phase 2: Apply all validated changes.
@@ -169,8 +169,8 @@ public class SystemStorageLibImpl implements SystemStorageLib {
             newDirMap.forEach(
                 (storeType, newDirPath) -> {
                   try {
-                    StorageManager manager = scopeStorage.storage(storeType);
-                    if (manager.getDirPath().equals(newDirPath)) {
+                    Storage storage = scopeStorage.storage(storeType);
+                    if (storage.getDirPath().equals(newDirPath)) {
                       return;
                     }
 
@@ -179,10 +179,10 @@ public class SystemStorageLibImpl implements SystemStorageLib {
                             "Updating dir path for scope `{}`, store type `{}` from `{}` to `{}`",
                             scopeStorage.name(),
                             storeType,
-                            manager.getDirPath(),
+                            storage.getDirPath(),
                             newDirPath);
 
-                    manager.setDirPath(newDirPath);
+                    storage.setDirPath(newDirPath);
                   } catch (Exception e) {
                     logger()
                         .warn(
@@ -216,7 +216,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   }
 
   @Override
-  public ScopeStorage scope(String scopeName) {
+  public Scope scope(String scopeName) {
     return scopes
         .compute(
             scopeName,
@@ -289,7 +289,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
     return logsDir;
   }
 
-  private ScopeStorage createScopeStorage(String scopeName) {
+  private Scope createScopeStorage(String scopeName) {
     // Build a directory map for the given scope, preferring custom directories from MetaConfig.
     Map<StoreType, Path> dirsForScope = new HashMap<>(defaultScopedDirs);
     try {
@@ -314,8 +314,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
       // If we cannot read the meta config, fall back to the default scoped directories.
       logger().warn("Failed to load meta config for scope {}: {}", scopeName, e.getMessage());
     }
-    return new ScopeStorageImpl(
-        this, scopeName, new SystemLogger(logManager, scopeName), dirsForScope);
+    return new ScopeImpl(this, scopeName, new SystemLogger(logManager, scopeName), dirsForScope);
   }
 
   private void detectScopes() {
