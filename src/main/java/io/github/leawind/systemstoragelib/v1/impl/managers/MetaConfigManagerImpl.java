@@ -84,7 +84,9 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
       if (result != null) {
         return result;
       }
-      return MetaConfig.getDefault();
+
+      config = createConfig();
+      return config;
     }
   }
 
@@ -118,6 +120,11 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
   @Override
   public EventEmitter<MetaConfig> onChanged() {
     return onChanged;
+  }
+
+  @Override
+  public MetaConfig createConfig() {
+    return new MetaConfigImpl();
   }
 
   @Override

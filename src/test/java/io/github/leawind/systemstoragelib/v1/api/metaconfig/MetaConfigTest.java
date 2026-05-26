@@ -5,16 +5,25 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.github.leawind.systemstoragelib.v1.BaseTest;
+import io.github.leawind.systemstoragelib.v1.api.managers.MetaConfigManager;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-public class MetaConfigTest {
+public class MetaConfigTest extends BaseTest {
+  private MetaConfigManager manager;
+
+  @BeforeEach
+  void setupEach() {
+    manager = lib.metaConfig();
+  }
 
   @Nested
   class GetOrCreateScopeConfig {
     @Test
     void createsNewConfigWhenAbsent() {
-      MetaConfig config = MetaConfig.getDefault();
+      MetaConfig config = manager.createConfig();
       PerScopeConfig perScope = config.getScopeConfig("new-scope");
 
       assertNotNull(perScope);
@@ -23,7 +32,7 @@ public class MetaConfigTest {
 
     @Test
     void returnsExistingConfigWhenPresent() {
-      MetaConfig config = MetaConfig.getDefault();
+      MetaConfig config = manager.createConfig();
       PerScopeConfig first = config.getScopeConfig("scope-a");
       PerScopeConfig second = config.getScopeConfig("scope-a");
 
@@ -35,7 +44,7 @@ public class MetaConfigTest {
   class RemoveScopeConfig {
     @Test
     void removesExistingScope() {
-      MetaConfig config = MetaConfig.getDefault();
+      MetaConfig config = manager.createConfig();
       config.getScopeConfig("scope-a");
       config.scopes().remove("scope-a");
 
@@ -44,7 +53,7 @@ public class MetaConfigTest {
 
     @Test
     void doesNothingForNonExistentScope() {
-      MetaConfig config = MetaConfig.getDefault();
+      MetaConfig config = manager.createConfig();
       config.getScopeConfig("scope-a");
       config.scopes().remove("nonexistent");
 
@@ -56,13 +65,13 @@ public class MetaConfigTest {
   class GetScopeConfig {
     @Test
     void returnsNullForNonExistentScope() {
-      MetaConfig config = MetaConfig.getDefault();
+      MetaConfig config = manager.createConfig();
       assertNull(config.scopes().get("nonexistent"));
     }
 
     @Test
     void returnsConfigForExistingScope() {
-      MetaConfig config = MetaConfig.getDefault();
+      MetaConfig config = manager.createConfig();
       PerScopeConfig created = config.getScopeConfig("scope-a");
       assertEquals(created, config.scopes().get("scope-a"));
     }

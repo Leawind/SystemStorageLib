@@ -22,11 +22,15 @@ public record MetaConfigImpl(Map<String, PerScopeConfig> scopes) implements Meta
     this.scopes = new HashMap<>(scopes);
   }
 
+  public MetaConfigImpl() {
+    this(new HashMap<>());
+  }
+
   // region scopes
 
   @Override
   public PerScopeConfig getScopeConfig(String scopeName) {
-    
+
     return scopes.computeIfAbsent(scopeName, ignored -> PerScopeConfig.createDefault());
   }
 

@@ -17,4 +17,7 @@ public interface MetaConfigManager extends StorageManager {
   /// Fired when the configuration value changes.
   /// Either by {@link #set(MetaConfig)} or file changed by external process.
   EventEmitter<MetaConfig> onChanged();
+
+  /// Create a new default configuration.
+  MetaConfig createConfig();
 }

@@ -21,10 +21,17 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 public class SystemStorageLibImplTest extends BaseTest {
+  private MetaConfigManager manager;
+
+  @BeforeEach
+  void setupEach() {
+    manager = lib.metaConfig();
+  }
 
   private Map<StoreType<?>, Path> allDirs() {
     Map<StoreType<?>, Path> dirs = new HashMap<>();
@@ -271,7 +278,7 @@ public class SystemStorageLibImplTest extends BaseTest {
 
       // Set up custom dir for DATA store type in scope "my-scope"
       Path customDataDir = tempDir.resolve("custom-data");
-      MetaConfig config = MetaConfig.getDefault();
+      MetaConfig config = manager.createConfig();
       PerScopeConfig perScopeConfig = config.getScopeConfig("my-scope");
       perScopeConfig.getCustomDirs().put(StoreType.DATA, customDataDir);
       impl.metaConfig().set(config);
@@ -305,7 +312,7 @@ public class SystemStorageLibImplTest extends BaseTest {
 
       // Only configure custom dir for DATA
       Path customDataDir = tempDir.resolve("custom-data");
-      MetaConfig config = MetaConfig.getDefault();
+      MetaConfig config = manager.createConfig();
       PerScopeConfig perScopeConfig = config.getScopeConfig("my-scope");
       perScopeConfig.getCustomDirs().put(StoreType.DATA, customDataDir);
       impl.metaConfig().set(config);
@@ -334,7 +341,7 @@ public class SystemStorageLibImplTest extends BaseTest {
 
       // Set a custom dir via set() — this should trigger onChanged and update existing scope
       Path customDataDir = tempDir.resolve("custom-data");
-      MetaConfig newConfig = MetaConfig.getDefault();
+      MetaConfig newConfig = manager.createConfig();
       PerScopeConfig perScopeConfig = newConfig.getScopeConfig("my-scope");
       perScopeConfig.getCustomDirs().put(StoreType.DATA, customDataDir);
       impl.metaConfig().set(newConfig);
@@ -351,7 +358,7 @@ public class SystemStorageLibImplTest extends BaseTest {
 
       // First set up a custom dir
       Path customDataDir = tempDir.resolve("custom-data");
-      MetaConfig customConfig = MetaConfig.getDefault();
+      MetaConfig customConfig = manager.createConfig();
       PerScopeConfig perScopeConfig = customConfig.getScopeConfig("my-scope");
       perScopeConfig.getCustomDirs().put(StoreType.DATA, customDataDir);
 
@@ -366,7 +373,7 @@ public class SystemStorageLibImplTest extends BaseTest {
           "DATA path should use custom dir after first update");
 
       // Now set a config without the custom dir
-      MetaConfig defaultConfig = MetaConfig.getDefault();
+      MetaConfig defaultConfig = manager.createConfig();
       impl.metaConfig().set(defaultConfig);
 
       assertEquals(
@@ -385,7 +392,7 @@ public class SystemStorageLibImplTest extends BaseTest {
 
       // Set custom dir only for DATA
       Path customDataDir = tempDir.resolve("custom-data");
-      MetaConfig newConfig = MetaConfig.getDefault();
+      MetaConfig newConfig = manager.createConfig();
       PerScopeConfig perScopeConfig = newConfig.getScopeConfig("my-scope");
       perScopeConfig.getCustomDirs().put(StoreType.DATA, customDataDir);
 
@@ -408,7 +415,7 @@ public class SystemStorageLibImplTest extends BaseTest {
 
       // Set a config change for a different scope
       Path customDataDir = tempDir.resolve("custom-data");
-      MetaConfig newConfig = MetaConfig.getDefault();
+      MetaConfig newConfig = manager.createConfig();
       PerScopeConfig perScopeConfig = newConfig.getScopeConfig("other-scope");
       perScopeConfig.getCustomDirs().put(StoreType.DATA, customDataDir);
 
@@ -431,7 +438,7 @@ public class SystemStorageLibImplTest extends BaseTest {
 
       // Try to set a custom dir for CREDENTIALS (non-customizable)
       Path customCredentialsDir = tempDir.resolve("custom-credentials");
-      MetaConfig config = MetaConfig.getDefault();
+      MetaConfig config = manager.createConfig();
 
       assertThrows(
           IllegalArgumentException.class,

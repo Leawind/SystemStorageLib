@@ -56,14 +56,14 @@ public class MetaConfigManagerTest extends BaseTest {
   }
 
   private MetaConfig createNonDefaultConfig() {
-    MetaConfig config = MetaConfig.getDefault();
+    MetaConfig config = manager.createConfig();
     PerScopeConfig perScopeConfig = config.getScopeConfig("scope1");
     perScopeConfig.getCustomDirs().put(StoreType.CONFIG, tempDir.resolve("custom/config"));
     return config;
   }
 
   private MetaConfig createNonDefaultConfig2() {
-    MetaConfig config = MetaConfig.getDefault();
+    MetaConfig config = manager.createConfig();
     PerScopeConfig perScopeConfig = config.getScopeConfig("scope2");
     perScopeConfig.getCustomDirs().put(StoreType.CONFIG, tempDir.resolve("custom/config2"));
     return config;
@@ -76,8 +76,7 @@ public class MetaConfigManagerTest extends BaseTest {
   }
 
   @BeforeEach
-  void setupEach() throws IOException {
-    Files.createDirectories(tempDir);
+  void setupEach() {
     manager = createManager(tempDir.resolve("meta" + RANDOM.nextInt()));
   }
 
@@ -93,14 +92,14 @@ public class MetaConfigManagerTest extends BaseTest {
   class GetConfig {
     @Test
     void getReturnsDefaultWhenNoConfigFile() throws IOException {
-      assertEquals(MetaConfig.getDefault(), manager.get());
+      assertEquals(manager.createConfig(), manager.get());
     }
 
     @Test
     void getReturnsConfigAfterSet() throws IOException {
       manager.set(createNonDefaultConfig());
 
-      MetaConfig config = MetaConfig.getDefault();
+      MetaConfig config = manager.createConfig();
       manager.set(config);
       assertEquals(config, manager.get());
     }
@@ -134,12 +133,12 @@ public class MetaConfigManagerTest extends BaseTest {
     @Test
     void setDoesNotThrowWhenDirExists() throws IOException {
       Files.createDirectories(manager.getDirPath());
-      assertDoesNotThrow(() -> manager.set(MetaConfig.getDefault()));
+      assertDoesNotThrow(() -> manager.set(manager.createConfig()));
     }
 
     @Test
     void setCreatesConfigFile() throws IOException {
-      manager.set(MetaConfig.getDefault());
+      manager.set(manager.createConfig());
       assertFalse(Files.exists(configFilePath()));
       manager.set(createNonDefaultConfig());
       assertTrue(Files.exists(configFilePath()));
@@ -207,7 +206,7 @@ public class MetaConfigManagerTest extends BaseTest {
       CountDownLatch latch = new CountDownLatch(1);
       registerListener(latch::countDown);
 
-      manager.set(MetaConfig.getDefault());
+      manager.set(manager.createConfig());
 
       assertTrue(
           latch.await(500, TimeUnit.MILLISECONDS),
