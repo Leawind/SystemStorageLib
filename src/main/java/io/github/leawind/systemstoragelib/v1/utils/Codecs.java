@@ -8,5 +8,5 @@ public class Codecs {
   public static final Codec<Path> PATH = Codec.STRING.xmap(Path::of, Path::toString);
 
   public static final Codec<StoreType> STORE_TYPE =
-      Codec.STRING.xmap(StoreType::of, StoreType::identifier);
+      Codec.STRING.xmap(StoreType::fromId, StoreType::id);
 }

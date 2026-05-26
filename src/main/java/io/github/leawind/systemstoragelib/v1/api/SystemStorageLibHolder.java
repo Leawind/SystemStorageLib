@@ -21,31 +21,31 @@ final class SystemStorageLibHolder {
                       Path.of(
                           baseDirs.cacheDir,
                           SystemStorageLibImpl.ROOT_DIR_NAME,
-                          StoreType.CACHE.identifier()))
+                          StoreType.CACHE.id()))
                   .storeDir(
                       StoreType.CONFIG,
                       Path.of(
                           baseDirs.configDir,
                           SystemStorageLibImpl.ROOT_DIR_NAME,
-                          StoreType.CONFIG.identifier()))
+                          StoreType.CONFIG.id()))
                   .storeDir(
                       StoreType.CREDENTIALS,
                       Path.of(
                           baseDirs.dataDir,
                           SystemStorageLibImpl.ROOT_DIR_NAME,
-                          StoreType.CREDENTIALS.identifier()))
+                          StoreType.CREDENTIALS.id()))
                   .storeDir(
                       StoreType.DATA,
                       Path.of(
                           baseDirs.dataDir,
                           SystemStorageLibImpl.ROOT_DIR_NAME,
-                          StoreType.DATA.identifier()))
+                          StoreType.DATA.id()))
                   .storeDir(
                       StoreType.DATA_LOCAL,
                       Path.of(
                           baseDirs.dataLocalDir,
                           SystemStorageLibImpl.ROOT_DIR_NAME,
-                          StoreType.DATA_LOCAL.identifier()))
+                          StoreType.DATA_LOCAL.id()))
                   .build();
             } catch (SystemStorageLibException e) {
               throw e;

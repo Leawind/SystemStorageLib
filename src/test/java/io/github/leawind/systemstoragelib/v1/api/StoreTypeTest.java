@@ -84,38 +84,38 @@ public class StoreTypeTest extends BaseTest {
   class Of {
 
     @Test
-    void ofCredentials() {
-      assertEquals(StoreType.CREDENTIALS, StoreType.of("credentials"));
+    void fromIdentifierCredentials() {
+      assertEquals(StoreType.CREDENTIALS, StoreType.fromId("credentials"));
     }
 
     @Test
-    void ofConfig() {
-      assertEquals(StoreType.CONFIG, StoreType.of("config"));
+    void fromIdentifierConfig() {
+      assertEquals(StoreType.CONFIG, StoreType.fromId("config"));
     }
 
     @Test
-    void ofData() {
-      assertEquals(StoreType.DATA, StoreType.of("data"));
+    void fromIdentifierData() {
+      assertEquals(StoreType.DATA, StoreType.fromId("data"));
     }
 
     @Test
-    void ofCache() {
-      assertEquals(StoreType.CACHE, StoreType.of("cache"));
+    void fromIdentifierCache() {
+      assertEquals(StoreType.CACHE, StoreType.fromId("cache"));
     }
 
     @Test
-    void ofDataLocal() {
-      assertEquals(StoreType.DATA_LOCAL, StoreType.of("data_local"));
+    void fromIdentifierDataLocal() {
+      assertEquals(StoreType.DATA_LOCAL, StoreType.fromId("data_local"));
     }
 
     @Test
-    void ofUnknownThrows() {
-      assertThrows(IllegalArgumentException.class, () -> StoreType.of("unknown"));
+    void fromIdentifierUnknownThrows() {
+      assertThrows(IllegalArgumentException.class, () -> StoreType.fromId("unknown"));
     }
 
     @Test
-    void ofEmptyThrows() {
-      assertThrows(IllegalArgumentException.class, () -> StoreType.of(""));
+    void fromIdentifierEmptyThrows() {
+      assertThrows(IllegalArgumentException.class, () -> StoreType.fromId(""));
     }
   }
 
@@ -157,8 +157,7 @@ public class StoreTypeTest extends BaseTest {
     @Test
     void allIdentifiersAreUnique() {
       StoreType[] values = StoreType.values();
-      long distinctCount =
-          java.util.Arrays.stream(values).map(StoreType::identifier).distinct().count();
+      long distinctCount = java.util.Arrays.stream(values).map(StoreType::id).distinct().count();
       assertEquals(values.length, distinctCount, "All StoreType identifiers must be unique");
     }
   }

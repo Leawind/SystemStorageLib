@@ -16,26 +16,23 @@ import java.util.List;
 /// | {@link #DATA_LOCAL} | Persistent + machine-local (or renewable but costly to regenerate) |
 ///
 /// @apiNote Each category must have different directory.
-public final class StoreType {
+public enum StoreType {
+  CACHE("cache", true),
+  CONFIG("config", true),
+  CREDENTIALS("credentials", false),
+  DATA("data", true),
+  DATA_LOCAL("data_local", true);
 
-  public static final StoreType CACHE = new StoreType("cache", true);
-  public static final StoreType CONFIG = new StoreType("config", true);
-  public static final StoreType CREDENTIALS = new StoreType("credentials", false);
-  public static final StoreType DATA = new StoreType("data", true);
-  public static final StoreType DATA_LOCAL = new StoreType("data_local", true);
-
-  private static final StoreType[] ALL_VALUES = {CACHE, CONFIG, CREDENTIALS, DATA, DATA_LOCAL};
-
-  private final String identifier;
+  private final String id;
   private final boolean allowCustomDir;
 
-  private StoreType(String identifier, boolean allowCustomDir) {
-    this.identifier = identifier;
+  StoreType(String id, boolean allowCustomDir) {
+    this.id = id;
     this.allowCustomDir = allowCustomDir;
   }
 
-  public String identifier() {
-    return identifier;
+  public String id() {
+    return id;
   }
 
   /// @see ScopeMetaConfig#getCustomDirs()
@@ -43,23 +40,14 @@ public final class StoreType {
     return allowCustomDir;
   }
 
-  @Override
-  public String toString() {
-    return identifier;
-  }
-
-  public static StoreType[] values() {
-    return ALL_VALUES.clone();
-  }
-
-  public static StoreType of(String identifier) {
-    return switch (identifier) {
+  public static StoreType fromId(String id) {
+    return switch (id) {
       case "cache" -> CACHE;
       case "config" -> CONFIG;
       case "credentials" -> CREDENTIALS;
       case "data" -> DATA;
       case "data_local" -> DATA_LOCAL;
-      default -> throw new IllegalArgumentException("Unknown store type: " + identifier);
+      default -> throw new IllegalArgumentException("Unknown store type: " + id);
     };
   }
 

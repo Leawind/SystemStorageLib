@@ -138,7 +138,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
                   .error(
                       "Path of store type {} is not customizable, ignoring custom dir in"
                           + " MetaConfig update",
-                      storeType.identifier());
+                      storeType.id());
               continue;
             }
 
@@ -305,8 +305,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
                   if (storeType.allowCustomDir()) {
                     dirsForScope.put(storeType, path);
                   } else {
-                    logger()
-                        .error("Path of store type {} is not customizable", storeType.identifier());
+                    logger().error("Path of store type {} is not customizable", storeType.id());
                   }
                 });
       }
