@@ -18,11 +18,11 @@ import org.slf4j.Logger;
 ///
 /// | Method | Condition |
 /// | - | - |
-/// | {@link #CREDENTIALS} | Sensitive credentials |
+/// | {@link #CACHE} | Renewable + cheap to regenerate |
 /// | {@link #CONFIG} | Configuration files |
+/// | {@link #CREDENTIALS} | Sensitive credentials |
 /// | {@link #DATA} | Persistent + shareable across machines |
-/// | {@link #CACHE} | Persistent + machine-local (or renewable but costly to regenerate) |
-/// | {@link #DATA_LOCAL} | Renewable + cheap to regenerate |
+/// | {@link #DATA_LOCAL} | Persistent + machine-local (or renewable but costly to regenerate) |
 ///
 /// @apiNote Each category must have different directory.
 public final class StoreType<S extends StorageManager> {
@@ -30,18 +30,18 @@ public final class StoreType<S extends StorageManager> {
   public static final Codec<StoreType<?>> CODEC =
       Codec.STRING.xmap(StoreType::of, StoreType::identifier);
 
-  public static final StoreType<CredentialStore> CREDENTIALS =
-      new StoreType<>(CredentialStore.class, "credentials", false, CredentialStoreImpl::new);
-  public static final StoreType<StorageManager> CONFIG =
-      new StoreType<>(StorageManager.class, "config", true, StorageManagerImpl::new);
-  public static final StoreType<StorageManager> DATA =
-      new StoreType<>(StorageManager.class, "data", true, StorageManagerImpl::new);
   public static final StoreType<StorageManager> CACHE =
       new StoreType<>(StorageManager.class, "cache", true, StorageManagerImpl::new);
+  public static final StoreType<StorageManager> CONFIG =
+      new StoreType<>(StorageManager.class, "config", true, StorageManagerImpl::new);
+  public static final StoreType<CredentialStore> CREDENTIALS =
+      new StoreType<>(CredentialStore.class, "credentials", false, CredentialStoreImpl::new);
+  public static final StoreType<StorageManager> DATA =
+      new StoreType<>(StorageManager.class, "data", true, StorageManagerImpl::new);
   public static final StoreType<StorageManager> DATA_LOCAL =
       new StoreType<>(StorageManager.class, "data_local", true, StorageManagerImpl::new);
 
-  private static final StoreType<?>[] ALL_VALUES = {CREDENTIALS, CONFIG, DATA, CACHE, DATA_LOCAL};
+  private static final StoreType<?>[] ALL_VALUES = {CACHE, CONFIG, CREDENTIALS, DATA, DATA_LOCAL};
 
   private final Class<S> clazz;
   private final String identifier;
@@ -87,10 +87,10 @@ public final class StoreType<S extends StorageManager> {
 
   public static StoreType<?> of(String identifier) {
     return switch (identifier) {
-      case "credentials" -> CREDENTIALS;
-      case "config" -> CONFIG;
-      case "data" -> DATA;
       case "cache" -> CACHE;
+      case "config" -> CONFIG;
+      case "credentials" -> CREDENTIALS;
+      case "data" -> DATA;
       case "data_local" -> DATA_LOCAL;
       default -> throw new IllegalArgumentException("Unknown store type: " + identifier);
     };
