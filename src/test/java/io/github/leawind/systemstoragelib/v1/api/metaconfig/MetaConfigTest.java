@@ -15,7 +15,7 @@ public class MetaConfigTest {
     @Test
     void createsNewConfigWhenAbsent() {
       MetaConfig config = MetaConfig.getDefault();
-      PerScopeConfig perScope = config.getOrCreateScopeConfig("new-scope");
+      PerScopeConfig perScope = config.getScopeConfig("new-scope");
 
       assertNotNull(perScope);
       assertTrue(config.scopes().containsKey("new-scope"));
@@ -24,8 +24,8 @@ public class MetaConfigTest {
     @Test
     void returnsExistingConfigWhenPresent() {
       MetaConfig config = MetaConfig.getDefault();
-      PerScopeConfig first = config.getOrCreateScopeConfig("scope-a");
-      PerScopeConfig second = config.getOrCreateScopeConfig("scope-a");
+      PerScopeConfig first = config.getScopeConfig("scope-a");
+      PerScopeConfig second = config.getScopeConfig("scope-a");
 
       assertEquals(first, second);
     }
@@ -36,7 +36,7 @@ public class MetaConfigTest {
     @Test
     void removesExistingScope() {
       MetaConfig config = MetaConfig.getDefault();
-      config.getOrCreateScopeConfig("scope-a");
+      config.getScopeConfig("scope-a");
       config.scopes().remove("scope-a");
 
       assertTrue(config.scopes().isEmpty());
@@ -45,7 +45,7 @@ public class MetaConfigTest {
     @Test
     void doesNothingForNonExistentScope() {
       MetaConfig config = MetaConfig.getDefault();
-      config.getOrCreateScopeConfig("scope-a");
+      config.getScopeConfig("scope-a");
       config.scopes().remove("nonexistent");
 
       assertEquals(1, config.scopes().size());
@@ -63,7 +63,7 @@ public class MetaConfigTest {
     @Test
     void returnsConfigForExistingScope() {
       MetaConfig config = MetaConfig.getDefault();
-      PerScopeConfig created = config.getOrCreateScopeConfig("scope-a");
+      PerScopeConfig created = config.getScopeConfig("scope-a");
       assertEquals(created, config.scopes().get("scope-a"));
     }
   }

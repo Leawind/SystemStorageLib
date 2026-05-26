@@ -57,14 +57,14 @@ public class MetaConfigManagerTest extends BaseTest {
 
   private MetaConfig createNonDefaultConfig() {
     MetaConfig config = MetaConfig.getDefault();
-    PerScopeConfig perScopeConfig = config.getOrCreateScopeConfig("scope1");
+    PerScopeConfig perScopeConfig = config.getScopeConfig("scope1");
     perScopeConfig.getCustomDirs().put(StoreType.CONFIG, tempDir.resolve("custom/config"));
     return config;
   }
 
   private MetaConfig createNonDefaultConfig2() {
     MetaConfig config = MetaConfig.getDefault();
-    PerScopeConfig perScopeConfig = config.getOrCreateScopeConfig("scope2");
+    PerScopeConfig perScopeConfig = config.getScopeConfig("scope2");
     perScopeConfig.getCustomDirs().put(StoreType.CONFIG, tempDir.resolve("custom/config2"));
     return config;
   }

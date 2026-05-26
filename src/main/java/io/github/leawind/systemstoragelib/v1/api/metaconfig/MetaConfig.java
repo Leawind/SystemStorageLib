@@ -13,7 +13,7 @@ public interface MetaConfig {
 
   Map<String, PerScopeConfig> scopes();
 
-  PerScopeConfig getOrCreateScopeConfig(String scopeName);
+  PerScopeConfig getScopeConfig(String scopeName);
 
   // endregion
 }

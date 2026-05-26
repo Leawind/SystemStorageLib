@@ -21,6 +21,6 @@ public class SystemStorageLibTest extends BaseTest {
     var scope = lib.scope("system_storage_lib_test");
     var config = lib.metaConfig();
 
-    config.get().getOrCreateScopeConfig(scope.name());
+    config.get().getScopeConfig(scope.name());
   }
 }

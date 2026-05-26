@@ -25,7 +25,8 @@ public record MetaConfigImpl(Map<String, PerScopeConfig> scopes) implements Meta
   // region scopes
 
   @Override
-  public PerScopeConfig getOrCreateScopeConfig(String scopeName) {
+  public PerScopeConfig getScopeConfig(String scopeName) {
+    
     return scopes.computeIfAbsent(scopeName, ignored -> PerScopeConfig.createDefault());
   }
 
