@@ -18,8 +18,10 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -78,12 +80,33 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   /// - If `scopedDirs` does not contain all {@link StoreType}.
   /// - If any value in `scopedDirs` is not unique.
   public SystemStorageLibImpl(
-      Path logsDir,
-      Path metaConfigDir,
-      Map<StoreType<?>, Path> defaultScopedDirs,
+      @NonNull Path logsDir,
+      @NonNull Path metaConfigDir,
+      @NonNull Map<StoreType<?>, Path> defaultScopedDirs,
       long maxLogFileSize,
       int maxLogArchiveFiles) {
+
+    if (maxLogFileSize <= 1) {
+      throw new IllegalArgumentException("maxLogFileSize is too small: " + maxLogFileSize);
+    }
+    if (maxLogArchiveFiles <= 1) {
+      throw new IllegalArgumentException("maxLogArchiveFiles is too small: " + maxLogArchiveFiles);
+    }
+
+    Objects.requireNonNull(logsDir);
+    Objects.requireNonNull(metaConfigDir);
+
+    logsDir = logsDir.toAbsolutePath().normalize();
+    metaConfigDir = metaConfigDir.toAbsolutePath().normalize();
+
     validateDirs(defaultScopedDirs);
+
+    if (defaultScopedDirs.containsValue(logsDir)) {
+      throw new IllegalArgumentException("logsDir is already used: " + logsDir);
+    }
+    if (defaultScopedDirs.containsValue(metaConfigDir)) {
+      throw new IllegalArgumentException("metaConfigDir is already used: " + metaConfigDir);
+    }
 
     this.logsDir = logsDir;
     this.defaultScopedDirs = new HashMap<>(defaultScopedDirs);
