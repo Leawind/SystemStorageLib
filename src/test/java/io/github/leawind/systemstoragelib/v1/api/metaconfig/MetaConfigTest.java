@@ -24,7 +24,8 @@ public class MetaConfigTest extends BaseTest {
     @Test
     void createsNewConfigWhenAbsent() {
       MetaConfig config = manager.createConfig();
-      PerScopeConfig perScope = config.getScopeConfig("new-scope");
+      PerScopeConfig perScope =
+          config.scopes().computeIfAbsent("new-scope", ignored -> config.createScopeConfig());
 
       assertNotNull(perScope);
       assertTrue(config.scopes().containsKey("new-scope"));
@@ -33,8 +34,10 @@ public class MetaConfigTest extends BaseTest {
     @Test
     void returnsExistingConfigWhenPresent() {
       MetaConfig config = manager.createConfig();
-      PerScopeConfig first = config.getScopeConfig("scope-a");
-      PerScopeConfig second = config.getScopeConfig("scope-a");
+      PerScopeConfig first =
+          config.scopes().computeIfAbsent("scope-a", ignored1 -> config.createScopeConfig());
+      PerScopeConfig second =
+          config.scopes().computeIfAbsent("scope-a", ignored -> config.createScopeConfig());
 
       assertEquals(first, second);
     }
@@ -45,7 +48,7 @@ public class MetaConfigTest extends BaseTest {
     @Test
     void removesExistingScope() {
       MetaConfig config = manager.createConfig();
-      config.getScopeConfig("scope-a");
+      config.scopes().computeIfAbsent("scope-a", ignored -> config.createScopeConfig());
       config.scopes().remove("scope-a");
 
       assertTrue(config.scopes().isEmpty());
@@ -54,7 +57,7 @@ public class MetaConfigTest extends BaseTest {
     @Test
     void doesNothingForNonExistentScope() {
       MetaConfig config = manager.createConfig();
-      config.getScopeConfig("scope-a");
+      config.scopes().computeIfAbsent("scope-a", ignored -> config.createScopeConfig());
       config.scopes().remove("nonexistent");
 
       assertEquals(1, config.scopes().size());
@@ -72,7 +75,8 @@ public class MetaConfigTest extends BaseTest {
     @Test
     void returnsConfigForExistingScope() {
       MetaConfig config = manager.createConfig();
-      PerScopeConfig created = config.getScopeConfig("scope-a");
+      PerScopeConfig created =
+          config.scopes().computeIfAbsent("scope-a", ignored -> config.createScopeConfig());
       assertEquals(created, config.scopes().get("scope-a"));
     }
   }

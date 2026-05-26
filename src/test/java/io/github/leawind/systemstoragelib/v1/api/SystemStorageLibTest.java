@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import io.github.leawind.systemstoragelib.v1.BaseTest;
 import java.io.IOException;
+
+import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
 import org.junit.jupiter.api.Test;
 
 public class SystemStorageLibTest extends BaseTest {
@@ -21,6 +23,8 @@ public class SystemStorageLibTest extends BaseTest {
     var scope = lib.scope("system_storage_lib_test");
     var config = lib.metaConfig();
 
-    config.get().getScopeConfig(scope.name());
+    MetaConfig metaConfig = config.get();
+    String scopeName = scope.name();
+    metaConfig.scopes().computeIfAbsent(scopeName, ignored -> metaConfig.createScopeConfig());
   }
 }
