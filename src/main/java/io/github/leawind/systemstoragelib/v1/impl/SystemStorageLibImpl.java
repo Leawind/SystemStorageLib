@@ -317,9 +317,9 @@ public class SystemStorageLibImpl implements SystemStorageLib {
     try (Stream<Path> entries = Files.list(rootDir)) {
       entries
           .filter(Files::isDirectory)
-          .map(p -> p.getFileName().toString())
-          .filter(this::isScopeNameValid)
-          .forEach(scope -> scopes.putIfAbsent(scope, Optional.empty()));
+          .map(scopeDirPath -> scopeDirPath.getFileName().toString())
+          .filter(scopeName -> validateScopeName(scopeName) == null)
+          .forEach(scopeName -> scopes.putIfAbsent(scopeName, Optional.empty()));
     } catch (IOException ignored) {
     }
   }

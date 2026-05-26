@@ -46,10 +46,6 @@ public interface SystemStorageLib {
   /// @return {@code null} if valid, otherwise a description of the validation failure
   @Nullable String validateScopeName(String scopeName);
 
-  default boolean isScopeNameValid(String scopeName) {
-    return validateScopeName(scopeName) == null;
-  }
-
   /// Returns the path to the logs directory.
   ///
   /// @return the absolute path to the logs directory

@@ -196,13 +196,6 @@ public class SystemStorageLibImplTest extends BaseTest {
     }
 
     @Test
-    void isScopeValidDelegatesToValidateScope() {
-      SystemStorageLibImpl impl = createImpl();
-      assertTrue(impl.isScopeNameValid("valid"));
-      assertFalse(impl.isScopeNameValid(""));
-    }
-
-    @Test
     void scopeAtMinLengthIsValid() {
       SystemStorageLibImpl impl = createImpl();
       assertNull(impl.validateScopeName("ab"));
