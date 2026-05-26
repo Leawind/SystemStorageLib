@@ -29,7 +29,7 @@ public class ScopeMetaConfigTest {
 
     @Test
     void storesAndRetrievesViaCustomDirs() {
-      ScopeMetaConfig config = ScopeMetaConfig.createDefault();
+      ScopeMetaConfig config = new ScopeMetaConfigImpl();
       config.getCustomDirs().put(StoreType.DATA, FOO);
 
       assertEquals(FOO, config.getCustomDirs().get(StoreType.DATA));
@@ -37,7 +37,7 @@ public class ScopeMetaConfigTest {
 
     @Test
     void overwritesExistingMapping() {
-      ScopeMetaConfig config = ScopeMetaConfig.createDefault();
+      ScopeMetaConfig config = new ScopeMetaConfigImpl();
       config.getCustomDirs().put(StoreType.DATA, FOO);
       config.getCustomDirs().put(StoreType.DATA, BAR);
 
@@ -49,14 +49,14 @@ public class ScopeMetaConfigTest {
       assertThrows(
           IllegalArgumentException.class,
           () -> {
-            ScopeMetaConfig scopeMetaConfig = ScopeMetaConfig.createDefault();
+            ScopeMetaConfig scopeMetaConfig = new ScopeMetaConfigImpl();
             scopeMetaConfig.getCustomDirs().put(StoreType.CREDENTIALS, FOO);
           });
     }
 
     @Test
     void throwsForDuplicatePathWithAnotherStoreType() {
-      ScopeMetaConfig config = ScopeMetaConfig.createDefault();
+      ScopeMetaConfig config = new ScopeMetaConfigImpl();
       config.getCustomDirs().put(StoreType.DATA, FOO);
 
       assertThrows(
@@ -65,7 +65,7 @@ public class ScopeMetaConfigTest {
 
     @Test
     void throwsForDuplicatePathAfterNormalization() {
-      ScopeMetaConfig config = ScopeMetaConfig.createDefault();
+      ScopeMetaConfig config = new ScopeMetaConfigImpl();
       config.getCustomDirs().put(StoreType.DATA, FS.getPath("/foo"));
 
       assertThrows(
@@ -81,7 +81,7 @@ public class ScopeMetaConfigTest {
       assertThrows(
           NullPointerException.class,
           () -> {
-            ScopeMetaConfig scopeMetaConfig = ScopeMetaConfig.createDefault();
+            ScopeMetaConfig scopeMetaConfig = new ScopeMetaConfigImpl();
             scopeMetaConfig.getCustomDirs().put(StoreType.DATA, null);
           });
     }
@@ -92,14 +92,14 @@ public class ScopeMetaConfigTest {
       assertThrows(
           IllegalArgumentException.class,
           () -> {
-            ScopeMetaConfig scopeMetaConfig = ScopeMetaConfig.createDefault();
+            ScopeMetaConfig scopeMetaConfig = new ScopeMetaConfigImpl();
             scopeMetaConfig.getCustomDirs().put(StoreType.DATA, relative);
           });
     }
 
     @Test
     void normalizesPath() {
-      ScopeMetaConfig config = ScopeMetaConfig.createDefault();
+      ScopeMetaConfig config = new ScopeMetaConfigImpl();
       Path path = FS.getPath("/foo/../foo");
       config.getCustomDirs().put(StoreType.DATA, path);
       assertEquals(FS.getPath("/foo"), config.getCustomDirs().get(StoreType.DATA));
@@ -111,7 +111,7 @@ public class ScopeMetaConfigTest {
 
     @Test
     void storesMultipleCustomDirs() {
-      ScopeMetaConfig config = ScopeMetaConfig.createDefault();
+      ScopeMetaConfig config = new ScopeMetaConfigImpl();
       Map<StoreType<?>, Path> dirs = new HashMap<>();
       dirs.put(StoreType.DATA, FOO);
       dirs.put(StoreType.CONFIG, BAR);
@@ -125,7 +125,7 @@ public class ScopeMetaConfigTest {
 
     @Test
     void overwritesExistingMappings() {
-      ScopeMetaConfig config = ScopeMetaConfig.createDefault();
+      ScopeMetaConfig config = new ScopeMetaConfigImpl();
       config.getCustomDirs().put(StoreType.DATA, FOO);
       config.getCustomDirs().put(StoreType.CONFIG, BAR);
 
@@ -139,7 +139,7 @@ public class ScopeMetaConfigTest {
 
     @Test
     void replacesAllMappings() {
-      ScopeMetaConfig config = ScopeMetaConfig.createDefault();
+      ScopeMetaConfig config = new ScopeMetaConfigImpl();
       config.getCustomDirs().put(StoreType.DATA, FOO);
 
       Map<StoreType<?>, Path> dirs = new HashMap<>();
@@ -152,7 +152,7 @@ public class ScopeMetaConfigTest {
 
     @Test
     void isAtomicOnFailure() {
-      ScopeMetaConfig config = ScopeMetaConfig.createDefault();
+      ScopeMetaConfig config = new ScopeMetaConfigImpl();
       config.getCustomDirs().put(StoreType.DATA, FOO);
 
       assertThrows(
@@ -171,7 +171,7 @@ public class ScopeMetaConfigTest {
       dirs.put(StoreType.CONFIG, FOO); // same path
 
       assertThrows(
-          IllegalArgumentException.class, () -> ScopeMetaConfig.createDefault().setCustomDirs(dirs));
+          IllegalArgumentException.class, () ->new ScopeMetaConfigImpl().setCustomDirs(dirs));
     }
 
     @Test
@@ -181,7 +181,7 @@ public class ScopeMetaConfigTest {
       dirs.put(StoreType.CONFIG, FS.getPath("/bar/../foo")); // normalizes to same path
 
       assertThrows(
-          IllegalArgumentException.class, () -> ScopeMetaConfig.createDefault().setCustomDirs(dirs));
+          IllegalArgumentException.class, () ->new ScopeMetaConfigImpl().setCustomDirs(dirs));
     }
 
     @Test
@@ -190,7 +190,7 @@ public class ScopeMetaConfigTest {
       dirs.put(StoreType.DATA, null);
 
       assertThrows(
-          NullPointerException.class, () -> ScopeMetaConfig.createDefault().setCustomDirs(dirs));
+          NullPointerException.class, () ->new ScopeMetaConfigImpl().setCustomDirs(dirs));
     }
   }
 
@@ -199,7 +199,7 @@ public class ScopeMetaConfigTest {
 
     @Test
     void removesMapping() {
-      ScopeMetaConfig config = ScopeMetaConfig.createDefault();
+      ScopeMetaConfig config = new ScopeMetaConfigImpl();
       config.getCustomDirs().put(StoreType.DATA, FOO);
       config.getCustomDirs().remove(StoreType.DATA);
 
@@ -208,7 +208,7 @@ public class ScopeMetaConfigTest {
 
     @Test
     void doesNothingForNonExistentMapping() {
-      ScopeMetaConfig config = ScopeMetaConfig.createDefault();
+      ScopeMetaConfig config = new ScopeMetaConfigImpl();
       config.getCustomDirs().remove(StoreType.DATA);
 
       assertTrue(config.getCustomDirs().isEmpty());
@@ -220,7 +220,7 @@ public class ScopeMetaConfigTest {
 
     @Test
     void clearsAllMappings() {
-      ScopeMetaConfig config = ScopeMetaConfig.createDefault();
+      ScopeMetaConfig config = new ScopeMetaConfigImpl();
       config.getCustomDirs().put(StoreType.DATA, FOO);
       config.getCustomDirs().put(StoreType.CONFIG, BAR);
       config.getCustomDirs().clear();
@@ -234,7 +234,7 @@ public class ScopeMetaConfigTest {
 
     @Test
     void emptyByDefault() {
-      assertTrue(ScopeMetaConfig.createDefault().getCustomDirs().isEmpty());
+      assertTrue(new ScopeMetaConfigImpl().getCustomDirs().isEmpty());
     }
   }
 
@@ -258,9 +258,9 @@ public class ScopeMetaConfigTest {
 
     @Test
     void equalWhenCustomDirsEqual() {
-      ScopeMetaConfig a = ScopeMetaConfig.createDefault();
+      ScopeMetaConfig a = new ScopeMetaConfigImpl();
       a.getCustomDirs().put(StoreType.DATA, FOO);
-      ScopeMetaConfig b = ScopeMetaConfig.createDefault();
+      ScopeMetaConfig b = new ScopeMetaConfigImpl();
       b.getCustomDirs().put(StoreType.DATA, FOO);
 
       assertEquals(a, b);
@@ -269,9 +269,9 @@ public class ScopeMetaConfigTest {
 
     @Test
     void notEqualWhenCustomDirsDiffer() {
-      ScopeMetaConfig a = ScopeMetaConfig.createDefault();
+      ScopeMetaConfig a = new ScopeMetaConfigImpl();
       a.getCustomDirs().put(StoreType.DATA, FOO);
-      ScopeMetaConfig b = ScopeMetaConfig.createDefault();
+      ScopeMetaConfig b = new ScopeMetaConfigImpl();
       b.getCustomDirs().put(StoreType.DATA, BAR);
 
       assertNotEquals(a, b);
@@ -279,9 +279,9 @@ public class ScopeMetaConfigTest {
 
     @Test
     void notEqualWhenOneHasMoreMappings() {
-      ScopeMetaConfig a = ScopeMetaConfig.createDefault();
+      ScopeMetaConfig a = new ScopeMetaConfigImpl();
       a.getCustomDirs().put(StoreType.DATA, FOO);
-      ScopeMetaConfig b = ScopeMetaConfig.createDefault();
+      ScopeMetaConfig b = new ScopeMetaConfigImpl();
 
       assertNotEquals(a, b);
     }
@@ -292,14 +292,14 @@ public class ScopeMetaConfigTest {
 
     @Test
     void returnsConfigWithEmptyCustomDirs() {
-      ScopeMetaConfig config = ScopeMetaConfig.createDefault();
+      ScopeMetaConfig config = new ScopeMetaConfigImpl();
       assertNotNull(config);
       assertTrue(config.getCustomDirs().isEmpty());
     }
 
     @Test
     void isIdempotent() {
-      assertEquals(ScopeMetaConfig.createDefault(), ScopeMetaConfig.createDefault());
+      assertEquals(new ScopeMetaConfigImpl(), new ScopeMetaConfigImpl());
     }
   }
 }

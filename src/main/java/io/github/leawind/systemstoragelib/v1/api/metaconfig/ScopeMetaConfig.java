@@ -1,16 +1,10 @@
 package io.github.leawind.systemstoragelib.v1.api.metaconfig;
 
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
-import io.github.leawind.systemstoragelib.v1.impl.metaconfig.ScopeMetaConfigImpl;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.Map;
 
 public interface ScopeMetaConfig {
-
-  static ScopeMetaConfig createDefault() {
-    return new ScopeMetaConfigImpl(new HashMap<>());
-  }
 
   // region customDirs
 

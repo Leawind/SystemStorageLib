@@ -4,7 +4,6 @@ import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.ScopeMetaConfig;
 import io.github.leawind.systemstoragelib.v1.utils.ScopeHashMap;
-import java.util.HashMap;
 import java.util.Map;
 
 public record MetaConfigImpl(SystemStorageLib lib, Map<String, ScopeMetaConfig> scopes)
@@ -20,7 +19,7 @@ public record MetaConfigImpl(SystemStorageLib lib, Map<String, ScopeMetaConfig> 
 
   @Override
   public ScopeMetaConfig createScopeConfig() {
-    return new ScopeMetaConfigImpl(new HashMap<>());
+    return new ScopeMetaConfigImpl();
   }
 
   // endregion

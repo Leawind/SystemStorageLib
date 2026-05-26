@@ -25,6 +25,8 @@ public final class ScopeMetaConfigImpl implements ScopeMetaConfig {
     this.customDirs.putAll(customDirs);
   }
 
+  public ScopeMetaConfigImpl() {}
+
   // region customDirs
 
   @Override
