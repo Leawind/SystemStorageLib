@@ -320,4 +320,62 @@ public class SystemStorageLibImpl implements SystemStorageLib {
     } catch (IOException ignored) {
     }
   }
+
+  public static final class BuilderImpl implements Builder {
+
+    private Path logsDir;
+    private Path metaConfigDir;
+    private final Map<StoreType<?>, Path> scopedDirs = new HashMap<>();
+    private long maxLogFileSize = 10 * 1024 * 1024;
+    private int maxLogArchiveFiles = 10;
+
+    public BuilderImpl() {}
+
+    @Override
+    public SystemStorageLibImpl build() {
+      if (logsDir == null) {
+        throw new IllegalArgumentException("logsDir must not be null");
+      }
+      if (metaConfigDir == null) {
+        throw new IllegalArgumentException("metaConfigDir must not be null");
+      }
+      if (scopedDirs.isEmpty()) {
+        throw new IllegalArgumentException("scopedDirs must not be empty");
+      }
+      return new SystemStorageLibImpl(
+          logsDir, metaConfigDir, scopedDirs, maxLogFileSize, maxLogArchiveFiles);
+    }
+
+    @Override
+    public BuilderImpl logsDir(Path logsDir) {
+      this.logsDir = logsDir;
+      return this;
+    }
+
+    @Override
+    public BuilderImpl metaConfigDir(Path metaConfigDir) {
+      this.metaConfigDir = metaConfigDir;
+      return this;
+    }
+
+    /// Set the root directory for a store type.
+    /// The scoped directory will be `rootDir / <scope>`.
+    @Override
+    public BuilderImpl storeDir(StoreType<?> storeType, Path rootDir) {
+      scopedDirs.put(storeType, rootDir);
+      return this;
+    }
+
+    @Override
+    public BuilderImpl maxLogFileSize(long maxLogFileSize) {
+      this.maxLogFileSize = maxLogFileSize;
+      return this;
+    }
+
+    @Override
+    public BuilderImpl maxLogArchiveFiles(int maxLogArchiveFiles) {
+      this.maxLogArchiveFiles = maxLogArchiveFiles;
+      return this;
+    }
+  }
 }

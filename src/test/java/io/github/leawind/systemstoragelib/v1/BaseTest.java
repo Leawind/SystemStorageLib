@@ -5,7 +5,6 @@ import com.google.common.jimfs.Jimfs;
 import io.github.leawind.systemstoragelib.v1.api.ScopeStorage;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
-import io.github.leawind.systemstoragelib.v1.api.SystemStorageLibConfig;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
@@ -29,16 +28,15 @@ public abstract class BaseTest {
     Files.createDirectories(tempDir);
 
     lib =
-        SystemStorageLib.create(
-            SystemStorageLibConfig.builder()
-                .logsDir(fs.getPath("/logs"))
-                .metaConfigDir(fs.getPath("/meta_config"))
-                .storeDir(StoreType.CREDENTIALS, fs.getPath("/credentials"))
-                .storeDir(StoreType.CACHE, fs.getPath("/cache"))
-                .storeDir(StoreType.CONFIG, fs.getPath("/config"))
-                .storeDir(StoreType.DATA, fs.getPath("/data"))
-                .storeDir(StoreType.DATA_LOCAL, fs.getPath("/data_local"))
-                .build());
+        SystemStorageLib.builder()
+            .logsDir(fs.getPath("/logs"))
+            .metaConfigDir(fs.getPath("/meta_config"))
+            .storeDir(StoreType.CREDENTIALS, fs.getPath("/credentials"))
+            .storeDir(StoreType.CACHE, fs.getPath("/cache"))
+            .storeDir(StoreType.CONFIG, fs.getPath("/config"))
+            .storeDir(StoreType.DATA, fs.getPath("/data"))
+            .storeDir(StoreType.DATA_LOCAL, fs.getPath("/data_local"))
+            .build();
 
     testScope = lib.scope("test");
   }

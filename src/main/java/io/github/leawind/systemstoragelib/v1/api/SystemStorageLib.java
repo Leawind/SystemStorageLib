@@ -68,12 +68,21 @@ public interface SystemStorageLib {
   /// @return a new instance
   /// @throws SystemStorageLibException if initialization fails
   /// @throws IllegalArgumentException if the configuration is invalid
-  static SystemStorageLib create(SystemStorageLibConfig config) {
-    return new SystemStorageLibImpl(
-        config.logsDir(),
-        config.metaConfigDir(),
-        config.scopedDirs(),
-        config.maxLogFileSize(),
-        config.maxLogArchiveFiles());
+  static Builder builder() {
+    return new SystemStorageLibImpl.BuilderImpl();
+  }
+
+  interface Builder {
+    SystemStorageLib build();
+
+    Builder logsDir(Path logsDir);
+
+    Builder metaConfigDir(Path metaConfigDir);
+
+    Builder storeDir(StoreType<?> storeType, Path rootDir);
+
+    Builder maxLogFileSize(long maxLogFileSize);
+
+    Builder maxLogArchiveFiles(int maxLogArchiveFiles);
   }
 }
