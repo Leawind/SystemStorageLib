@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 
 public interface Storage {
 
-  /// Returns the logger for this storage manager.
   Logger logger();
 
   /// Returns the storage directory path, always absolute and normalized.

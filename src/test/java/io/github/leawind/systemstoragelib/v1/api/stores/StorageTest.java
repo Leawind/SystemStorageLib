@@ -25,68 +25,68 @@ import org.junit.jupiter.api.Test;
 
 public class StorageTest extends BaseTest {
 
-  private Storage manager;
+  private Storage storage;
 
   @BeforeEach
   void setupEach() {
-    manager = new StorageImpl(lib, lib.logger(), tempDir.resolve("storage"));
+    storage = new StorageImpl(lib, lib.logger(), tempDir.resolve("storage"));
   }
 
   @Test
   void testGetDirPathReturnsProvidedPath() {
-    assertEquals(tempDir.resolve("storage"), manager.getDirPath());
+    assertEquals(tempDir.resolve("storage"), storage.getDirPath());
   }
 
   @Test
   void testDirPathIsAbsoluteAndNormalized() {
     Path relativePath = tempDir.resolve("storage/../storage");
-    Storage mgr = new StorageImpl(lib, lib.logger(), relativePath);
-    assertEquals(relativePath.toAbsolutePath().normalize(), mgr.getDirPath());
+    Storage storage = new StorageImpl(lib, lib.logger(), relativePath);
+    assertEquals(relativePath.toAbsolutePath().normalize(), storage.getDirPath());
   }
 
   @Test
   void testSetDirPathUpdatesPath() {
     Path newPath = tempDir.resolve("new-storage");
-    manager.setDirPath(newPath);
-    assertEquals(newPath, manager.getDirPath());
+    storage.setDirPath(newPath);
+    assertEquals(newPath, storage.getDirPath());
   }
 
   @Test
   void testSetDirPathResetsLock() throws IOException {
     // Acquire lock on original path
-    manager.getLock().readLock().lock();
-    manager.getLock().readLock().unlock();
+    storage.getLock().readLock().lock();
+    storage.getLock().readLock().unlock();
 
     // Change dirPath — lock should be reset
     Path newPath = tempDir.resolve("new-storage");
-    manager.setDirPath(newPath);
+    storage.setDirPath(newPath);
 
     // Lock should work on the new path
     assertDoesNotThrow(
         () -> {
-          manager.getLock().writeLock().lock();
-          manager.getLock().writeLock().unlock();
+          storage.getLock().writeLock().lock();
+          storage.getLock().writeLock().unlock();
         });
   }
 
   @Test
   void testSetDirPathNormalizesPath() {
     Path newPath = tempDir.resolve("new-storage/../new-storage");
-    manager.setDirPath(newPath);
-    assertEquals(newPath.toAbsolutePath().normalize(), manager.getDirPath());
+    storage.setDirPath(newPath);
+    assertEquals(newPath.toAbsolutePath().normalize(), storage.getDirPath());
   }
 
   @Test
   void testSetDirPathDeletesOldLockFile() throws IOException {
     // Force lock file creation on original path
-    manager.getLock().readLock().lock();
-    manager.getLock().readLock().unlock();
+    storage.getLock().readLock().lock();
+    storage.getLock().readLock().unlock();
 
-    Path oldLockFile = manager.getDirPath().resolve(".lock");
+    Path oldLockFile = storage.getDirPath().resolve(".lock");
     assertTrue(Files.exists(oldLockFile), "Lock file should exist after acquiring lock");
 
     Path newPath = tempDir.resolve("new-storage");
-    manager.setDirPath(newPath);
+    storage.setDirPath(newPath);
 
     assertFalse(Files.exists(oldLockFile), "Old lock file should be deleted after setDirPath");
   }
@@ -94,11 +94,11 @@ public class StorageTest extends BaseTest {
   @Test
   void testSetDirPathCreatesLockUnderNewPath() throws IOException {
     Path newPath = tempDir.resolve("new-storage");
-    manager.setDirPath(newPath);
+    storage.setDirPath(newPath);
 
     // Acquire lock — should create .lock file under new path
-    manager.getLock().readLock().lock();
-    manager.getLock().readLock().unlock();
+    storage.getLock().readLock().lock();
+    storage.getLock().readLock().unlock();
 
     Path newLockFile = newPath.resolve(".lock");
     assertTrue(Files.exists(newLockFile), "Lock file should exist under new path");
@@ -106,20 +106,20 @@ public class StorageTest extends BaseTest {
 
   @Test
   void testDirCreatedOnGetLock() {
-    assertFalse(Files.exists(manager.getDirPath()));
+    assertFalse(Files.exists(storage.getDirPath()));
   }
 
   @Test
   void testClearRemovesAllFilesExceptLock() throws IOException {
-    try (UncheckedCloseable ignored = LockUtils.writeLock(manager.getLock())) {
-      Path dir = manager.getDirPath();
+    try (UncheckedCloseable ignored = LockUtils.writeLock(storage.getLock())) {
+      Path dir = storage.getDirPath();
       Files.createDirectories(dir);
       Files.createFile(dir.resolve("file1.txt"));
       Files.createFile(dir.resolve("file2.txt"));
       Files.createDirectories(dir.resolve("subdir"));
       Files.createFile(dir.resolve("subdir/file3.txt"));
 
-      manager.clear();
+      storage.clear();
 
       assertFalse(Files.exists(dir.resolve("file1.txt")));
       assertFalse(Files.exists(dir.resolve("file2.txt")));
@@ -134,21 +134,21 @@ public class StorageTest extends BaseTest {
   @Test
   void testClearDoesNothingIfDirNotExists() {
     // Don't create directory
-    assertFalse(Files.exists(manager.getDirPath()));
+    assertFalse(Files.exists(storage.getDirPath()));
     // Should not throw
-    assertDoesNotThrow(() -> manager.clear());
+    assertDoesNotThrow(() -> storage.clear());
   }
 
   @Test
   void testDeleteRemovesDirectoryAndLockFile() throws IOException {
-    Path dir = manager.getDirPath();
+    Path dir = storage.getDirPath();
 
-    try (UncheckedCloseable ignored = LockUtils.writeLock(manager.getLock())) {
+    try (UncheckedCloseable ignored = LockUtils.writeLock(storage.getLock())) {
       Files.createDirectories(dir);
       Files.createFile(dir.resolve("data.txt"));
     }
 
-    manager.delete();
+    storage.delete();
 
     assertFalse(Files.exists(dir));
   }
@@ -158,24 +158,24 @@ public class StorageTest extends BaseTest {
 
     @Test
     void testReadLockReentrant() throws IOException {
-      manager.getLock().readLock().lock();
-      manager.getLock().readLock().lock();
-      manager.getLock().readLock().lock();
+      storage.getLock().readLock().lock();
+      storage.getLock().readLock().lock();
+      storage.getLock().readLock().lock();
 
-      manager.getLock().readLock().unlock();
-      manager.getLock().readLock().unlock();
-      manager.getLock().readLock().unlock();
+      storage.getLock().readLock().unlock();
+      storage.getLock().readLock().unlock();
+      storage.getLock().readLock().unlock();
     }
 
     @Test
     void testWriteLockReentrant() throws IOException {
-      manager.getLock().writeLock().lock();
-      manager.getLock().writeLock().lock();
-      manager.getLock().writeLock().lock();
+      storage.getLock().writeLock().lock();
+      storage.getLock().writeLock().lock();
+      storage.getLock().writeLock().lock();
 
-      manager.getLock().writeLock().unlock();
-      manager.getLock().writeLock().unlock();
-      manager.getLock().writeLock().unlock();
+      storage.getLock().writeLock().unlock();
+      storage.getLock().writeLock().unlock();
+      storage.getLock().writeLock().unlock();
     }
 
     @Test
@@ -191,11 +191,11 @@ public class StorageTest extends BaseTest {
           () -> {
             try {
               startLatch.await();
-              manager.getLock().readLock().lock();
+              storage.getLock().readLock().lock();
               thread1Acquired.set(true);
               // Hold lock briefly
               Thread.sleep(100);
-              manager.getLock().readLock().unlock();
+              storage.getLock().readLock().unlock();
             } catch (Exception ignored) {
             } finally {
               doneLatch.countDown();
@@ -206,9 +206,9 @@ public class StorageTest extends BaseTest {
           () -> {
             try {
               startLatch.await();
-              manager.getLock().readLock().lock();
+              storage.getLock().readLock().lock();
               thread2Acquired.set(true);
-              manager.getLock().readLock().unlock();
+              storage.getLock().readLock().unlock();
             } catch (Exception ignored) {
             } finally {
               doneLatch.countDown();
@@ -227,23 +227,23 @@ public class StorageTest extends BaseTest {
 
     @Test
     void testWriteLockDowngradeSupported() throws IOException {
-      manager.getLock().writeLock().lock(); //   ═╗
-      manager.getLock().readLock().lock(); //    ─║─┐
-      manager.getLock().writeLock().unlock(); // ═╝ │
-      manager.getLock().readLock().lock(); //    ─┐ │
-      manager.getLock().readLock().unlock(); //  ─┘ │
-      manager.getLock().readLock().unlock(); //  ───┘
+      storage.getLock().writeLock().lock(); //   ═╗
+      storage.getLock().readLock().lock(); //    ─║─┐
+      storage.getLock().writeLock().unlock(); // ═╝ │
+      storage.getLock().readLock().lock(); //    ─┐ │
+      storage.getLock().readLock().unlock(); //  ─┘ │
+      storage.getLock().readLock().unlock(); //  ───┘
     }
 
     @Test
     void testReadLockUpgradeThrowsException() throws IOException {
-      manager.getLock().readLock().lock();
+      storage.getLock().readLock().lock();
       // Trying to acquire write lock while holding read lock should throw
-      assertThrows(Exception.class, manager.getLock().writeLock()::lock);
-      manager.getLock().readLock().unlock();
+      assertThrows(Exception.class, storage.getLock().writeLock()::lock);
+      storage.getLock().readLock().unlock();
 
-      manager.getLock().writeLock().lock();
-      manager.getLock().writeLock().unlock();
+      storage.getLock().writeLock().lock();
+      storage.getLock().writeLock().unlock();
     }
   }
 }

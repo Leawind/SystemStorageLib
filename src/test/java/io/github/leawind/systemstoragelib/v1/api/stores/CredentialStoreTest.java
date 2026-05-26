@@ -24,7 +24,7 @@ public class CredentialStoreTest extends BaseTest {
 
   @BeforeEach
   void setUp() {
-    store = CredentialStore.create(testScope.storage(StoreType.CREDENTIALS));
+    store = CredentialStore.create(scope.storage(StoreType.CREDENTIALS));
   }
 
   @Test
@@ -87,7 +87,7 @@ public class CredentialStoreTest extends BaseTest {
   @Test
   void testFileNamingIsHashed() throws IOException {
     store.set("github_token", "value");
-    try (Stream<Path> paths = Files.list(store.storageManager().getDirPath())) {
+    try (Stream<Path> paths = Files.list(store.storage().getDirPath())) {
       List<Path> encFiles = paths.filter(p -> p.toString().endsWith(".enc")).toList();
       assertEquals(1, encFiles.size());
       for (Path p : encFiles) {
@@ -102,7 +102,7 @@ public class CredentialStoreTest extends BaseTest {
   void testFileContentIsEncrypted() throws IOException {
     String secretValue = "this_is_a_secret_that_should_not_appear_in_plaintext";
     store.set("secret_key", secretValue);
-    try (Stream<Path> paths = Files.list(store.storageManager().getDirPath())) {
+    try (Stream<Path> paths = Files.list(store.storage().getDirPath())) {
       paths
           .filter(p -> p.toString().endsWith(".enc"))
           .forEach(
@@ -123,7 +123,7 @@ public class CredentialStoreTest extends BaseTest {
   @Test
   void testFileMinSize() throws IOException {
     store.set("key", "x");
-    try (Stream<Path> paths = Files.list(store.storageManager().getDirPath())) {
+    try (Stream<Path> paths = Files.list(store.storage().getDirPath())) {
       paths
           .filter(p -> p.toString().endsWith(".enc"))
           .forEach(
@@ -142,7 +142,7 @@ public class CredentialStoreTest extends BaseTest {
   @Test
   void testCorruptedFileThrowsIntegrityException() throws IOException {
     store.set("corrupt_key", "value");
-    try (Stream<Path> paths = Files.list(store.storageManager().getDirPath())) {
+    try (Stream<Path> paths = Files.list(store.storage().getDirPath())) {
       paths
           .filter(p -> p.toString().endsWith(".enc"))
           .findFirst()
@@ -173,14 +173,14 @@ public class CredentialStoreTest extends BaseTest {
   void testClearRemovesCredentials() throws IOException {
     store.set("key1", "val1");
     store.set("key2", "val2");
-    store.storageManager().clear();
+    store.storage().clear();
     assertFalse(store.exists("key1"));
     assertFalse(store.exists("key2"));
   }
 
   @Test
   void testDirPathIsAccessible() {
-    assertNotNull(store.storageManager().getDirPath());
+    assertNotNull(store.storage().getDirPath());
   }
 
   @Test

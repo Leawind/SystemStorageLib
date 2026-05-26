@@ -1,6 +1,6 @@
 package io.github.leawind.systemstoragelib.v1.api;
 
-import io.github.leawind.systemstoragelib.v1.api.stores.MetaConfigManager;
+import io.github.leawind.systemstoragelib.v1.api.stores.MetaConfigStore;
 import io.github.leawind.systemstoragelib.v1.impl.SystemStorageLibImpl;
 import java.nio.file.Path;
 import java.util.stream.Stream;
@@ -16,8 +16,8 @@ public interface SystemStorageLib {
 
   /// Manager for meta configuration.
   ///
-  /// @return the {@link MetaConfigManager} for reading and writing configuration
-  MetaConfigManager metaConfig();
+  /// @return the {@link MetaConfigStore} for reading and writing configuration
+  MetaConfigStore metaConfig();
 
   /// Creates or retrieves a {@link Scope} for the given scope name.
   ///

@@ -82,7 +82,7 @@ public class CredentialStoreImpl implements CredentialStore {
   }
 
   @Override
-  public Storage storageManager() {
+  public Storage storage() {
     return storage;
   }
 

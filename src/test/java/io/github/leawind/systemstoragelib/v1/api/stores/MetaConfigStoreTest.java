@@ -13,7 +13,7 @@ import io.github.leawind.systemstoragelib.v1.BaseTest;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.ScopeMetaConfig;
-import io.github.leawind.systemstoragelib.v1.impl.stores.MetaConfigManagerImpl;
+import io.github.leawind.systemstoragelib.v1.impl.stores.MetaConfigStoreImpl;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,30 +24,30 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-public class MetaConfigManagerTest extends BaseTest {
+public class MetaConfigStoreTest extends BaseTest {
   private static final Gson GSON = new Gson();
 
-  private MetaConfigManagerImpl manager;
+  private MetaConfigStoreImpl store;
 
   @BeforeEach
   void setupEach() {
-    manager = (MetaConfigManagerImpl) lib.metaConfig();
+    store = (MetaConfigStoreImpl) lib.metaConfig();
   }
 
   @AfterEach
   void tearDown() {
     try {
-      manager.stopWatching();
+      store.stopWatching();
     } catch (IOException ignored) {
     }
   }
 
   private Path configFilePath() {
-    return manager.storage().getDirPath().resolve("config.json");
+    return store.storage().getDirPath().resolve("config.json");
   }
 
   private MetaConfig createNonDefaultConfig() {
-    MetaConfig config = manager.createConfig();
+    MetaConfig config = store.createConfig();
     ScopeMetaConfig scopeMetaConfig =
         config.scopes().computeIfAbsent("scope1", ignored -> config.createScopeConfig());
     scopeMetaConfig.getCustomDirs().put(StoreType.CONFIG, tempDir.resolve("custom/config"));
@@ -55,7 +55,7 @@ public class MetaConfigManagerTest extends BaseTest {
   }
 
   private MetaConfig createNonDefaultConfig2() {
-    MetaConfig config = manager.createConfig();
+    MetaConfig config = store.createConfig();
     ScopeMetaConfig scopeMetaConfig =
         config.scopes().computeIfAbsent("scope2", ignored -> config.createScopeConfig());
     scopeMetaConfig.getCustomDirs().put(StoreType.CONFIG, tempDir.resolve("custom/config2"));
@@ -63,8 +63,8 @@ public class MetaConfigManagerTest extends BaseTest {
   }
 
   private void registerListener(Runnable onEvent) {
-    synchronized (manager.onChanged()) {
-      manager.onChanged().on(ignored -> onEvent.run());
+    synchronized (store.onChanged()) {
+      store.onChanged().on(ignored -> onEvent.run());
     }
   }
 
@@ -72,39 +72,39 @@ public class MetaConfigManagerTest extends BaseTest {
   class GetConfig {
     @Test
     void getReturnsDefaultWhenNoConfigFile() throws IOException {
-      assertEquals(manager.createConfig(), manager.get());
+      assertEquals(store.createConfig(), store.get());
     }
 
     @Test
     void getReturnsConfigAfterSet() throws IOException {
-      manager.set(createNonDefaultConfig());
+      store.set(createNonDefaultConfig());
 
-      MetaConfig config = manager.createConfig();
-      manager.set(config);
-      assertEquals(config, manager.get());
+      MetaConfig config = store.createConfig();
+      store.set(config);
+      assertEquals(config, store.get());
     }
 
     @Test
     void getReturnsConfigFromExistingValidFile() throws IOException {
-      Files.createDirectories(manager.storage().getDirPath());
+      Files.createDirectories(store.storage().getDirPath());
       Files.writeString(configFilePath(), "{\"custom_dirs\":{}}");
 
-      MetaConfig result = manager.get();
+      MetaConfig result = store.get();
       assertNotNull(result);
     }
 
     @Test
     void getReturnsDefaultWhenConfigFileIsEmpty() throws IOException {
-      Files.createDirectories(manager.storage().getDirPath());
+      Files.createDirectories(store.storage().getDirPath());
       Files.createFile(configFilePath());
-      assertNotNull(manager.get());
+      assertNotNull(store.get());
     }
 
     @Test
     void getReturnsDefaultWhenConfigFileIsMalformed() throws IOException {
-      Files.createDirectories(manager.storage().getDirPath());
+      Files.createDirectories(store.storage().getDirPath());
       Files.writeString(configFilePath(), "{invalid json content");
-      assertNotNull(manager.get());
+      assertNotNull(store.get());
     }
   }
 
@@ -112,15 +112,15 @@ public class MetaConfigManagerTest extends BaseTest {
   class SetConfig {
     @Test
     void setDoesNotThrowWhenDirExists() throws IOException {
-      Files.createDirectories(manager.storage().getDirPath());
-      assertDoesNotThrow(() -> manager.set(manager.createConfig()));
+      Files.createDirectories(store.storage().getDirPath());
+      assertDoesNotThrow(() -> store.set(store.createConfig()));
     }
 
     @Test
     void setCreatesConfigFile() throws IOException {
-      manager.set(manager.createConfig());
+      store.set(store.createConfig());
       assertFalse(Files.exists(configFilePath()));
-      manager.set(createNonDefaultConfig());
+      store.set(createNonDefaultConfig());
       assertTrue(Files.exists(configFilePath()));
     }
 
@@ -128,7 +128,7 @@ public class MetaConfigManagerTest extends BaseTest {
     void setIsIdempotentWithSameReference() throws IOException {
       Path configPath = configFilePath();
 
-      manager.set(createNonDefaultConfig());
+      store.set(createNonDefaultConfig());
       long modifiedTime1 = Files.getLastModifiedTime(configPath).toMillis();
 
       try {
@@ -137,7 +137,7 @@ public class MetaConfigManagerTest extends BaseTest {
         Thread.currentThread().interrupt();
       }
 
-      manager.set(createNonDefaultConfig());
+      store.set(createNonDefaultConfig());
       long modifiedTime2 = Files.getLastModifiedTime(configPath).toMillis();
 
       assertEquals(modifiedTime1, modifiedTime2, "File should not be modified on idempotent set");
@@ -158,13 +158,13 @@ public class MetaConfigManagerTest extends BaseTest {
 
     private String toJson(MetaConfig config) {
       JsonElement element =
-          manager.CONFIG_CODEC.encodeStart(JsonOps.INSTANCE, config).result().orElseThrow();
+          store.CONFIG_CODEC.encodeStart(JsonOps.INSTANCE, config).result().orElseThrow();
       return GSON.toJson(element);
     }
 
     @Test
     void externalModificationTriggersOnChanged() throws IOException, InterruptedException {
-      manager.set(createNonDefaultConfig());
+      store.set(createNonDefaultConfig());
       waitForWatcherSettle();
 
       CountDownLatch latch = new CountDownLatch(1);
@@ -180,13 +180,13 @@ public class MetaConfigManagerTest extends BaseTest {
 
     @Test
     void setTriggersOnChanged() throws IOException, InterruptedException {
-      manager.set(createNonDefaultConfig());
+      store.set(createNonDefaultConfig());
       waitForWatcherSettle();
 
       CountDownLatch latch = new CountDownLatch(1);
       registerListener(latch::countDown);
 
-      manager.set(manager.createConfig());
+      store.set(store.createConfig());
 
       assertTrue(
           latch.await(500, TimeUnit.MILLISECONDS),
@@ -195,13 +195,13 @@ public class MetaConfigManagerTest extends BaseTest {
 
     @Test
     void setSameConfigDoesNotTriggerOnChanged() throws IOException, InterruptedException {
-      manager.set(createNonDefaultConfig());
+      store.set(createNonDefaultConfig());
       waitForWatcherSettle();
 
       CountDownLatch latch = new CountDownLatch(1);
       registerListener(latch::countDown);
 
-      manager.set(createNonDefaultConfig());
+      store.set(createNonDefaultConfig());
 
       assertFalse(
           latch.await(500, TimeUnit.MILLISECONDS),
@@ -210,7 +210,7 @@ public class MetaConfigManagerTest extends BaseTest {
 
     @Test
     void malformedExternalFileDoesNotTriggerOnChanged() throws IOException, InterruptedException {
-      manager.set(createNonDefaultConfig());
+      store.set(createNonDefaultConfig());
       waitForWatcherSettle();
 
       CountDownLatch latch = new CountDownLatch(1);

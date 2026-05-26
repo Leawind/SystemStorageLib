@@ -5,8 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-/// Defines storage locations for different types of data within a specific scope.
-/// Each scope provides access to storage managers tailored for different data categories.
+/// Defines different data types within a specific scope.
 ///
 /// | Method | Condition |
 /// | - | - |

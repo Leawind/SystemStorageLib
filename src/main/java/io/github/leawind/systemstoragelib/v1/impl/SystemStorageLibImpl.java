@@ -7,10 +7,10 @@ import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.ScopeMetaConfig;
-import io.github.leawind.systemstoragelib.v1.api.stores.MetaConfigManager;
+import io.github.leawind.systemstoragelib.v1.api.stores.MetaConfigStore;
 import io.github.leawind.systemstoragelib.v1.impl.log.LogManager;
 import io.github.leawind.systemstoragelib.v1.impl.log.SystemLogger;
-import io.github.leawind.systemstoragelib.v1.impl.stores.MetaConfigManagerImpl;
+import io.github.leawind.systemstoragelib.v1.impl.stores.MetaConfigStoreImpl;
 import io.github.leawind.systemstoragelib.v1.utils.ConcurrentScopeHashMap;
 import io.github.leawind.systemstoragelib.v1.utils.MapUtils;
 import java.io.IOException;
@@ -43,7 +43,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
   private final LogManager logManager;
   private final Logger logger;
-  private final MetaConfigManager metaConfig;
+  private final MetaConfigStore metaConfig;
   private final Map<String, Optional<Scope>> scopes;
 
   /// ## Args
@@ -105,7 +105,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
     logManager = new LogManager(this, logsDir, maxLogFileSize, maxLogArchiveFiles);
     logger = new SystemLogger(logManager, "");
-    metaConfig = new MetaConfigManagerImpl(this, new StorageImpl(this, logger, metaConfigDir));
+    metaConfig = new MetaConfigStoreImpl(this, new StorageImpl(this, logger, metaConfigDir));
     // Listen for external changes to meta config and update scope storage paths accordingly.
     metaConfig.onChanged().on(this::handleMetaConfigChanged);
 
@@ -211,7 +211,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   }
 
   @Override
-  public MetaConfigManager metaConfig() {
+  public MetaConfigStore metaConfig() {
     return metaConfig;
   }
 

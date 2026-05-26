@@ -14,7 +14,7 @@ import io.github.leawind.systemstoragelib.v1.api.Storage;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.ScopeMetaConfig;
-import io.github.leawind.systemstoragelib.v1.api.stores.MetaConfigManager;
+import io.github.leawind.systemstoragelib.v1.api.stores.MetaConfigStore;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -25,11 +25,11 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 public class SystemStorageLibImplTest extends BaseTest {
-  private MetaConfigManager manager;
+  private MetaConfigStore store;
 
   @BeforeEach
   void setupEach() {
-    manager = lib.metaConfig();
+    store = lib.metaConfig();
   }
 
   private Map<StoreType, Path> allDirs() {
@@ -256,7 +256,7 @@ public class SystemStorageLibImplTest extends BaseTest {
     @Test
     void metaConfigReturnsNonNullManager() {
       SystemStorageLibImpl impl = createImpl();
-      MetaConfigManager mgr = impl.metaConfig();
+      MetaConfigStore mgr = impl.metaConfig();
       assertNotNull(mgr);
     }
   }
@@ -270,7 +270,7 @@ public class SystemStorageLibImplTest extends BaseTest {
 
       // Set up custom dir for DATA store type in scope "my-scope"
       Path customDataDir = tempDir.resolve("custom-data");
-      MetaConfig config = manager.createConfig();
+      MetaConfig config = store.createConfig();
       ScopeMetaConfig scopeMetaConfig =
           config.scopes().computeIfAbsent("my-scope", ignored -> config.createScopeConfig());
       scopeMetaConfig.getCustomDirs().put(StoreType.DATA, customDataDir);
@@ -305,7 +305,7 @@ public class SystemStorageLibImplTest extends BaseTest {
 
       // Only configure custom dir for DATA
       Path customDataDir = tempDir.resolve("custom-data");
-      MetaConfig config = manager.createConfig();
+      MetaConfig config = store.createConfig();
       ScopeMetaConfig scopeMetaConfig =
           config.scopes().computeIfAbsent("my-scope", ignored -> config.createScopeConfig());
       scopeMetaConfig.getCustomDirs().put(StoreType.DATA, customDataDir);
@@ -335,7 +335,7 @@ public class SystemStorageLibImplTest extends BaseTest {
 
       // Set a custom dir via set() — this should trigger onChanged and update existing scope
       Path customDataDir = tempDir.resolve("custom-data");
-      MetaConfig newConfig = manager.createConfig();
+      MetaConfig newConfig = store.createConfig();
       ScopeMetaConfig scopeMetaConfig =
           newConfig.scopes().computeIfAbsent("my-scope", ignored -> newConfig.createScopeConfig());
       scopeMetaConfig.getCustomDirs().put(StoreType.DATA, customDataDir);
@@ -353,7 +353,7 @@ public class SystemStorageLibImplTest extends BaseTest {
 
       // First set up a custom dir
       Path customDataDir = tempDir.resolve("custom-data");
-      MetaConfig customConfig = manager.createConfig();
+      MetaConfig customConfig = store.createConfig();
       ScopeMetaConfig scopeMetaConfig =
           customConfig
               .scopes()
@@ -371,7 +371,7 @@ public class SystemStorageLibImplTest extends BaseTest {
           "DATA path should use custom dir after first update");
 
       // Now set a config without the custom dir
-      MetaConfig defaultConfig = manager.createConfig();
+      MetaConfig defaultConfig = store.createConfig();
       impl.metaConfig().set(defaultConfig);
 
       assertEquals(
@@ -390,7 +390,7 @@ public class SystemStorageLibImplTest extends BaseTest {
 
       // Set custom dir only for DATA
       Path customDataDir = tempDir.resolve("custom-data");
-      MetaConfig newConfig = manager.createConfig();
+      MetaConfig newConfig = store.createConfig();
       ScopeMetaConfig scopeMetaConfig =
           newConfig.scopes().computeIfAbsent("my-scope", ignored -> newConfig.createScopeConfig());
       scopeMetaConfig.getCustomDirs().put(StoreType.DATA, customDataDir);
@@ -414,7 +414,7 @@ public class SystemStorageLibImplTest extends BaseTest {
 
       // Set a config change for a different scope
       Path customDataDir = tempDir.resolve("custom-data");
-      MetaConfig newConfig = manager.createConfig();
+      MetaConfig newConfig = store.createConfig();
       ScopeMetaConfig scopeMetaConfig =
           newConfig
               .scopes()
@@ -440,7 +440,7 @@ public class SystemStorageLibImplTest extends BaseTest {
 
       // Try to set a custom dir for CREDENTIALS (non-customizable)
       Path customCredentialsDir = tempDir.resolve("custom-credentials");
-      MetaConfig config = manager.createConfig();
+      MetaConfig config = store.createConfig();
 
       assertThrows(
           IllegalArgumentException.class,

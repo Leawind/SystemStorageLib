@@ -6,24 +6,24 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.leawind.systemstoragelib.v1.BaseTest;
-import io.github.leawind.systemstoragelib.v1.api.stores.MetaConfigManager;
+import io.github.leawind.systemstoragelib.v1.api.stores.MetaConfigStore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 public class MetaConfigTest extends BaseTest {
-  private MetaConfigManager manager;
+  private MetaConfigStore store;
 
   @BeforeEach
   void setupEach() {
-    manager = lib.metaConfig();
+    store = lib.metaConfig();
   }
 
   @Nested
   class GetOrCreateScopeConfig {
     @Test
     void createsNewConfigWhenAbsent() {
-      MetaConfig config = manager.createConfig();
+      MetaConfig config = store.createConfig();
       ScopeMetaConfig perScope =
           config.scopes().computeIfAbsent("new-scope", ignored -> config.createScopeConfig());
 
@@ -33,7 +33,7 @@ public class MetaConfigTest extends BaseTest {
 
     @Test
     void returnsExistingConfigWhenPresent() {
-      MetaConfig config = manager.createConfig();
+      MetaConfig config = store.createConfig();
       ScopeMetaConfig first =
           config.scopes().computeIfAbsent("scope-a", ignored1 -> config.createScopeConfig());
       ScopeMetaConfig second =
@@ -47,7 +47,7 @@ public class MetaConfigTest extends BaseTest {
   class RemoveScopeConfig {
     @Test
     void removesExistingScope() {
-      MetaConfig config = manager.createConfig();
+      MetaConfig config = store.createConfig();
       config.scopes().computeIfAbsent("scope-a", ignored -> config.createScopeConfig());
       config.scopes().remove("scope-a");
 
@@ -56,7 +56,7 @@ public class MetaConfigTest extends BaseTest {
 
     @Test
     void doesNothingForNonExistentScope() {
-      MetaConfig config = manager.createConfig();
+      MetaConfig config = store.createConfig();
       config.scopes().computeIfAbsent("scope-a", ignored -> config.createScopeConfig());
       config.scopes().remove("nonexistent");
 
@@ -68,13 +68,13 @@ public class MetaConfigTest extends BaseTest {
   class GetScopeConfig {
     @Test
     void returnsNullForNonExistentScope() {
-      MetaConfig config = manager.createConfig();
+      MetaConfig config = store.createConfig();
       assertNull(config.scopes().get("nonexistent"));
     }
 
     @Test
     void returnsConfigForExistingScope() {
-      MetaConfig config = manager.createConfig();
+      MetaConfig config = store.createConfig();
       ScopeMetaConfig created =
           config.scopes().computeIfAbsent("scope-a", ignored -> config.createScopeConfig());
       assertEquals(created, config.scopes().get("scope-a"));

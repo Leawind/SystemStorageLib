@@ -30,7 +30,7 @@ public interface CredentialStore {
     return new CredentialStoreImpl(storage);
   }
 
-  Storage storageManager();
+  Storage storage();
 
   boolean exists(@NonNull String key);
 

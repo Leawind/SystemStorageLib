@@ -14,7 +14,7 @@ import io.github.leawind.inventory.misc.UncheckedCloseable;
 import io.github.leawind.systemstoragelib.v1.api.Storage;
 import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
-import io.github.leawind.systemstoragelib.v1.api.stores.MetaConfigManager;
+import io.github.leawind.systemstoragelib.v1.api.stores.MetaConfigStore;
 import io.github.leawind.systemstoragelib.v1.impl.metaconfig.MetaConfigImpl;
 import io.github.leawind.systemstoragelib.v1.impl.metaconfig.ScopeMetaConfigImpl;
 import io.github.leawind.systemstoragelib.v1.utils.AtomicFileWriter;
@@ -36,7 +36,7 @@ import org.jspecify.annotations.Nullable;
 ///
 /// A background file watcher detects external modifications and re-reads the file,
 /// emitting `onChanged` events when the parsed config differs from the cached value.
-public class MetaConfigManagerImpl implements MetaConfigManager, AutoCloseable {
+public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
   private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
   private static final String CONFIG_FILE_NAME = "config.json";
   private static final long FILE_CHANGE_DEBOUNCE_MS = 100;
@@ -56,7 +56,7 @@ public class MetaConfigManagerImpl implements MetaConfigManager, AutoCloseable {
 
   private long lastHandledFileChangeMs = 0;
 
-  public MetaConfigManagerImpl(SystemStorageLib lib, Storage storage) {
+  public MetaConfigStoreImpl(SystemStorageLib lib, Storage storage) {
     this.lib = lib;
     this.storage = storage;
     this.configFilePath =
