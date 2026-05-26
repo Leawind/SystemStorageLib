@@ -12,7 +12,7 @@ import com.mojang.serialization.JsonOps;
 import io.github.leawind.systemstoragelib.v1.BaseTest;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
-import io.github.leawind.systemstoragelib.v1.api.metaconfig.PerScopeConfig;
+import io.github.leawind.systemstoragelib.v1.api.metaconfig.ScopeMetaConfig;
 import io.github.leawind.systemstoragelib.v1.impl.managers.MetaConfigManagerImpl;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -48,17 +48,17 @@ public class MetaConfigManagerTest extends BaseTest {
 
   private MetaConfig createNonDefaultConfig() {
     MetaConfig config = manager.createConfig();
-    PerScopeConfig perScopeConfig =
+    ScopeMetaConfig scopeMetaConfig =
         config.scopes().computeIfAbsent("scope1", ignored -> config.createScopeConfig());
-    perScopeConfig.getCustomDirs().put(StoreType.CONFIG, tempDir.resolve("custom/config"));
+    scopeMetaConfig.getCustomDirs().put(StoreType.CONFIG, tempDir.resolve("custom/config"));
     return config;
   }
 
   private MetaConfig createNonDefaultConfig2() {
     MetaConfig config = manager.createConfig();
-    PerScopeConfig perScopeConfig =
+    ScopeMetaConfig scopeMetaConfig =
         config.scopes().computeIfAbsent("scope2", ignored -> config.createScopeConfig());
-    perScopeConfig.getCustomDirs().put(StoreType.CONFIG, tempDir.resolve("custom/config2"));
+    scopeMetaConfig.getCustomDirs().put(StoreType.CONFIG, tempDir.resolve("custom/config2"));
     return config;
   }
 

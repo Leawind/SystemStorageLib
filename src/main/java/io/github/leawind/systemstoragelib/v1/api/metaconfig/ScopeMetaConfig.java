@@ -1,15 +1,15 @@
 package io.github.leawind.systemstoragelib.v1.api.metaconfig;
 
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
-import io.github.leawind.systemstoragelib.v1.impl.metaconfig.PerScopeConfigImpl;
+import io.github.leawind.systemstoragelib.v1.impl.metaconfig.ScopeMetaConfigImpl;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
-public interface PerScopeConfig {
+public interface ScopeMetaConfig {
 
-  static PerScopeConfig createDefault() {
-    return new PerScopeConfigImpl(new HashMap<>());
+  static ScopeMetaConfig createDefault() {
+    return new ScopeMetaConfigImpl(new HashMap<>());
   }
 
   // region customDirs
@@ -20,7 +20,7 @@ public interface PerScopeConfig {
   ///
   /// However, it differs from a regular `Map`, it validates all entries atomically.
   ///
-  /// - the store type must be customizable ({@link StoreType#customizable()})
+  /// - the store type must be customizable ({@link StoreType#allowCustomDir()})
   /// - the path must be absolute ({@link Path#isAbsolute()})
   /// - the path must be unique in the map
   ///

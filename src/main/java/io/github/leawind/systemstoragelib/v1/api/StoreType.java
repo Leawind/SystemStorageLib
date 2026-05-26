@@ -4,7 +4,7 @@ import com.mojang.serialization.Codec;
 import io.github.leawind.inventory.util.function.TriFunction;
 import io.github.leawind.systemstoragelib.v1.api.managers.CredentialStore;
 import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
-import io.github.leawind.systemstoragelib.v1.api.metaconfig.PerScopeConfig;
+import io.github.leawind.systemstoragelib.v1.api.metaconfig.ScopeMetaConfig;
 import io.github.leawind.systemstoragelib.v1.impl.managers.CredentialStoreImpl;
 import io.github.leawind.systemstoragelib.v1.impl.managers.StorageManagerImpl;
 import java.nio.file.Path;
@@ -45,17 +45,17 @@ public final class StoreType<S extends StorageManager> {
 
   private final Class<S> clazz;
   private final String identifier;
-  private final boolean customizable;
+  private final boolean allowCustomDir;
   private final TriFunction<SystemStorageLib, Logger, Path, S> managerFactory;
 
   private StoreType(
       Class<S> clazz,
       String identifier,
-      boolean customizable,
+      boolean allowCustomDir,
       TriFunction<SystemStorageLib, Logger, Path, S> managerFactory) {
     this.clazz = clazz;
     this.identifier = identifier;
-    this.customizable = customizable;
+    this.allowCustomDir = allowCustomDir;
     this.managerFactory = managerFactory;
   }
 
@@ -71,9 +71,9 @@ public final class StoreType<S extends StorageManager> {
     return identifier;
   }
 
-  /// @see PerScopeConfig#getCustomDirs()
-  public boolean customizable() {
-    return customizable;
+  /// @see ScopeMetaConfig#getCustomDirs()
+  public boolean allowCustomDir() {
+    return allowCustomDir;
   }
 
   @Override

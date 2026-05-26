@@ -2,15 +2,15 @@ package io.github.leawind.systemstoragelib.v1.impl.metaconfig;
 
 import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
-import io.github.leawind.systemstoragelib.v1.api.metaconfig.PerScopeConfig;
+import io.github.leawind.systemstoragelib.v1.api.metaconfig.ScopeMetaConfig;
 import io.github.leawind.systemstoragelib.v1.utils.ScopeHashMap;
 import java.util.HashMap;
 import java.util.Map;
 
-public record MetaConfigImpl(SystemStorageLib lib, Map<String, PerScopeConfig> scopes)
+public record MetaConfigImpl(SystemStorageLib lib, Map<String, ScopeMetaConfig> scopes)
     implements MetaConfig {
 
-  public MetaConfigImpl(SystemStorageLib lib, Map<String, PerScopeConfig> scopes) {
+  public MetaConfigImpl(SystemStorageLib lib, Map<String, ScopeMetaConfig> scopes) {
     this.lib = lib;
     this.scopes = new ScopeHashMap<>(lib);
     this.scopes.putAll(scopes);
@@ -19,8 +19,8 @@ public record MetaConfigImpl(SystemStorageLib lib, Map<String, PerScopeConfig> s
   // region scopes
 
   @Override
-  public PerScopeConfig createScopeConfig() {
-    return new PerScopeConfigImpl(new HashMap<>());
+  public ScopeMetaConfig createScopeConfig() {
+    return new ScopeMetaConfigImpl(new HashMap<>());
   }
 
   // endregion

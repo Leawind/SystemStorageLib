@@ -14,7 +14,7 @@ public class CustomDirMap extends ValidatingHashMap<StoreType<?>, Path> {
   public void validateEntry(StoreType<?> storeType, Path path) {
     Objects.requireNonNull(path, "custom directory path must not be null");
 
-    if (!storeType.customizable()) {
+    if (!storeType.allowCustomDir()) {
       throw new IllegalArgumentException(
           "Store type is not customizable: " + storeType.identifier());
     }

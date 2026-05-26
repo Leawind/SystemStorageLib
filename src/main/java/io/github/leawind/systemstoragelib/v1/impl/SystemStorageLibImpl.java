@@ -7,7 +7,7 @@ import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
 import io.github.leawind.systemstoragelib.v1.api.managers.MetaConfigManager;
 import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
-import io.github.leawind.systemstoragelib.v1.api.metaconfig.PerScopeConfig;
+import io.github.leawind.systemstoragelib.v1.api.metaconfig.ScopeMetaConfig;
 import io.github.leawind.systemstoragelib.v1.impl.log.LogManager;
 import io.github.leawind.systemstoragelib.v1.impl.log.SystemLogger;
 import io.github.leawind.systemstoragelib.v1.impl.managers.MetaConfigManagerImpl;
@@ -30,8 +30,8 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
   public static final String ROOT_DIR_NAME = "mc_system_storage";
 
-  public static final int MIN_SCOPE_LENGTH = 2;
-  public static final int MAX_SCOPE_LENGTH = 128;
+  public static final int MIN_SCOPE_NAME_LENGTH = 2;
+  public static final int MAX_SCOPE_NAME_LENGTH = 128;
 
   private final Path logsDir;
 
@@ -125,15 +125,15 @@ public class SystemStorageLibImpl implements SystemStorageLib {
           }
           ScopeStorage scopeStorage = scopeOpt.get();
 
-          PerScopeConfig perScopeConfig = newConfig.scopes().get(scope);
+          ScopeMetaConfig scopeMetaConfig = newConfig.scopes().get(scope);
           Map<StoreType<?>, Path> customDirs =
-              (perScopeConfig != null) ? perScopeConfig.getCustomDirs() : null;
+              (scopeMetaConfig != null) ? scopeMetaConfig.getCustomDirs() : null;
 
           Map<StoreType<?>, Path> newDirMap = new HashMap<>();
           for (StoreType<?> storeType : StoreType.values()) {
             Path newDirPath = (customDirs != null) ? customDirs.get(storeType) : null;
 
-            if (newDirPath != null && !storeType.customizable()) {
+            if (newDirPath != null && !storeType.allowCustomDir()) {
               logger()
                   .error(
                       "Path of store type {} is not customizable, ignoring custom dir in"
@@ -241,11 +241,12 @@ public class SystemStorageLibImpl implements SystemStorageLib {
       return "scope is empty";
     }
 
-    if (!(MIN_SCOPE_LENGTH <= scopeName.length() && scopeName.length() <= MAX_SCOPE_LENGTH)) {
+    if (!(MIN_SCOPE_NAME_LENGTH <= scopeName.length()
+        && scopeName.length() <= MAX_SCOPE_NAME_LENGTH)) {
       return "scope length must be between "
-          + MIN_SCOPE_LENGTH
+          + MIN_SCOPE_NAME_LENGTH
           + " and "
-          + MAX_SCOPE_LENGTH
+          + MAX_SCOPE_NAME_LENGTH
           + " characters";
     }
 
@@ -294,14 +295,14 @@ public class SystemStorageLibImpl implements SystemStorageLib {
     try {
       // Load meta configuration which may contain per‑scope custom directory mappings.
       MetaConfig meta = metaConfig.get();
-      PerScopeConfig perScope = meta.scopes().get(scopeName);
+      ScopeMetaConfig perScope = meta.scopes().get(scopeName);
       if (perScope != null) {
         // Override default directories with any custom paths defined for this scope.
         perScope
             .getCustomDirs()
             .forEach(
                 (storeType, path) -> {
-                  if (storeType.customizable()) {
+                  if (storeType.allowCustomDir()) {
                     dirsForScope.put(storeType, path);
                   } else {
                     logger()

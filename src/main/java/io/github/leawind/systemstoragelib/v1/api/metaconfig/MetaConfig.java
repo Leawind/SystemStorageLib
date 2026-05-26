@@ -6,9 +6,9 @@ import java.util.Map;
 public interface MetaConfig {
   // region scopes
 
-  Map<String, PerScopeConfig> scopes();
+  Map<String, ScopeMetaConfig> scopes();
 
-  PerScopeConfig createScopeConfig();
+  ScopeMetaConfig createScopeConfig();
 
   // endregion
 }

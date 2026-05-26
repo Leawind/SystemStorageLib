@@ -24,7 +24,7 @@ public class MetaConfigTest extends BaseTest {
     @Test
     void createsNewConfigWhenAbsent() {
       MetaConfig config = manager.createConfig();
-      PerScopeConfig perScope =
+      ScopeMetaConfig perScope =
           config.scopes().computeIfAbsent("new-scope", ignored -> config.createScopeConfig());
 
       assertNotNull(perScope);
@@ -34,9 +34,9 @@ public class MetaConfigTest extends BaseTest {
     @Test
     void returnsExistingConfigWhenPresent() {
       MetaConfig config = manager.createConfig();
-      PerScopeConfig first =
+      ScopeMetaConfig first =
           config.scopes().computeIfAbsent("scope-a", ignored1 -> config.createScopeConfig());
-      PerScopeConfig second =
+      ScopeMetaConfig second =
           config.scopes().computeIfAbsent("scope-a", ignored -> config.createScopeConfig());
 
       assertEquals(first, second);
@@ -75,7 +75,7 @@ public class MetaConfigTest extends BaseTest {
     @Test
     void returnsConfigForExistingScope() {
       MetaConfig config = manager.createConfig();
-      PerScopeConfig created =
+      ScopeMetaConfig created =
           config.scopes().computeIfAbsent("scope-a", ignored -> config.createScopeConfig());
       assertEquals(created, config.scopes().get("scope-a"));
     }

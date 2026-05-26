@@ -15,7 +15,7 @@ import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
 import io.github.leawind.systemstoragelib.v1.api.managers.MetaConfigManager;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
 import io.github.leawind.systemstoragelib.v1.impl.metaconfig.MetaConfigImpl;
-import io.github.leawind.systemstoragelib.v1.impl.metaconfig.PerScopeConfigImpl;
+import io.github.leawind.systemstoragelib.v1.impl.metaconfig.ScopeMetaConfigImpl;
 import io.github.leawind.systemstoragelib.v1.utils.AtomicFileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -46,7 +46,7 @@ public class MetaConfigManagerImpl extends StorageManagerImpl
       RecordCodecBuilder.create(
           inst ->
               inst.group(
-                      Codec.unboundedMap(Codec.STRING, PerScopeConfigImpl.CODEC)
+                      Codec.unboundedMap(Codec.STRING, ScopeMetaConfigImpl.CODEC)
                           .fieldOf("scopes")
                           .forGetter(MetaConfig::scopes))
                   .apply(inst, (map) -> new MetaConfigImpl(lib, map)));

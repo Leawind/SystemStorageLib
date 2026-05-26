@@ -3,25 +3,25 @@ package io.github.leawind.systemstoragelib.v1.impl.metaconfig;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
-import io.github.leawind.systemstoragelib.v1.api.metaconfig.PerScopeConfig;
+import io.github.leawind.systemstoragelib.v1.api.metaconfig.ScopeMetaConfig;
 import io.github.leawind.systemstoragelib.v1.utils.Codecs;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
 
-public final class PerScopeConfigImpl implements PerScopeConfig {
-  public static final Codec<PerScopeConfig> CODEC =
+public final class ScopeMetaConfigImpl implements ScopeMetaConfig {
+  public static final Codec<ScopeMetaConfig> CODEC =
       RecordCodecBuilder.create(
           inst ->
               inst.group(
                       Codec.unboundedMap(StoreType.CODEC, Codecs.PATH)
                           .fieldOf("custom_dirs")
-                          .forGetter(PerScopeConfig::getCustomDirs))
-                  .apply(inst, PerScopeConfigImpl::new));
+                          .forGetter(ScopeMetaConfig::getCustomDirs))
+                  .apply(inst, ScopeMetaConfigImpl::new));
 
   private final CustomDirMap customDirs = new CustomDirMap();
 
-  public PerScopeConfigImpl(Map<StoreType<?>, Path> customDirs) {
+  public ScopeMetaConfigImpl(Map<StoreType<?>, Path> customDirs) {
     this.customDirs.putAll(customDirs);
   }
 
@@ -48,7 +48,7 @@ public final class PerScopeConfigImpl implements PerScopeConfig {
     if (this == o) {
       return true;
     }
-    if (o instanceof PerScopeConfig other) {
+    if (o instanceof ScopeMetaConfig other) {
       return Objects.equals(customDirs, other.getCustomDirs());
     }
     return false;

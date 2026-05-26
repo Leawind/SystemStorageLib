@@ -27,35 +27,35 @@ public class StoreTypeTest extends BaseTest {
     void credentialsType() {
       assertEquals(CredentialStore.class, StoreType.CREDENTIALS.managerClass());
       assertEquals("credentials", StoreType.CREDENTIALS.identifier());
-      assertFalse(StoreType.CREDENTIALS.customizable());
+      assertFalse(StoreType.CREDENTIALS.allowCustomDir());
     }
 
     @Test
     void configType() {
       assertEquals(StorageManager.class, StoreType.CONFIG.managerClass());
       assertEquals("config", StoreType.CONFIG.identifier());
-      assertTrue(StoreType.CONFIG.customizable());
+      assertTrue(StoreType.CONFIG.allowCustomDir());
     }
 
     @Test
     void dataType() {
       assertEquals(StorageManager.class, StoreType.DATA.managerClass());
       assertEquals("data", StoreType.DATA.identifier());
-      assertTrue(StoreType.DATA.customizable());
+      assertTrue(StoreType.DATA.allowCustomDir());
     }
 
     @Test
     void cacheType() {
       assertEquals(StorageManager.class, StoreType.CACHE.managerClass());
       assertEquals("cache", StoreType.CACHE.identifier());
-      assertTrue(StoreType.CACHE.customizable());
+      assertTrue(StoreType.CACHE.allowCustomDir());
     }
 
     @Test
     void dataLocalType() {
       assertEquals(StorageManager.class, StoreType.DATA_LOCAL.managerClass());
       assertEquals("data_local", StoreType.DATA_LOCAL.identifier());
-      assertTrue(StoreType.DATA_LOCAL.customizable());
+      assertTrue(StoreType.DATA_LOCAL.allowCustomDir());
     }
   }
 
