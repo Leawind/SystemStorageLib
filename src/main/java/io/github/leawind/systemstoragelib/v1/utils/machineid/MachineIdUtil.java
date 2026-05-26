@@ -142,6 +142,13 @@ public final class MachineIdUtil {
             }
           });
 
+  /// Returns the machine identifier for the current system.
+  ///
+  /// The identifier is lazily resolved on first call and cached for subsequent calls.
+  ///
+  /// @return the machine identifier
+  /// @throws MachineIdResolutionException if no provider is available for the current OS
+  ///         or if resolution fails
   public static String getMachineId() {
     return value.get();
   }

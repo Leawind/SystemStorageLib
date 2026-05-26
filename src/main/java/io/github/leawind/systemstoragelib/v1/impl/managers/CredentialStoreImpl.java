@@ -53,7 +53,7 @@ import org.slf4j.Logger;
 /// | `0x0D` | NB | Ciphertext |
 /// | EOF-16 | 16B | GCM Auth Tag |
 ///
-/// AES key derived via PBKDF2 from `user.name:user.home`.
+/// AES key derived via PBKDF2 from `user.name:user.home:machineId`.
 public class CredentialStoreImpl extends StorageManagerImpl implements CredentialStore {
 
   private static final byte FORMAT_VERSION = 0x01;

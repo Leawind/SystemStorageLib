@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import io.github.leawind.inventory.util.function.TriFunction;
 import io.github.leawind.systemstoragelib.v1.api.managers.CredentialStore;
 import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
+import io.github.leawind.systemstoragelib.v1.api.metaconfig.PerScopeConfig;
 import io.github.leawind.systemstoragelib.v1.impl.managers.CredentialStoreImpl;
 import io.github.leawind.systemstoragelib.v1.impl.managers.StorageManagerImpl;
 import java.nio.file.Path;
@@ -70,6 +71,7 @@ public final class StoreType<S extends StorageManager> {
     return identifier;
   }
 
+  /// @see PerScopeConfig#getCustomDirs()
   public boolean customizable() {
     return customizable;
   }

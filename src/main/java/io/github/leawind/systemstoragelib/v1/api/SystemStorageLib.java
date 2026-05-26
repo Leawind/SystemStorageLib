@@ -60,29 +60,31 @@ public interface SystemStorageLib {
     return SystemStorageLibHolder.getInstance();
   }
 
-  /// Creates a {@link SystemStorageLib} instance with the given configuration.
+  /// Returns a builder for creating a `SystemStorageLib` instance with custom configuration.
   ///
   /// Usually for testing.
-  ///
-  /// @param config the configuration
-  /// @return a new instance
-  /// @throws SystemStorageLibException if initialization fails
-  /// @throws IllegalArgumentException if the configuration is invalid
   static Builder builder() {
     return new SystemStorageLibImpl.BuilderImpl();
   }
 
+  /// Builder for creating a `SystemStorageLib` instance with custom configuration.
   interface Builder {
+    /// Builds and returns the configured `SystemStorageLib` instance.
     SystemStorageLib build();
 
+    /// Sets the directory for log files.
     Builder logsDir(Path logsDir);
 
+    /// Sets the directory for meta configuration files.
     Builder metaConfigDir(Path metaConfigDir);
 
+    /// The scoped directory will be `rootDir / <scope>`.
     Builder storeDir(StoreType<?> storeType, Path rootDir);
 
+    /// Sets the maximum size of a log file in bytes before rotation.
     Builder maxLogFileSize(long maxLogFileSize);
 
+    /// Sets the maximum number of rotated archive log files.
     Builder maxLogArchiveFiles(int maxLogArchiveFiles);
   }
 }
