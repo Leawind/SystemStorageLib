@@ -1,5 +1,6 @@
 package io.github.leawind.systemstoragelib.v1.impl;
 
+import dev.dirs.BaseDirectories;
 import io.github.leawind.systemstoragelib.v1.api.ScopeStorage;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
@@ -356,14 +357,14 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
     @Override
     public SystemStorageLibImpl build() {
-      if (logsDir == null) {
-        throw new IllegalArgumentException("logsDir must not be null");
-      }
-      if (metaConfigDir == null) {
-        throw new IllegalArgumentException("metaConfigDir must not be null");
-      }
-      if (scopedDirs.isEmpty()) {
-        throw new IllegalArgumentException("scopedDirs must not be empty");
+      if (logsDir == null || metaConfigDir == null) {
+        BaseDirectories baseDirs = BaseDirectories.get();
+        if (logsDir == null) {
+          logsDir = Path.of(baseDirs.dataDir, ROOT_DIR_NAME, "logs");
+        }
+        if (metaConfigDir == null) {
+          metaConfigDir = Path.of(baseDirs.configDir, ROOT_DIR_NAME, "metaconfig");
+        }
       }
       return new SystemStorageLibImpl(
           logsDir, metaConfigDir, scopedDirs, maxLogFileSize, maxLogArchiveFiles);
