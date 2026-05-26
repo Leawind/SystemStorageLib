@@ -160,7 +160,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
                     logger()
                         .info(
                             "Updating dir path for scope `{}`, store type `{}` from `{}` to `{}`",
-                            scopeStorage.scope(),
+                            scopeStorage.name(),
                             storeType,
                             manager.getDirPath(),
                             newDirPath);
@@ -170,7 +170,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
                     logger()
                         .warn(
                             "Failed to update dir path for scope `{}`, store type `{}`: `{}`",
-                            scopeStorage.scope(),
+                            scopeStorage.name(),
                             storeType,
                             e.getMessage());
                   }
@@ -199,15 +199,15 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   }
 
   @Override
-  public ScopeStorage scope(String scope) {
-    String err = validateScope(scope);
+  public ScopeStorage scope(String scopeName) {
+    String err = validateScopeName(scopeName);
     if (err != null) {
       throw new IllegalArgumentException("Invalid scope: " + err);
     }
 
     return scopes
         .compute(
-            scope,
+            scopeName,
             (k, v) -> {
               if (v != null && v.isPresent()) {
                 return v;
@@ -218,18 +218,18 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   }
 
   @Override
-  public Stream<String> getAllScopes() {
+  public Stream<String> streamScopes() {
     detectScopes();
     return scopes.keySet().stream();
   }
 
   @Override
-  public @Nullable String validateScope(String scope) {
-    if (scope.isEmpty()) {
+  public @Nullable String validateScopeName(String scopeName) {
+    if (scopeName.isEmpty()) {
       return "scope is empty";
     }
 
-    if (!(MIN_SCOPE_LENGTH <= scope.length() && scope.length() <= MAX_SCOPE_LENGTH)) {
+    if (!(MIN_SCOPE_LENGTH <= scopeName.length() && scopeName.length() <= MAX_SCOPE_LENGTH)) {
       return "scope length must be between "
           + MIN_SCOPE_LENGTH
           + " and "
@@ -237,7 +237,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
           + " characters";
     }
 
-    char firstChar = scope.charAt(0);
+    char firstChar = scopeName.charAt(0);
     switch (firstChar) {
       case '-':
       case '+':
@@ -245,7 +245,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
         return "scope must not start with `" + firstChar + "`";
     }
 
-    char lastChar = scope.charAt(scope.length() - 1);
+    char lastChar = scopeName.charAt(scopeName.length() - 1);
     switch (lastChar) {
       case '-':
       case '+':
@@ -253,7 +253,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
         return "scope must not end with `" + lastChar + "`";
     }
 
-    for (char c : scope.toCharArray()) {
+    for (char c : scopeName.toCharArray()) {
       if (c >= 'A' && c <= 'Z') continue;
       if (c >= 'a' && c <= 'z') continue;
       if (c >= '0' && c <= '9') continue;
@@ -276,13 +276,13 @@ public class SystemStorageLibImpl implements SystemStorageLib {
     return logsDir;
   }
 
-  private ScopeStorage createScopeStorage(String scope) {
+  private ScopeStorage createScopeStorage(String name) {
     // Build a directory map for the given scope, preferring custom directories from MetaConfig.
     Map<StoreType<?>, Path> dirsForScope = new HashMap<>(defaultScopedDirs);
     try {
       // Load meta configuration which may contain per‑scope custom directory mappings.
       MetaConfig meta = metaConfig.get();
-      PerScopeConfig perScope = meta.scopes().get(scope);
+      PerScopeConfig perScope = meta.scopes().get(name);
       if (perScope != null) {
         // Override default directories with any custom paths defined for this scope.
         perScope
@@ -299,9 +299,9 @@ public class SystemStorageLibImpl implements SystemStorageLib {
       }
     } catch (IOException e) {
       // If we cannot read the meta config, fall back to the default scoped directories.
-      logger().warn("Failed to load meta config for scope {}: {}", scope, e.getMessage());
+      logger().warn("Failed to load meta config for scope {}: {}", name, e.getMessage());
     }
-    return new ScopeStorageImpl(scope, new SystemLogger(logManager, scope), dirsForScope);
+    return new ScopeStorageImpl(name, new SystemLogger(logManager, name), dirsForScope);
   }
 
   private void detectScopes() {
@@ -317,7 +317,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
       entries
           .filter(Files::isDirectory)
           .map(p -> p.getFileName().toString())
-          .filter(this::isScopeValid)
+          .filter(this::isScopeNameValid)
           .forEach(scope -> scopes.putIfAbsent(scope, Optional.empty()));
     } catch (IOException ignored) {
     }

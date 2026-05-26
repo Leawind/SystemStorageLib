@@ -8,7 +8,7 @@ public interface ScopeStorage {
   /// Returns the scope name this storage is associated with.
   ///
   /// @return the scope name
-  String scope();
+  String name();
 
   /// Logger for this scope.
   ///

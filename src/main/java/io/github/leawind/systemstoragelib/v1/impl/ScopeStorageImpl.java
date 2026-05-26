@@ -12,7 +12,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 
 public final class ScopeStorageImpl implements ScopeStorage {
-  private final String scope;
+  private final String name;
   private final Logger logger;
   private final Map<StoreType<?>, ? extends StorageManager> managers;
 
@@ -20,18 +20,18 @@ public final class ScopeStorageImpl implements ScopeStorage {
   ///
   /// - If any StoreType is missing.
   /// - If any dirPath is not unique.
-  public ScopeStorageImpl(String scope, Logger logger, Map<StoreType<?>, Path> dirs) {
+  public ScopeStorageImpl(String name, Logger logger, Map<StoreType<?>, Path> dirs) {
     Map<StoreType<?>, ? extends StorageManager> managers = new HashMap<>();
 
     for (Map.Entry<StoreType<?>, Path> entry : dirs.entrySet()) {
       StoreType<?> type = entry.getKey();
-      Path scopedPath = entry.getValue().resolve(scope);
+      Path scopedPath = entry.getValue().resolve(name);
 
       managers.put(type, UnsafeTypeUtils.cast(type.manager(logger, scopedPath)));
     }
     validateManagers(managers);
 
-    this.scope = scope;
+    this.name = name;
     this.logger = logger;
     this.managers = managers;
   }
@@ -48,8 +48,8 @@ public final class ScopeStorageImpl implements ScopeStorage {
   }
 
   @Override
-  public String scope() {
-    return scope;
+  public String name() {
+    return name;
   }
 
   @Override

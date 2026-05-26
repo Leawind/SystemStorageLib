@@ -42,14 +42,14 @@ public class ScopeStorageTest extends BaseTest {
     assertNotNull(storage.storage(StoreType.DATA));
     assertNotNull(storage.storage(StoreType.DATA_LOCAL));
 
-    assertEquals("test_scope", storage.scope());
+    assertEquals("test_scope", storage.name());
   }
 
   @Test
   void ofCreatesScopedPaths() {
     ScopeStorage storage = new ScopeStorageImpl("my_scope", TEST_LOGGER, dirs);
     assertNotNull(storage);
-    assertEquals("my_scope", storage.scope());
+    assertEquals("my_scope", storage.name());
 
     StorageManager config = storage.storage(StoreType.CONFIG);
     assertTrue(config.getDirPath().endsWith("my_scope"));

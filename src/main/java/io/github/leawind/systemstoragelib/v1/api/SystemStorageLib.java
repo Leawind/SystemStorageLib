@@ -22,16 +22,17 @@ public interface SystemStorageLib {
 
   /// Creates or retrieves a {@link ScopeStorage} for the given scope name.
   ///
-  /// @param scope the scope name, must pass {@link #validateScope}
-  /// @return the scope storage instance
+  /// @param scopeName the scope name, must pass {@link #validateScopeName}
+  /// @return the name storage instance
   /// @throws IllegalArgumentException if the scope name is invalid
-  ScopeStorage scope(String scope);
+  ScopeStorage scope(String scopeName);
 
   /// Returns all known scope names, both from the in-memory cache and
   /// detected on disk.
   ///
   /// @return a stream of scope names
-  Stream<String> getAllScopes();
+  @Deprecated
+  Stream<String> streamScopes();
 
   /// Validates a scope name.
   ///
@@ -42,12 +43,12 @@ public interface SystemStorageLib {
   ///   - ASCII letters, lowercase and uppercase
   ///   - chars like `_`, `-`, `+`, `.`
   ///
-  /// @param scope the scope name to validate
+  /// @param scopeName the scope name to validate
   /// @return {@code null} if valid, otherwise a description of the validation failure
-  @Nullable String validateScope(String scope);
+  @Nullable String validateScopeName(String scopeName);
 
-  default boolean isScopeValid(String scope) {
-    return validateScope(scope) == null;
+  default boolean isScopeNameValid(String scopeName) {
+    return validateScopeName(scopeName) == null;
   }
 
   /// Returns the path to the logs directory.

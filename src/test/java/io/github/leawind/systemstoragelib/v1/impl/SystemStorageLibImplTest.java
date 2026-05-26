@@ -107,31 +107,31 @@ public class SystemStorageLibImplTest extends BaseTest {
     @Test
     void validScopeReturnsNull() {
       SystemStorageLibImpl impl = createImpl();
-      assertNull(impl.validateScope("valid-scope"));
+      assertNull(impl.validateScopeName("valid-scope"));
     }
 
     @Test
     void emptyScopeIsInvalid() {
       SystemStorageLibImpl impl = createImpl();
-      assertNotNull(impl.validateScope(""));
+      assertNotNull(impl.validateScopeName(""));
     }
 
     @Test
     void tooShortScopeIsInvalid() {
       SystemStorageLibImpl impl = createImpl();
-      assertNotNull(impl.validateScope("a"));
+      assertNotNull(impl.validateScopeName("a"));
     }
 
     @Test
     void tooLongScopeIsInvalid() {
       SystemStorageLibImpl impl = createImpl();
-      assertNotNull(impl.validateScope("a".repeat(1024)));
+      assertNotNull(impl.validateScopeName("a".repeat(1024)));
     }
 
     @Test
     void scopeStartingWithDashIsInvalid() {
       SystemStorageLibImpl impl = createImpl();
-      String result = impl.validateScope("-invalid");
+      String result = impl.validateScopeName("-invalid");
       assertNotNull(result);
       assertTrue(result.contains("must not start with"));
     }
@@ -139,7 +139,7 @@ public class SystemStorageLibImplTest extends BaseTest {
     @Test
     void scopeStartingWithPlusIsInvalid() {
       SystemStorageLibImpl impl = createImpl();
-      String result = impl.validateScope("+invalid");
+      String result = impl.validateScopeName("+invalid");
       assertNotNull(result);
       assertTrue(result.contains("must not start with"));
     }
@@ -147,7 +147,7 @@ public class SystemStorageLibImplTest extends BaseTest {
     @Test
     void scopeStartingWithDotIsInvalid() {
       SystemStorageLibImpl impl = createImpl();
-      String result = impl.validateScope(".invalid");
+      String result = impl.validateScopeName(".invalid");
       assertNotNull(result);
       assertTrue(result.contains("must not start with"));
     }
@@ -155,7 +155,7 @@ public class SystemStorageLibImplTest extends BaseTest {
     @Test
     void scopeEndingWithDashIsInvalid() {
       SystemStorageLibImpl impl = createImpl();
-      String result = impl.validateScope("invalid-");
+      String result = impl.validateScopeName("invalid-");
       assertNotNull(result);
       assertTrue(result.contains("must not end with"));
     }
@@ -163,7 +163,7 @@ public class SystemStorageLibImplTest extends BaseTest {
     @Test
     void scopeEndingWithPlusIsInvalid() {
       SystemStorageLibImpl impl = createImpl();
-      String result = impl.validateScope("invalid+");
+      String result = impl.validateScopeName("invalid+");
       assertNotNull(result);
       assertTrue(result.contains("must not end with"));
     }
@@ -171,7 +171,7 @@ public class SystemStorageLibImplTest extends BaseTest {
     @Test
     void scopeEndingWithDotIsInvalid() {
       SystemStorageLibImpl impl = createImpl();
-      String result = impl.validateScope("invalid.");
+      String result = impl.validateScopeName("invalid.");
       assertNotNull(result);
       assertTrue(result.contains("must not end with"));
     }
@@ -179,26 +179,26 @@ public class SystemStorageLibImplTest extends BaseTest {
     @Test
     void scopeWithInvalidCharacterIsInvalid() {
       SystemStorageLibImpl impl = createImpl();
-      assertNotNull(impl.validateScope("invalid scope"));
+      assertNotNull(impl.validateScopeName("invalid scope"));
     }
 
     @Test
     void scopeWithAllowedSpecialCharsIsValid() {
       SystemStorageLibImpl impl = createImpl();
-      assertNull(impl.validateScope("my_scope-v1.2+feature"));
+      assertNull(impl.validateScopeName("my_scope-v1.2+feature"));
     }
 
     @Test
     void isScopeValidDelegatesToValidateScope() {
       SystemStorageLibImpl impl = createImpl();
-      assertTrue(impl.isScopeValid("valid"));
-      assertFalse(impl.isScopeValid(""));
+      assertTrue(impl.isScopeNameValid("valid"));
+      assertFalse(impl.isScopeNameValid(""));
     }
 
     @Test
     void scopeAtMinLengthIsValid() {
       SystemStorageLibImpl impl = createImpl();
-      assertNull(impl.validateScope("ab"));
+      assertNull(impl.validateScopeName("ab"));
     }
 
     @Test
@@ -206,7 +206,7 @@ public class SystemStorageLibImplTest extends BaseTest {
       SystemStorageLibImpl impl = createImpl();
       char[] chars = new char[SystemStorageLibImpl.MAX_SCOPE_LENGTH];
       Arrays.fill(chars, 'a');
-      assertNull(impl.validateScope(new String(chars)));
+      assertNull(impl.validateScopeName(new String(chars)));
     }
   }
 
@@ -218,7 +218,7 @@ public class SystemStorageLibImplTest extends BaseTest {
       SystemStorageLibImpl impl = createImpl();
       ScopeStorage storage = impl.scope("test_scope");
       assertNotNull(storage);
-      assertEquals("test_scope", storage.scope());
+      assertEquals("test_scope", storage.name());
     }
 
     @Test

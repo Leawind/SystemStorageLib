@@ -33,11 +33,11 @@ public class LogManager extends StorageManagerImpl implements AutoCloseable {
    *
    * <p>IOException is silently caught and ignored to avoid affecting normal business logic.
    */
-  public void writeLog(Level level, String scope, long pid, String message) {
+  public void writeLog(Level level, String scopeName, long pid, String message) {
     try {
       try (UncheckedCloseable ignored = LockUtils.lock(getLock().writeLock())) {
         rotateIfNeeded();
-        String line = formatLine(level, scope, pid, message);
+        String line = formatLine(level, scopeName, pid, message);
         Files.writeString(
             logFilePath, line + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
       }
@@ -71,8 +71,8 @@ public class LogManager extends StorageManagerImpl implements AutoCloseable {
     Files.deleteIfExists(getDirPath().resolve(LOCK_FILE_NAME));
   }
 
-  private static String formatLine(Level level, String scope, long pid, String message) {
+  private static String formatLine(Level level, String scopeName, long pid, String message) {
     return String.format(
-        "[%s] [%s] [%d] [%s] %s", Instant.now().toString(), level, pid, scope, message);
+        "[%s] [%s] [%d] [%s] %s", Instant.now().toString(), level, pid, scopeName, message);
   }
 }

@@ -13,7 +13,7 @@ public class SystemStorageLibTest extends BaseTest {
   void test() {
     ScopeStorage storage = lib.scope("system_storage_lib_test");
     assertNotNull(storage);
-    assertEquals("system_storage_lib_test", storage.scope());
+    assertEquals("system_storage_lib_test", storage.name());
   }
 
   @Test
@@ -21,6 +21,6 @@ public class SystemStorageLibTest extends BaseTest {
     var scope = lib.scope("system_storage_lib_test");
     var config = lib.metaConfig();
 
-    config.get().getOrCreateScopeConfig(scope.scope());
+    config.get().getOrCreateScopeConfig(scope.name());
   }
 }
