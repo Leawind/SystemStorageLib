@@ -171,7 +171,7 @@ public class ScopeMetaConfigTest {
       dirs.put(StoreType.CONFIG, FOO); // same path
 
       assertThrows(
-          IllegalArgumentException.class, () ->new ScopeMetaConfigImpl().setCustomDirs(dirs));
+          IllegalArgumentException.class, () -> new ScopeMetaConfigImpl().setCustomDirs(dirs));
     }
 
     @Test
@@ -181,7 +181,7 @@ public class ScopeMetaConfigTest {
       dirs.put(StoreType.CONFIG, FS.getPath("/bar/../foo")); // normalizes to same path
 
       assertThrows(
-          IllegalArgumentException.class, () ->new ScopeMetaConfigImpl().setCustomDirs(dirs));
+          IllegalArgumentException.class, () -> new ScopeMetaConfigImpl().setCustomDirs(dirs));
     }
 
     @Test
@@ -189,8 +189,7 @@ public class ScopeMetaConfigTest {
       Map<StoreType<?>, Path> dirs = new HashMap<>();
       dirs.put(StoreType.DATA, null);
 
-      assertThrows(
-          NullPointerException.class, () ->new ScopeMetaConfigImpl().setCustomDirs(dirs));
+      assertThrows(NullPointerException.class, () -> new ScopeMetaConfigImpl().setCustomDirs(dirs));
     }
   }
 
