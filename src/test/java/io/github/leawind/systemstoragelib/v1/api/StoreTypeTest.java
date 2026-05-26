@@ -9,19 +9,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.google.gson.JsonElement;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
+import io.github.leawind.systemstoragelib.v1.BaseTest;
 import io.github.leawind.systemstoragelib.v1.api.managers.CredentialStore;
 import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
-import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class StoreTypeTest {
+public class StoreTypeTest extends BaseTest {
 
   private static final Logger TEST_LOGGER = LoggerFactory.getLogger(StoreTypeTest.class);
 
@@ -87,8 +86,6 @@ public class StoreTypeTest {
 
   @Nested
   class Manager {
-
-    @TempDir Path tempDir;
 
     @Test
     void credentialsManagerFactoryCreatesCredentialStore() {

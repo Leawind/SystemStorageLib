@@ -37,6 +37,9 @@ public final class AtomicFileWriter {
   /// Creates parent directories if they don't exist. On failure, the temp file is cleaned up
   /// and the target file is left unchanged.
   public static void write(Path target, Path tmpPath, byte[] data) throws IOException {
+    if (Files.isDirectory(target)) {
+      throw new IOException("Target is a directory: " + target);
+    }
     Files.createDirectories(target.getParent());
     try {
       writeToTmp(tmpPath, data);

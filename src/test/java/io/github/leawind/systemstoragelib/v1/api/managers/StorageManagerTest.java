@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.leawind.inventory.lock.LockUtils;
 import io.github.leawind.inventory.misc.UncheckedCloseable;
+import io.github.leawind.systemstoragelib.v1.BaseTest;
 import io.github.leawind.systemstoragelib.v1.impl.managers.StorageManagerImpl;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,19 +21,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class StorageManagerTest {
+public class StorageManagerTest extends BaseTest {
 
-  @TempDir Path tempDir;
   private static final Logger TEST_LOGGER = LoggerFactory.getLogger(StorageManagerTest.class);
 
   private StorageManager manager;
 
   @BeforeEach
-  void setupEach() {
+  void setupEach() throws IOException {
     manager = new StorageManagerImpl(TEST_LOGGER, tempDir.resolve("storage"));
   }
 

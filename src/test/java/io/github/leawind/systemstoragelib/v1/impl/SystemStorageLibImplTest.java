@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.github.leawind.systemstoragelib.v1.BaseTest;
 import io.github.leawind.systemstoragelib.v1.api.ScopeStorage;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.managers.MetaConfigManager;
@@ -22,11 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
-public class SystemStorageLibImplTest {
-
-  @TempDir Path tempDir;
+public class SystemStorageLibImplTest extends BaseTest {
 
   private Map<StoreType<?>, Path> allDirs() {
     Map<StoreType<?>, Path> dirs = new HashMap<>();

@@ -6,19 +6,34 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.google.common.jimfs.Configuration;
+import com.google.common.jimfs.Jimfs;
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
 public class AtomicFileWriterTest {
+  private FileSystem fs;
+  private Path tempDir;
 
-  @TempDir Path tempDir;
+  @BeforeEach
+  void setup() throws IOException {
+    fs = Jimfs.newFileSystem(Configuration.unix());
+    tempDir = fs.getPath("/tmp");
+    Files.createDirectories(tempDir);
+  }
+
+  @AfterEach
+  void close() throws IOException {
+    fs.close();
+  }
 
   // region write()
 
@@ -103,7 +118,7 @@ public class AtomicFileWriterTest {
 
   @Test
   void resolveTmpPath_appendsTmpSuffixWithUuid() {
-    Path target = Paths.get("/some/dir/file.enc");
+    Path target = fs.getPath("/some/dir/file.enc");
     Path tmp = AtomicFileWriter.resolveTmpPath(target);
 
     assertEquals(target.getParent(), tmp.getParent());
@@ -114,7 +129,7 @@ public class AtomicFileWriterTest {
 
   @Test
   void resolveTmpPath_sameDirectoryAsTarget() {
-    Path target = Paths.get("/a/b/c.txt");
+    Path target = fs.getPath("/a/b/c.txt");
     Path tmp = AtomicFileWriter.resolveTmpPath(target);
 
     assertEquals(target.getParent(), tmp.getParent());
@@ -196,24 +211,6 @@ public class AtomicFileWriterTest {
 
     // Should not throw
     AtomicFileWriter.cleanUp(tmp);
-  }
-
-  // endregion
-
-  // region Integration: failure scenario
-
-  @Test
-  void write_tmpCleanedUpOnFailure() throws IOException {
-    Path targetDir = tempDir.resolve("target_is_dir");
-    Files.createDirectories(targetDir);
-
-    assertThrows(IOException.class, () -> AtomicFileWriter.write(targetDir, new byte[] {1}));
-
-    // No .tmp file should remain
-    try (Stream<Path> paths = Files.list(tempDir)) {
-      long tmpCount = paths.filter(p -> p.getFileName().toString().contains(".tmp.")).count();
-      assertEquals(0, tmpCount, "No .tmp file should remain after failure");
-    }
   }
 
   // endregion

@@ -6,11 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.google.common.jimfs.Configuration;
-import com.google.common.jimfs.Jimfs;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.mojang.serialization.JsonOps;
+import io.github.leawind.systemstoragelib.v1.BaseTest;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.PerScopeConfig;
@@ -18,7 +17,6 @@ import io.github.leawind.systemstoragelib.v1.impl.SystemStorageLibImpl;
 import io.github.leawind.systemstoragelib.v1.impl.managers.MetaConfigManagerImpl;
 import io.github.leawind.systemstoragelib.v1.impl.metaconfig.MetaConfigImpl;
 import java.io.IOException;
-import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -31,12 +29,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-public class MetaConfigManagerTest {
+public class MetaConfigManagerTest extends BaseTest {
   private static final Random RANDOM = new Random();
   private static final Gson GSON = new Gson();
-  private static final FileSystem FS = Jimfs.newFileSystem(Configuration.unix());
-
-  private final Path tempDir = FS.getPath("/tmp");
 
   private MetaConfigManager manager;
 
