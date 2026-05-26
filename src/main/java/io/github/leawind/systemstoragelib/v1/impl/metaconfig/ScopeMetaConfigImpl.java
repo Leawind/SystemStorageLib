@@ -14,7 +14,7 @@ public final class ScopeMetaConfigImpl implements ScopeMetaConfig {
       RecordCodecBuilder.create(
           inst ->
               inst.group(
-                      Codec.unboundedMap(StoreType.CODEC, Codecs.PATH)
+                      Codec.unboundedMap(Codecs.STORE_TYPE, Codecs.PATH)
                           .fieldOf("custom_dirs")
                           .forGetter(ScopeMetaConfig::getCustomDirs))
                   .apply(inst, ScopeMetaConfigImpl::new));

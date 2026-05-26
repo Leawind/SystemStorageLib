@@ -12,6 +12,7 @@ import com.mojang.serialization.JsonOps;
 import io.github.leawind.systemstoragelib.v1.BaseTest;
 import io.github.leawind.systemstoragelib.v1.api.managers.CredentialStore;
 import io.github.leawind.systemstoragelib.v1.api.managers.StorageManager;
+import io.github.leawind.systemstoragelib.v1.utils.Codecs;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -207,7 +208,7 @@ public class StoreTypeTest extends BaseTest {
     @Test
     void codecEncodesIdentifier() {
       DataResult<com.google.gson.JsonElement> result =
-          StoreType.CODEC.encodeStart(JsonOps.INSTANCE, StoreType.CONFIG);
+          Codecs.STORE_TYPE.encodeStart(JsonOps.INSTANCE, StoreType.CONFIG);
       assertTrue(result.result().isPresent());
       assertEquals("config", result.result().get().getAsString());
     }
@@ -215,7 +216,7 @@ public class StoreTypeTest extends BaseTest {
     @Test
     void codecDecodesIdentifier() {
       DataResult<StoreType<?>> result =
-          StoreType.CODEC.parse(JsonOps.INSTANCE, new com.google.gson.JsonPrimitive("data"));
+          Codecs.STORE_TYPE.parse(JsonOps.INSTANCE, new com.google.gson.JsonPrimitive("data"));
       assertTrue(result.result().isPresent());
       assertEquals(StoreType.DATA, result.result().get());
     }
@@ -223,10 +224,10 @@ public class StoreTypeTest extends BaseTest {
     @Test
     void codecRoundTripAllTypes() {
       for (StoreType<?> type : StoreType.values()) {
-        DataResult<JsonElement> encoded = StoreType.CODEC.encodeStart(JsonOps.INSTANCE, type);
+        DataResult<JsonElement> encoded = Codecs.STORE_TYPE.encodeStart(JsonOps.INSTANCE, type);
         assertTrue(encoded.result().isPresent());
         DataResult<StoreType<?>> decoded =
-            StoreType.CODEC.parse(JsonOps.INSTANCE, encoded.result().get());
+            Codecs.STORE_TYPE.parse(JsonOps.INSTANCE, encoded.result().get());
         assertTrue(decoded.result().isPresent());
         assertEquals(type, decoded.result().get());
       }
