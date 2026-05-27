@@ -1,5 +1,7 @@
 package io.github.leawind.systemstoragelib.v1.impl.metaconfig;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.ScopeMetaConfig;
@@ -7,11 +9,20 @@ import io.github.leawind.systemstoragelib.v1.utils.ScopeHashMap;
 import java.util.Map;
 import org.jspecify.annotations.Nullable;
 
-public record MetaConfigImpl(SystemStorageLib lib, Map<String, ScopeMetaConfig> scopes)
-    implements MetaConfig {
+public final class MetaConfigImpl implements MetaConfig {
+  public static Codec<MetaConfig> codec(SystemStorageLib lib) {
+    return RecordCodecBuilder.create(
+        inst ->
+            inst.group(
+                    Codec.unboundedMap(Codec.STRING, ScopeMetaConfigImpl.CODEC)
+                        .fieldOf("scopes")
+                        .forGetter(MetaConfig::scopes))
+                .apply(inst, (map) -> new MetaConfigImpl(lib, map)));
+  }
 
-  public MetaConfigImpl(SystemStorageLib lib, @Nullable Map<String, ScopeMetaConfig> scopes) {
-    this.lib = lib;
+  private final Map<String, ScopeMetaConfig> scopes;
+
+  MetaConfigImpl(SystemStorageLib lib, @Nullable Map<String, ScopeMetaConfig> scopes) {
     this.scopes = new ScopeHashMap<>(lib);
     if (scopes != null) {
       this.scopes.putAll(scopes);
@@ -23,6 +34,11 @@ public record MetaConfigImpl(SystemStorageLib lib, Map<String, ScopeMetaConfig> 
   }
 
   // region scopes
+
+  @Override
+  public Map<String, ScopeMetaConfig> scopes() {
+    return scopes;
+  }
 
   @Override
   public ScopeMetaConfig scope(String scopeName) {

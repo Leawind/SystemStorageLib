@@ -7,7 +7,6 @@ import com.google.gson.JsonSyntaxException;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.leawind.inventory.event.EventEmitter;
 import io.github.leawind.inventory.lock.LockUtils;
 import io.github.leawind.inventory.misc.UncheckedCloseable;
@@ -44,7 +43,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
   private final Storage storage;
   private final Object watchStartLock = new Object();
 
-  public final Codec<MetaConfig> CONFIG_CODEC;
+  private final Codec<MetaConfig> configCodec;
 
   private final EventEmitter<MetaConfig> onChanged = new EventEmitter<>();
 
@@ -61,14 +60,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
     this.configFilePath =
         storage.getDirPath().resolve(CONFIG_FILE_NAME).toAbsolutePath().normalize();
 
-    CONFIG_CODEC =
-        RecordCodecBuilder.create(
-            inst ->
-                inst.group(
-                        Codec.unboundedMap(Codec.STRING, ScopeMetaConfigImpl.CODEC)
-                            .fieldOf("scopes")
-                            .forGetter(MetaConfig::scopes))
-                    .apply(inst, (map) -> new MetaConfigImpl(lib, map)));
+    configCodec = MetaConfigImpl.codec(lib);
 
     storage.onDirUpdated().on(this, this::handleDirUpdated);
 
@@ -91,7 +83,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
   public void update(Consumer<MetaConfig> updater) throws IOException {
     try (UncheckedCloseable ignored = LockUtils.lock(storage.getLock().writeLock())) {
       MetaConfig oldConfig = readOrDefaultUnsafe();
-      MetaConfig newConfig = Codecs.clone(oldConfig, CONFIG_CODEC, JsonOps.INSTANCE);
+      MetaConfig newConfig = Codecs.clone(oldConfig, configCodec, JsonOps.INSTANCE);
 
       updater.accept(newConfig);
 
@@ -103,7 +95,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
 
       Files.createDirectories(configFilePath.getParent());
 
-      DataResult<JsonElement> result = CONFIG_CODEC.encodeStart(JsonOps.INSTANCE, newConfig);
+      DataResult<JsonElement> result = configCodec.encodeStart(JsonOps.INSTANCE, newConfig);
       Optional<JsonElement> encoded = result.result();
       if (encoded.isEmpty()) {
         storage.logger().error("Failed to encode meta config: {}", result.error().orElse(null));
@@ -162,7 +154,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
       return null;
     }
 
-    DataResult<MetaConfig> parsedResult = CONFIG_CODEC.parse(JsonOps.INSTANCE, jsonElement);
+    DataResult<MetaConfig> parsedResult = configCodec.parse(JsonOps.INSTANCE, jsonElement);
     Optional<MetaConfig> parsed = parsedResult.result();
 
     if (parsed.isEmpty()) {
