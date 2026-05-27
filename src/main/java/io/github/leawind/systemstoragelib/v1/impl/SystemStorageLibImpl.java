@@ -25,8 +25,10 @@ import java.util.stream.Stream;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SystemStorageLibImpl implements SystemStorageLib {
+  public static final Logger FALLBACK_LOGGER = LoggerFactory.getLogger(SystemStorageLibImpl.class);
 
   public static final String ROOT_DIR_NAME = "mc_system_storage";
 
@@ -103,8 +105,11 @@ public class SystemStorageLibImpl implements SystemStorageLib {
     this.logsDir = logsDir;
     this.defaultScopedDirs = new HashMap<>(defaultScopedDirs);
 
-    logStore = new LogStore(this, logsDir, maxLogFileSize, maxLogArchiveFiles);
+    logStore =
+        new LogStore(
+            new StorageImpl(this, FALLBACK_LOGGER, logsDir), maxLogFileSize, maxLogArchiveFiles);
     logger = new SystemLogger(logStore, "");
+
     metaConfig = new MetaConfigStoreImpl(this, new StorageImpl(this, logger, metaConfigDir));
     // Listen for external changes to meta config and update scope storage paths accordingly.
     metaConfig.onChanged().on(this::handleMetaConfigChanged);
