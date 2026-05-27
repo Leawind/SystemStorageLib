@@ -5,7 +5,10 @@
   "name": "${name}",
   "description": "${description}",
   "authors": ["Leawind"],
-  "contact": {},
+  "contact": {
+    "homepage": "${homeUrl}",
+    "sources": "${sourceUrl}"
+  },
   "environment": "*",
   "entrypoints": {},
   "depends": {

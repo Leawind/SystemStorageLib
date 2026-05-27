@@ -1,6 +1,6 @@
 modLoader = "lowcodefml"
 loaderVersion = "*"
-issueTrackerURL = "https://github.com/Leawind/SystemStorageLib/issues"
+issueTrackerURL = "${sourceUrl}/issues"
 license = "${license}"
 
 [[mods]]
