@@ -18,25 +18,20 @@ repositories {
     maven("https://libraries.minecraft.net")
 }
 
-
-val bundleSlf4j = false
-
 val shadowBundle: Configuration by configurations.creating
-
-fun DependencyHandlerScope.shadow(dependencyNotation: String) {
+fun DependencyHandlerScope.shadowBundle(dependencyNotation: String) {
     implementation(dependencyNotation)
     add("shadowBundle", dependencyNotation)
 }
 
 dependencies {
-    implementation("org.slf4j:slf4j-api:2.0.17")
-    implementation("org.slf4j:slf4j-simple:2.0.17")
-
-
-    shadow("com.github.Leawind:inventory-java:9d3ca9b13b")
-    shadow("dev.dirs:directories:26")
+    shadowBundle("com.github.Leawind:inventory-java:9d3ca9b13b")
+    shadowBundle("dev.dirs:directories:26")
 
     compileOnly("org.jspecify:jspecify:1.0.0")
+
+    compileOnly("org.slf4j:slf4j-api:2.0.17")
+    testImplementation("org.slf4j:slf4j-simple:2.0.17")
 
     implementation("com.mojang:datafixerupper:4.0.26")
 
