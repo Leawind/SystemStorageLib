@@ -9,6 +9,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import org.slf4j.event.Level;
 
 public class LogStore implements AutoCloseable {
@@ -72,8 +74,18 @@ public class LogStore implements AutoCloseable {
     Files.deleteIfExists(storage.getDirPath().resolve(StorageImpl.LOCK_FILE_NAME));
   }
 
+  private static final DateTimeFormatter FORMATTER =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").withZone(ZoneOffset.UTC);
+
   private static String formatLine(Level level, String scopeName, long pid, String message) {
+    // [2026-05-27T15:52:35.786Z] [3202337/Test worker] INFO () Hello world!
     return String.format(
-        "[%s] [%s] [%d] [%s] %s", Instant.now().toString(), level, pid, scopeName, message);
+        "[%s] [%d/%s] %s (%s) %s",
+        FORMATTER.format(Instant.now()),
+        pid,
+        Thread.currentThread().getName(),
+        level,
+        scopeName,
+        message);
   }
 }
