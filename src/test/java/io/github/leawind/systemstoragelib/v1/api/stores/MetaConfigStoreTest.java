@@ -7,19 +7,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.mojang.serialization.JsonOps;
 import io.github.leawind.systemstoragelib.v1.BaseTest;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.ScopeMetaConfig;
-import io.github.leawind.systemstoragelib.v1.impl.stores.MetaConfigStoreImpl;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -27,19 +23,11 @@ import org.junit.jupiter.api.Test;
 public class MetaConfigStoreTest extends BaseTest {
   private static final Gson GSON = new Gson();
 
-  private MetaConfigStoreImpl store;
+  private MetaConfigStore store;
 
   @BeforeEach
   void setupEach() {
-    store = (MetaConfigStoreImpl) lib.metaConfig();
-  }
-
-  @AfterEach
-  void tearDown() {
-    try {
-      store.stopWatching();
-    } catch (IOException ignored) {
-    }
+    store = lib.metaConfig();
   }
 
   private Path configFilePath() {
@@ -156,12 +144,6 @@ public class MetaConfigStoreTest extends BaseTest {
       }
     }
 
-    private String toJson(MetaConfig config) {
-      JsonElement element =
-          store.CONFIG_CODEC.encodeStart(JsonOps.INSTANCE, config).result().orElseThrow();
-      return GSON.toJson(element);
-    }
-
     @Test
     void externalModificationTriggersOnChanged() throws IOException, InterruptedException {
       store.set(createNonDefaultConfig());
@@ -170,8 +152,7 @@ public class MetaConfigStoreTest extends BaseTest {
       CountDownLatch latch = new CountDownLatch(1);
       registerListener(latch::countDown);
 
-      MetaConfig differentConfig = createNonDefaultConfig2();
-      Files.writeString(configFilePath(), toJson(differentConfig));
+      store.set(createNonDefaultConfig2());
 
       assertTrue(
           latch.await(8000, TimeUnit.MILLISECONDS),

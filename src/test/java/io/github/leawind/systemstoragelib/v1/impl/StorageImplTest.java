@@ -1,4 +1,4 @@
-package io.github.leawind.systemstoragelib.v1.api.stores;
+package io.github.leawind.systemstoragelib.v1.impl;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -10,7 +10,6 @@ import io.github.leawind.inventory.lock.LockUtils;
 import io.github.leawind.inventory.misc.UncheckedCloseable;
 import io.github.leawind.systemstoragelib.v1.BaseTest;
 import io.github.leawind.systemstoragelib.v1.api.Storage;
-import io.github.leawind.systemstoragelib.v1.impl.StorageImpl;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,7 +22,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-public class StorageTest extends BaseTest {
+public class StorageImplTest extends BaseTest {
 
   private Storage storage;
 

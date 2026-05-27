@@ -1,4 +1,4 @@
-package io.github.leawind.systemstoragelib.v1.api;
+package io.github.leawind.systemstoragelib.v1.impl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -6,7 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.leawind.systemstoragelib.v1.BaseTest;
-import io.github.leawind.systemstoragelib.v1.impl.ScopeImpl;
+import io.github.leawind.systemstoragelib.v1.api.Scope;
+import io.github.leawind.systemstoragelib.v1.api.Storage;
+import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,10 +17,10 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ScopeTest extends BaseTest {
+public class ScopeImplTest extends BaseTest {
   private Map<StoreType, Path> dirs;
 
-  private static final Logger TEST_LOGGER = LoggerFactory.getLogger(ScopeTest.class);
+  private static final Logger TEST_LOGGER = LoggerFactory.getLogger(ScopeImplTest.class);
 
   @BeforeEach
   void setupEach() {
