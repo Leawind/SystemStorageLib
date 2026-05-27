@@ -7,7 +7,6 @@ import io.github.leawind.inventory.lock.LockUtils;
 import io.github.leawind.inventory.misc.Lazy;
 import io.github.leawind.inventory.misc.UncheckedCloseable;
 import io.github.leawind.systemstoragelib.v1.api.Storage;
-import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,8 +18,6 @@ import org.slf4j.Logger;
 
 public class StorageImpl implements Storage {
   public static final String LOCK_FILE_NAME = ".lock";
-
-  protected final SystemStorageLib lib;
 
   private final Logger logger;
 
@@ -39,8 +36,7 @@ public class StorageImpl implements Storage {
 
   private final EventEmitter<Path> onDirUpdated = new EventEmitter<>();
 
-  public StorageImpl(SystemStorageLib lib, Logger logger, Path dirPath) {
-    this.lib = lib;
+  public StorageImpl(Logger logger, Path dirPath) {
     this.logger = logger;
     this.dirPath = dirPath.toAbsolutePath().normalize();
     this.lockPath = this.dirPath.resolve(LOCK_FILE_NAME);

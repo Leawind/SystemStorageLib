@@ -52,6 +52,6 @@ public final class ScopeImpl implements Scope {
   @Override
   public Storage storage(StoreType storeType) {
     return storages.computeIfAbsent(
-        storeType, key -> new StorageImpl(lib, logger, dirs.get(key).resolve(name)));
+        storeType, key -> new StorageImpl(logger, dirs.get(key).resolve(name)));
   }
 }

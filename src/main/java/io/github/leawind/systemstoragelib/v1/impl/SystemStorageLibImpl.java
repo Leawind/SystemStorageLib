@@ -106,11 +106,10 @@ public class SystemStorageLibImpl implements SystemStorageLib {
     this.defaultScopedDirs = new HashMap<>(defaultScopedDirs);
 
     logStore =
-        new LogStore(
-            new StorageImpl(this, FALLBACK_LOGGER, logsDir), maxLogFileSize, maxLogArchiveFiles);
+        new LogStore(new StorageImpl(FALLBACK_LOGGER, logsDir), maxLogFileSize, maxLogArchiveFiles);
     logger = new SystemLogger(logStore, "");
 
-    metaConfig = new MetaConfigStoreImpl(this, new StorageImpl(this, logger, metaConfigDir));
+    metaConfig = new MetaConfigStoreImpl(this, new StorageImpl(logger, metaConfigDir));
     // Listen for external changes to meta config and update scope storage paths accordingly.
     metaConfig.onChanged().on(this::handleMetaConfigChanged);
 
