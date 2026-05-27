@@ -6,11 +6,11 @@ import io.github.leawind.systemstoragelib.v1.api.Storage;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
+import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfigStore;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.ScopeMetaConfig;
-import io.github.leawind.systemstoragelib.v1.api.stores.MetaConfigStore;
-import io.github.leawind.systemstoragelib.v1.impl.log.LogManager;
+import io.github.leawind.systemstoragelib.v1.impl.log.LogStore;
 import io.github.leawind.systemstoragelib.v1.impl.log.SystemLogger;
-import io.github.leawind.systemstoragelib.v1.impl.stores.MetaConfigStoreImpl;
+import io.github.leawind.systemstoragelib.v1.impl.metaconfig.MetaConfigStoreImpl;
 import io.github.leawind.systemstoragelib.v1.utils.ConcurrentScopeHashMap;
 import io.github.leawind.systemstoragelib.v1.utils.MapUtils;
 import java.io.IOException;
@@ -41,7 +41,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   /// - data: `/home/Steve/.local/share/<root_name>/data`.
   private final Map<StoreType, Path> defaultScopedDirs;
 
-  private final LogManager logManager;
+  private final LogStore logStore;
   private final Logger logger;
   private final MetaConfigStore metaConfig;
   private final Map<String, Optional<Scope>> scopes;
@@ -103,8 +103,8 @@ public class SystemStorageLibImpl implements SystemStorageLib {
     this.logsDir = logsDir;
     this.defaultScopedDirs = new HashMap<>(defaultScopedDirs);
 
-    logManager = new LogManager(this, logsDir, maxLogFileSize, maxLogArchiveFiles);
-    logger = new SystemLogger(logManager, "");
+    logStore = new LogStore(this, logsDir, maxLogFileSize, maxLogArchiveFiles);
+    logger = new SystemLogger(logStore, "");
     metaConfig = new MetaConfigStoreImpl(this, new StorageImpl(this, logger, metaConfigDir));
     // Listen for external changes to meta config and update scope storage paths accordingly.
     metaConfig.onChanged().on(this::handleMetaConfigChanged);
@@ -313,7 +313,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
       // If we cannot read the meta config, fall back to the default scoped directories.
       logger().warn("Failed to load meta config for scope {}: {}", scopeName, e.getMessage());
     }
-    return new ScopeImpl(this, scopeName, new SystemLogger(logManager, scopeName), dirsForScope);
+    return new ScopeImpl(this, scopeName, new SystemLogger(logStore, scopeName), dirsForScope);
   }
 
   private void detectScopes() {

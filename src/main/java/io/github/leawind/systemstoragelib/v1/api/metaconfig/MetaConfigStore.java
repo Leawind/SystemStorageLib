@@ -1,8 +1,7 @@
-package io.github.leawind.systemstoragelib.v1.api.stores;
+package io.github.leawind.systemstoragelib.v1.api.metaconfig;
 
 import io.github.leawind.inventory.event.EventEmitter;
 import io.github.leawind.systemstoragelib.v1.api.Storage;
-import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
 import java.io.IOException;
 
 public interface MetaConfigStore {

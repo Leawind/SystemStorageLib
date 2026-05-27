@@ -1,10 +1,10 @@
-package io.github.leawind.systemstoragelib.v1.impl.stores;
+package io.github.leawind.systemstoragelib.v1.impl;
 
 import io.github.leawind.inventory.lock.LockUtils;
 import io.github.leawind.inventory.misc.UncheckedCloseable;
+import io.github.leawind.systemstoragelib.v1.api.CredentialStore;
 import io.github.leawind.systemstoragelib.v1.api.Storage;
 import io.github.leawind.systemstoragelib.v1.api.exception.CredentialIntegrityException;
-import io.github.leawind.systemstoragelib.v1.api.stores.CredentialStore;
 import io.github.leawind.systemstoragelib.v1.utils.AtomicFileWriter;
 import io.github.leawind.systemstoragelib.v1.utils.machineid.MachineIdResolutionException;
 import io.github.leawind.systemstoragelib.v1.utils.machineid.MachineIdUtil;

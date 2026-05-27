@@ -1,4 +1,4 @@
-package io.github.leawind.systemstoragelib.v1.api.stores;
+package io.github.leawind.systemstoragelib.v1.api.metaconfig;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -9,8 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.google.gson.Gson;
 import io.github.leawind.systemstoragelib.v1.BaseTest;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
-import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
-import io.github.leawind.systemstoragelib.v1.api.metaconfig.ScopeMetaConfig;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

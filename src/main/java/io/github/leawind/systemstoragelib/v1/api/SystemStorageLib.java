@@ -1,6 +1,6 @@
 package io.github.leawind.systemstoragelib.v1.api;
 
-import io.github.leawind.systemstoragelib.v1.api.stores.MetaConfigStore;
+import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfigStore;
 import io.github.leawind.systemstoragelib.v1.impl.SystemStorageLibImpl;
 import java.nio.file.Path;
 import java.util.stream.Stream;

@@ -1,8 +1,7 @@
-package io.github.leawind.systemstoragelib.v1.api.stores;
+package io.github.leawind.systemstoragelib.v1.api;
 
-import io.github.leawind.systemstoragelib.v1.api.Storage;
 import io.github.leawind.systemstoragelib.v1.api.exception.CredentialIntegrityException;
-import io.github.leawind.systemstoragelib.v1.impl.stores.CredentialStoreImpl;
+import io.github.leawind.systemstoragelib.v1.impl.CredentialStoreImpl;
 import java.io.IOException;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;

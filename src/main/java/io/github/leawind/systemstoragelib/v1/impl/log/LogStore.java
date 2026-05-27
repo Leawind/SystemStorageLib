@@ -12,15 +12,15 @@ import java.time.Instant;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
-public class LogManager extends StorageImpl implements AutoCloseable {
+public class LogStore extends StorageImpl implements AutoCloseable {
   private static final String LOG_FILE_NAME = "latest.log";
 
   private final Path logFilePath;
   private final long maxFileSize;
   private final int maxArchiveFiles;
 
-  public LogManager(SystemStorageLib lib, Path logDir, long maxFileSize, int maxArchiveFiles) {
-    super(lib, LoggerFactory.getLogger(LogManager.class), logDir);
+  public LogStore(SystemStorageLib lib, Path logDir, long maxFileSize, int maxArchiveFiles) {
+    super(lib, LoggerFactory.getLogger(LogStore.class), logDir);
     this.logFilePath = logDir.resolve(LOG_FILE_NAME);
     this.maxFileSize = maxFileSize;
     this.maxArchiveFiles = maxArchiveFiles;

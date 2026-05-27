@@ -1,4 +1,4 @@
-package io.github.leawind.systemstoragelib.v1.impl.stores;
+package io.github.leawind.systemstoragelib.v1.impl.metaconfig;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -14,9 +14,7 @@ import io.github.leawind.inventory.misc.UncheckedCloseable;
 import io.github.leawind.systemstoragelib.v1.api.Storage;
 import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
-import io.github.leawind.systemstoragelib.v1.api.stores.MetaConfigStore;
-import io.github.leawind.systemstoragelib.v1.impl.metaconfig.MetaConfigImpl;
-import io.github.leawind.systemstoragelib.v1.impl.metaconfig.ScopeMetaConfigImpl;
+import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfigStore;
 import io.github.leawind.systemstoragelib.v1.utils.AtomicFileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
