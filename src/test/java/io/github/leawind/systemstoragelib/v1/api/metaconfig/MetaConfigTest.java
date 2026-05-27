@@ -12,19 +12,19 @@ import org.junit.jupiter.api.Test;
 
 public class MetaConfigTest extends BaseTest {
   private MetaConfigStore store;
+  private MetaConfig config;
 
   @BeforeEach
   void setupEach() {
     store = lib.metaConfig();
+    config = store.createConfig();
   }
 
   @Nested
   class GetOrCreateScopeConfig {
     @Test
     void createsNewConfigWhenAbsent() {
-      MetaConfig config = store.createConfig();
-      ScopeMetaConfig perScope =
-          config.scopes().computeIfAbsent("new-scope", ignored -> config.createScopeConfig());
+      ScopeMetaConfig perScope = config.scope("new-scope");
 
       assertNotNull(perScope);
       assertTrue(config.scopes().containsKey("new-scope"));
@@ -32,11 +32,8 @@ public class MetaConfigTest extends BaseTest {
 
     @Test
     void returnsExistingConfigWhenPresent() {
-      MetaConfig config = store.createConfig();
-      ScopeMetaConfig first =
-          config.scopes().computeIfAbsent("scope-a", ignored1 -> config.createScopeConfig());
-      ScopeMetaConfig second =
-          config.scopes().computeIfAbsent("scope-a", ignored -> config.createScopeConfig());
+      ScopeMetaConfig first = config.scope("scope-a");
+      ScopeMetaConfig second = config.scope("scope-a");
 
       assertEquals(first, second);
     }
@@ -46,8 +43,7 @@ public class MetaConfigTest extends BaseTest {
   class RemoveScopeConfig {
     @Test
     void removesExistingScope() {
-      MetaConfig config = store.createConfig();
-      config.scopes().computeIfAbsent("scope-a", ignored -> config.createScopeConfig());
+      config.scope("scope-a");
       config.scopes().remove("scope-a");
 
       assertTrue(config.scopes().isEmpty());
@@ -55,8 +51,7 @@ public class MetaConfigTest extends BaseTest {
 
     @Test
     void doesNothingForNonExistentScope() {
-      MetaConfig config = store.createConfig();
-      config.scopes().computeIfAbsent("scope-a", ignored -> config.createScopeConfig());
+      config.scope("scope-a");
       config.scopes().remove("nonexistent");
 
       assertEquals(1, config.scopes().size());
@@ -67,15 +62,12 @@ public class MetaConfigTest extends BaseTest {
   class GetScopeConfig {
     @Test
     void returnsNullForNonExistentScope() {
-      MetaConfig config = store.createConfig();
       assertNull(config.scopes().get("nonexistent"));
     }
 
     @Test
     void returnsConfigForExistingScope() {
-      MetaConfig config = store.createConfig();
-      ScopeMetaConfig created =
-          config.scopes().computeIfAbsent("scope-a", ignored -> config.createScopeConfig());
+      ScopeMetaConfig created = config.scope("scope-a");
       assertEquals(created, config.scopes().get("scope-a"));
     }
   }

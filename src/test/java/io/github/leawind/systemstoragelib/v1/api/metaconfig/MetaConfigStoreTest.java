@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.google.gson.Gson;
 import io.github.leawind.systemstoragelib.v1.BaseTest;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import java.io.IOException;
@@ -19,8 +18,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 public class MetaConfigStoreTest extends BaseTest {
-  private static final Gson GSON = new Gson();
-
   private MetaConfigStore store;
 
   @BeforeEach
@@ -34,17 +31,13 @@ public class MetaConfigStoreTest extends BaseTest {
 
   private MetaConfig createNonDefaultConfig() {
     MetaConfig config = store.createConfig();
-    ScopeMetaConfig scopeMetaConfig =
-        config.scopes().computeIfAbsent("scope1", ignored -> config.createScopeConfig());
-    scopeMetaConfig.getCustomDirs().put(StoreType.CONFIG, tempDir.resolve("custom/config"));
+    config.scope("scope1").getCustomDirs().put(StoreType.CONFIG, tempDir.resolve("custom/config"));
     return config;
   }
 
   private MetaConfig createNonDefaultConfig2() {
     MetaConfig config = store.createConfig();
-    ScopeMetaConfig scopeMetaConfig =
-        config.scopes().computeIfAbsent("scope2", ignored -> config.createScopeConfig());
-    scopeMetaConfig.getCustomDirs().put(StoreType.CONFIG, tempDir.resolve("custom/config2"));
+    config.scope("scope2").getCustomDirs().put(StoreType.CONFIG, tempDir.resolve("custom/config2"));
     return config;
   }
 

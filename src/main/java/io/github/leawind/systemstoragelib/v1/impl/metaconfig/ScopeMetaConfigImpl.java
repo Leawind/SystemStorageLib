@@ -21,7 +21,7 @@ public final class ScopeMetaConfigImpl implements ScopeMetaConfig {
 
   private final CustomDirMap customDirs = new CustomDirMap();
 
-  public ScopeMetaConfigImpl(Map<StoreType, Path> customDirs) {
+  private ScopeMetaConfigImpl(Map<StoreType, Path> customDirs) {
     this.customDirs.putAll(customDirs);
   }
 

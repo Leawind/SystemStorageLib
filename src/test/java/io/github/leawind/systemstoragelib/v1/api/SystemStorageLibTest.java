@@ -20,10 +20,9 @@ public class SystemStorageLibTest extends BaseTest {
   @Test
   void test2() throws IOException {
     var scope = lib.scope("system_storage_lib_test");
-    var config = lib.metaConfig();
 
-    MetaConfig metaConfig = config.get();
-    String scopeName = scope.name();
-    metaConfig.scopes().computeIfAbsent(scopeName, ignored -> metaConfig.createScopeConfig());
+    MetaConfig config = lib.metaConfig().get();
+    config.scope(scope.name()).getCustomDirs().put(StoreType.DATA, tempDir.resolve("/custom_data"));
+    lib.metaConfig().set(config);
   }
 }

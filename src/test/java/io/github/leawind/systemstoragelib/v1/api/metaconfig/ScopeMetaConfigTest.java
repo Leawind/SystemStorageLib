@@ -22,7 +22,7 @@ public class ScopeMetaConfigTest extends BaseTest {
 
   @BeforeEach
   void setup() {
-    config = lib.metaConfig().createConfig().createScopeConfig();
+    config = lib.metaConfig().createConfig().scope("example_mod");
     foo = fs.getPath("/foo");
     bar = fs.getPath("/bar");
   }

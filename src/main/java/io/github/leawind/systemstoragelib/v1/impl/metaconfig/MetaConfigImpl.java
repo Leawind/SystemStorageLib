@@ -18,8 +18,8 @@ public record MetaConfigImpl(SystemStorageLib lib, Map<String, ScopeMetaConfig> 
   // region scopes
 
   @Override
-  public ScopeMetaConfig createScopeConfig() {
-    return new ScopeMetaConfigImpl();
+  public ScopeMetaConfig scope(String scopeName) {
+    return scopes.computeIfAbsent(scopeName, (ignored) -> new ScopeMetaConfigImpl());
   }
 
   // endregion
