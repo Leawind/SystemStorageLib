@@ -1,7 +1,11 @@
 plugins {
     `java-library`
     id("com.gradleup.shadow") version "9.3.1"
+    `maven-publish`
 }
+
+group = "${project.property("mod.group")}"
+version = "${project.property("mod.version")}"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
@@ -82,5 +86,22 @@ tasks.processResources {
         )
     ) {
         expand(props)
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            from(components["java"])
+
+            pom {
+                name.set("${project.property("mod.name")}")
+                description.set("${project.property("mod.description")}")
+                url.set("${project.property("mod.sourceUrl")}")
+            }
+        }
+    }
+    repositories {
+        mavenLocal()
     }
 }
