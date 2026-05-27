@@ -16,183 +16,201 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class MetaConfigStoreTest extends BaseTest {
   private MetaConfigStore store;
+  private Path configFilePath;
+
+  @TempDir Path customDir;
 
   @BeforeEach
   void setupEach() {
     store = lib.metaConfig();
+    configFilePath = store.storage().getDirPath().resolve("config.json");
   }
 
-  private Path configFilePath() {
-    return store.storage().getDirPath().resolve("config.json");
+  private MetaConfig getDefaultConfig() throws IOException {
+    store.update(config -> config.scopes().clear());
+    return store.get();
   }
 
-  private MetaConfig createNonDefaultConfig() {
-    MetaConfig config = store.createConfig();
-    config.scope("scope1").getCustomDirs().put(StoreType.CONFIG, tempDir.resolve("custom/config"));
-    return config;
+  private MetaConfig setAsNonDefaultConfig() throws IOException {
+    MetaConfig[] result = {null};
+    store.update(
+        config -> {
+          config
+              .scope("example_mod")
+              .getCustomDirs()
+              .put(StoreType.CONFIG, customDir.resolve("config"));
+          result[0] = config;
+        });
+    return result[0];
   }
 
-  private MetaConfig createNonDefaultConfig2() {
-    MetaConfig config = store.createConfig();
-    config.scope("scope2").getCustomDirs().put(StoreType.CONFIG, tempDir.resolve("custom/config2"));
-    return config;
-  }
-
-  private void registerListener(Runnable onEvent) {
-    synchronized (store.onChanged()) {
-      store.onChanged().on(ignored -> onEvent.run());
+  private void waitForWatcherSettle() {
+    try {
+      Thread.sleep(500);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
     }
   }
 
   @Nested
   class GetConfig {
-    @Test
-    void getReturnsDefaultWhenNoConfigFile() throws IOException {
-      assertEquals(store.createConfig(), store.get());
-    }
 
     @Test
     void getReturnsConfigAfterSet() throws IOException {
-      store.set(createNonDefaultConfig());
+      var config = setAsNonDefaultConfig();
 
-      MetaConfig config = store.createConfig();
-      store.set(config);
       assertEquals(config, store.get());
-    }
-
-    @Test
-    void getReturnsConfigFromExistingValidFile() throws IOException {
-      Files.createDirectories(store.storage().getDirPath());
-      Files.writeString(configFilePath(), "{\"custom_dirs\":{}}");
-
-      MetaConfig result = store.get();
-      assertNotNull(result);
     }
 
     @Test
     void getReturnsDefaultWhenConfigFileIsEmpty() throws IOException {
       Files.createDirectories(store.storage().getDirPath());
-      Files.createFile(configFilePath());
+      Files.createFile(configFilePath);
+
       assertNotNull(store.get());
     }
 
     @Test
     void getReturnsDefaultWhenConfigFileIsMalformed() throws IOException {
       Files.createDirectories(store.storage().getDirPath());
-      Files.writeString(configFilePath(), "{invalid json content");
+      Files.writeString(configFilePath, "{invalid json content");
+
       assertNotNull(store.get());
     }
   }
 
   @Nested
-  class SetConfig {
+  class UpdateConfig {
+
     @Test
-    void setDoesNotThrowWhenDirExists() throws IOException {
+    void updateDoesNotThrowWhenDirExists() throws IOException {
       Files.createDirectories(store.storage().getDirPath());
-      assertDoesNotThrow(() -> store.set(store.createConfig()));
+      assertDoesNotThrow(() -> store.update(config -> {}));
     }
 
     @Test
-    void setCreatesConfigFile() throws IOException {
-      store.set(store.createConfig());
-      assertFalse(Files.exists(configFilePath()));
-      store.set(createNonDefaultConfig());
-      assertTrue(Files.exists(configFilePath()));
+    void updateCreatesConfigFile() throws IOException {
+      store.update(
+          config ->
+              config
+                  .scope("example_mod")
+                  .getCustomDirs()
+                  .put(StoreType.DATA, customDir.resolve("data")));
+      assertTrue(Files.exists(configFilePath));
     }
 
     @Test
-    void setIsIdempotentWithSameReference() throws IOException {
-      Path configPath = configFilePath();
+    void updateIsIdempotentWithSameConfig() throws IOException {
+      store.update(
+          config ->
+              config
+                  .scope("example_mod")
+                  .getCustomDirs()
+                  .put(StoreType.CONFIG, customDir.resolve("config")));
 
-      store.set(createNonDefaultConfig());
-      long modifiedTime1 = Files.getLastModifiedTime(configPath).toMillis();
+      long modifiedTime1 = Files.getLastModifiedTime(configFilePath).toMillis();
 
       try {
-        Thread.sleep(10);
+        Thread.sleep(50);
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
       }
 
-      store.set(createNonDefaultConfig());
-      long modifiedTime2 = Files.getLastModifiedTime(configPath).toMillis();
+      store.update(
+          config ->
+              config
+                  .scope("example_mod")
+                  .getCustomDirs()
+                  .put(StoreType.CONFIG, customDir.resolve("config")));
 
-      assertEquals(modifiedTime1, modifiedTime2, "File should not be modified on idempotent set");
+      long modifiedTime2 = Files.getLastModifiedTime(configFilePath).toMillis();
+      assertEquals(modifiedTime1, modifiedTime2);
     }
   }
 
   @Nested
   class WatchFileChanges {
 
-    /// Sleep enough time for the watcher thread to process any pending file events.
-    private void waitForWatcherSettle() {
-      try {
-        Thread.sleep(200);
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-      }
-    }
-
     @Test
     void externalModificationTriggersOnChanged() throws IOException, InterruptedException {
-      store.set(createNonDefaultConfig());
+      store.update(
+          config ->
+              config
+                  .scope("scope1")
+                  .getCustomDirs()
+                  .put(StoreType.CONFIG, customDir.resolve("custom/config")));
       waitForWatcherSettle();
 
       CountDownLatch latch = new CountDownLatch(1);
-      registerListener(latch::countDown);
+      store.onChanged().on(event -> latch.countDown());
 
-      store.set(createNonDefaultConfig2());
+      store.update(
+          config ->
+              config
+                  .scope("scope2")
+                  .getCustomDirs()
+                  .put(StoreType.CONFIG, customDir.resolve("custom/config2")));
 
-      assertTrue(
-          latch.await(8000, TimeUnit.MILLISECONDS),
-          "onChanged should be triggered when config file is modified externally");
+      assertTrue(latch.await(2000, TimeUnit.MILLISECONDS));
     }
 
     @Test
-    void setTriggersOnChanged() throws IOException, InterruptedException {
-      store.set(createNonDefaultConfig());
+    void updateTriggersOnChanged() throws IOException, InterruptedException {
+      store.update(
+          config ->
+              config
+                  .scope("example_mod")
+                  .getCustomDirs()
+                  .put(StoreType.CONFIG, customDir.resolve("config")));
       waitForWatcherSettle();
 
       CountDownLatch latch = new CountDownLatch(1);
-      registerListener(latch::countDown);
+      store.onChanged().on(event -> latch.countDown());
 
-      store.set(store.createConfig());
+      store.update(config -> config.scopes().clear());
 
-      assertTrue(
-          latch.await(500, TimeUnit.MILLISECONDS),
-          "onChanged should be triggered when set() writes a different config");
+      assertTrue(latch.await(500, TimeUnit.MILLISECONDS));
     }
 
     @Test
-    void setSameConfigDoesNotTriggerOnChanged() throws IOException, InterruptedException {
-      store.set(createNonDefaultConfig());
+    void updateSameConfigDoesNotTriggerOnChanged() throws IOException, InterruptedException {
+      store.update(
+          config ->
+              config
+                  .scope("example_mod")
+                  .getCustomDirs()
+                  .put(StoreType.CONFIG, customDir.resolve("config")));
       waitForWatcherSettle();
 
       CountDownLatch latch = new CountDownLatch(1);
-      registerListener(latch::countDown);
+      store.onChanged().on(event -> latch.countDown());
 
-      store.set(createNonDefaultConfig());
+      store.update(
+          config ->
+              config
+                  .scope("example_mod")
+                  .getCustomDirs()
+                  .put(StoreType.CONFIG, customDir.resolve("config")));
 
-      assertFalse(
-          latch.await(500, TimeUnit.MILLISECONDS),
-          "onChanged should NOT be triggered when set() is called with the same config");
+      assertFalse(latch.await(500, TimeUnit.MILLISECONDS));
     }
 
     @Test
-    void malformedExternalFileDoesNotTriggerOnChanged() throws IOException, InterruptedException {
-      store.set(createNonDefaultConfig());
+    void malformedExternalFileTriggersOnChanged() throws IOException, InterruptedException {
+      CountDownLatch latch = new CountDownLatch(1);
+      store.onChanged().on(event -> latch.countDown());
+
+      setAsNonDefaultConfig();
+
       waitForWatcherSettle();
 
-      CountDownLatch latch = new CountDownLatch(1);
-      registerListener(latch::countDown);
+      Files.writeString(configFilePath, "{invalid json content");
 
-      Files.writeString(configFilePath(), "{invalid json content");
-
-      assertFalse(
-          latch.await(500, TimeUnit.MILLISECONDS),
-          "onChanged should NOT be triggered when external file contains invalid JSON");
+      assertTrue(latch.await(500, TimeUnit.MILLISECONDS));
     }
   }
 }

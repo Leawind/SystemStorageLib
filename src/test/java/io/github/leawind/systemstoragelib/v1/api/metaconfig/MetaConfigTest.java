@@ -6,18 +6,17 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.leawind.systemstoragelib.v1.BaseTest;
+import java.io.IOException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 public class MetaConfigTest extends BaseTest {
-  private MetaConfigStore store;
   private MetaConfig config;
 
   @BeforeEach
-  void setupEach() {
-    store = lib.metaConfig();
-    config = store.createConfig();
+  void setupEach() throws IOException {
+    config = lib.metaConfig().get();
   }
 
   @Nested

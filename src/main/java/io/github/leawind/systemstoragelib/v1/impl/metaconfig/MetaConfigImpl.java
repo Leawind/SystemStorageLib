@@ -5,14 +5,21 @@ import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.ScopeMetaConfig;
 import io.github.leawind.systemstoragelib.v1.utils.ScopeHashMap;
 import java.util.Map;
+import org.jspecify.annotations.Nullable;
 
 public record MetaConfigImpl(SystemStorageLib lib, Map<String, ScopeMetaConfig> scopes)
     implements MetaConfig {
 
-  public MetaConfigImpl(SystemStorageLib lib, Map<String, ScopeMetaConfig> scopes) {
+  public MetaConfigImpl(SystemStorageLib lib, @Nullable Map<String, ScopeMetaConfig> scopes) {
     this.lib = lib;
     this.scopes = new ScopeHashMap<>(lib);
-    this.scopes.putAll(scopes);
+    if (scopes != null) {
+      this.scopes.putAll(scopes);
+    }
+  }
+
+  MetaConfigImpl(SystemStorageLib lib) {
+    this(lib, null);
   }
 
   // region scopes

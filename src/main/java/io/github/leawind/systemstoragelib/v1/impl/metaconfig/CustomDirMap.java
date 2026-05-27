@@ -7,8 +7,26 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class CustomDirMap extends ValidatingHashMap<StoreType, Path> {
+
+  /// Validate a new entry before put it.
+  ///
+  /// Do not repeat what {@link #validateEntry(StoreType, Path)} does.
+  ///
+  /// @param normalized Normalized path
+  public void validateNewEntry(StoreType storeType, Path normalized) {
+    var conflicts =
+        entrySet().stream()
+            .filter(e -> !e.getKey().equals(storeType) & e.getValue().equals(normalized))
+            .map(e -> e.getKey().id())
+            .collect(Collectors.joining(", "));
+
+    if (!conflicts.isEmpty()) {
+      throw new IllegalArgumentException("Conflict custom directory path:" + conflicts);
+    }
+  }
 
   @Override
   public void validateEntry(StoreType storeType, Path path) {
@@ -31,10 +49,7 @@ public class CustomDirMap extends ValidatingHashMap<StoreType, Path> {
   @Override
   public Path put(StoreType storeType, Path path) {
     Path normalized = path.normalize();
-    if (containsValue(normalized)) {
-      throw new IllegalArgumentException("Custom directory path must be unique: " + path);
-    }
-
+    validateNewEntry(storeType, normalized);
     return super.put(storeType, normalized);
   }
 

@@ -40,5 +40,6 @@ public interface Storage {
   /// Deletes the entire storage directory and all contents.
   void delete() throws IOException;
 
+  /// Emits when the storage directory path is updated.
   EventEmitter<Path> onDirUpdated();
 }

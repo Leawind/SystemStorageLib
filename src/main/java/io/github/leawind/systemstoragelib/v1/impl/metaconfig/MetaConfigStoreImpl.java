@@ -16,6 +16,7 @@ import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfigStore;
 import io.github.leawind.systemstoragelib.v1.utils.AtomicFileWriter;
+import io.github.leawind.systemstoragelib.v1.utils.Codecs;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.ClosedWatchServiceException;
@@ -25,9 +26,9 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
-import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import org.jspecify.annotations.Nullable;
 
 /// Stores configuration as JSON in `config.json` under the storage directory.
@@ -49,7 +50,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
 
   private Path configFilePath;
 
-  private volatile @Nullable MetaConfig config = null;
+  private volatile @Nullable MetaConfig cache = null;
   private volatile @Nullable WatchService watchService = null;
 
   private long lastHandledFileChangeMs = 0;
@@ -74,24 +75,6 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
     ensureWatchStarted();
   }
 
-  private void handleDirUpdated(Path oldDirPath) {
-    Path dirPath = storage.getDirPath();
-    if (dirPath.equals(oldDirPath)) {
-      return;
-    }
-
-    synchronized (watchStartLock) {
-      this.configFilePath = dirPath.resolve(CONFIG_FILE_NAME).toAbsolutePath().normalize();
-      this.config = null;
-      try {
-        stopWatching();
-      } catch (IOException e) {
-        storage.logger().warn("Failed to stop watch service when updating dirPath", e);
-      }
-      ensureWatchStarted();
-    }
-  }
-
   @Override
   public Storage storage() {
     return storage;
@@ -99,49 +82,40 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
 
   @Override
   public MetaConfig get() throws IOException {
-    MetaConfig cached = config;
-    if (cached != null) {
-      return cached;
-    }
-
-    synchronized (this) {
-      if (config != null) {
-        return config;
-      }
-      MetaConfig result = readAndCache();
-      if (result != null) {
-        return result;
-      }
-
-      config = createConfig();
-      return config;
+    try (UncheckedCloseable ignored = LockUtils.lock(storage.getLock().readLock())) {
+      return readOrDefaultUnsafe();
     }
   }
 
   @Override
-  public void set(MetaConfig config) throws IOException {
-    MetaConfig oldConfig = get();
-    if (oldConfig.equals(config)) {
-      return;
-    }
-
+  public void update(Consumer<MetaConfig> updater) throws IOException {
     try (UncheckedCloseable ignored = LockUtils.lock(storage.getLock().writeLock())) {
-      this.config = config;
-      Files.createDirectories(storage.getDirPath());
+      MetaConfig oldConfig = readOrDefaultUnsafe();
+      MetaConfig newConfig = Codecs.clone(oldConfig, CONFIG_CODEC, JsonOps.INSTANCE);
 
-      DataResult<JsonElement> result = CONFIG_CODEC.encodeStart(JsonOps.INSTANCE, config);
+      updater.accept(newConfig);
+
+      if (oldConfig.equals(newConfig)) {
+        return;
+      }
+
+      cache = newConfig;
+
+      Files.createDirectories(configFilePath.getParent());
+
+      DataResult<JsonElement> result = CONFIG_CODEC.encodeStart(JsonOps.INSTANCE, newConfig);
       Optional<JsonElement> encoded = result.result();
       if (encoded.isEmpty()) {
-        storage.logger().warn("Failed to encode meta config: {}", result.error().orElse(null));
+        storage.logger().error("Failed to encode meta config: {}", result.error().orElse(null));
         return;
       }
 
       String json = GSON.toJson(encoded.get());
       AtomicFileWriter.write(configFilePath, json.getBytes(StandardCharsets.UTF_8));
-    }
 
-    synchronized (onChanged) {
-      onChanged.emit(config);
+      synchronized (onChanged) {
+        onChanged.emit(newConfig);
+      }
     }
   }
 
@@ -151,73 +125,76 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
   }
 
   @Override
-  public MetaConfig createConfig() {
-    return new MetaConfigImpl(lib, Collections.emptyMap());
-  }
-
-  @Override
   public void close() throws IOException {
     stopWatching();
   }
 
-  public synchronized void stopWatching() throws IOException {
-    WatchService ws = watchService;
-    if (ws == null) {
-      return;
-    }
-
-    try {
-      ws.close();
-    } catch (IOException e) {
-      storage.logger().warn("Failed to close watch service", e);
-      throw e;
-    }
-
-    watchService = null;
-  }
-
-  private @Nullable MetaConfig readAndCache() throws IOException {
-    if (configFilePath == null) {
-      return null;
-    }
-
+  /// ### Returns
+  ///
+  /// - The current configuration from disk if file exist and valid.
+  /// - `null` if:
+  ///   - file not exist.
+  ///   - file is empty.
+  ///   - file content is not valid JSON.
+  ///   - file content json is not valid meta config.
+  ///
+  /// ### Throws
+  ///
+  /// - `IOException` if file read failed.
+  private @Nullable MetaConfig readUnsafe() throws IOException {
     if (!Files.exists(configFilePath)) {
       return null;
     }
 
-    try (UncheckedCloseable ignored = LockUtils.lock(storage.getLock().readLock())) {
-      String content = Files.readString(configFilePath, StandardCharsets.UTF_8);
-      if (content.isEmpty()) {
-        storage.logger().warn("Meta config file is empty: {}", configFilePath);
-        return null;
-      }
-
-      JsonElement jsonElement;
-      try {
-        jsonElement = GSON.fromJson(content, JsonElement.class);
-      } catch (JsonSyntaxException e) {
-        storage
-            .logger()
-            .warn(
-                "Failed to parse JSON in meta config file {}: {}", configFilePath, e.getMessage());
-        return null;
-      }
-
-      DataResult<MetaConfig> parsedResult = CONFIG_CODEC.parse(JsonOps.INSTANCE, jsonElement);
-      Optional<MetaConfig> parsed = parsedResult.result();
-      if (parsed.isPresent()) {
-        config = parsed.get();
-        return config;
-      } else {
-        storage
-            .logger()
-            .warn(
-                "Failed to parse meta config file {}: {}",
-                configFilePath,
-                parsedResult.error().orElse(null));
-        return null;
-      }
+    String content = Files.readString(configFilePath, StandardCharsets.UTF_8);
+    if (content.isEmpty()) {
+      storage.logger().warn("Meta config file is empty: {}", configFilePath);
+      return null;
     }
+
+    JsonElement jsonElement;
+    try {
+      jsonElement = GSON.fromJson(content, JsonElement.class);
+    } catch (JsonSyntaxException e) {
+      storage
+          .logger()
+          .warn("Failed to parse JSON in meta config file {}: {}", configFilePath, e.getMessage());
+      return null;
+    }
+
+    DataResult<MetaConfig> parsedResult = CONFIG_CODEC.parse(JsonOps.INSTANCE, jsonElement);
+    Optional<MetaConfig> parsed = parsedResult.result();
+
+    if (parsed.isEmpty()) {
+      storage
+          .logger()
+          .warn(
+              "Failed to parse meta config file {}: {}",
+              configFilePath,
+              parsedResult.error().orElse(null));
+      return null;
+    }
+
+    cache = parsed.get();
+    return cache;
+  }
+
+  /// ### Returns
+  ///
+  /// - The current configuration from disk if file exist and valid.
+  /// - A new default configuration if:
+  ///   - file not exist.
+  ///   - file is empty.
+  ///
+  /// ### Throws
+  ///
+  /// - `IOException` if file read failed.
+  private MetaConfig readOrDefaultUnsafe() throws IOException {
+    MetaConfig result = readUnsafe();
+    if (result == null) {
+      return new MetaConfigImpl(lib);
+    }
+    return result;
   }
 
   private void ensureWatchStarted() {
@@ -300,27 +277,68 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
     }
   }
 
-  /// Handle file change events detected by the watch service.
+  public synchronized void stopWatching() throws IOException {
+    WatchService ws = watchService;
+    if (ws == null) {
+      return;
+    }
+
+    try {
+      ws.close();
+    } catch (IOException e) {
+      storage.logger().warn("Failed to close watch service", e);
+      throw e;
+    }
+
+    watchService = null;
+  }
+
+  /// Handle meta config file change events detected by the watch service.
   ///
   /// Re-reads the config file and emits `onChanged` if the parsed config differs from the cached
   /// value. If the config file was deleted, clears the cache so the next read returns the default.
-  private void handleFileChange() {
-    try {
-      if (!Files.exists(configFilePath)) {
-        config = null;
+  private synchronized void handleFileChange() {
+    synchronized (onChanged) {
+      if (cache == null) {
+        storage.logger().error("Meta config file change detected, but cache is still null");
+        cache = new MetaConfigImpl(lib);
+      }
+
+      MetaConfig newConfig;
+
+      try {
+        newConfig = readOrDefaultUnsafe();
+      } catch (IOException e) {
+        storage
+            .logger()
+            .warn("IOException occurred while reading meta config file handling file change", e);
         return;
       }
 
-      MetaConfig oldConfig = config;
-      MetaConfig newConfig = readAndCache();
-
-      if (newConfig != null && !Objects.equals(oldConfig, newConfig)) {
-        synchronized (onChanged) {
-          onChanged.emit(newConfig);
-        }
+      if (!Objects.equals(cache, newConfig)) {
+        cache = newConfig;
+        onChanged.emit(newConfig);
       }
-    } catch (IOException e) {
-      storage.logger().error("Failed to handle meta config file change", e);
     }
+  }
+
+  private void handleDirUpdated(Path oldDirPath) {
+    Path dirPath = storage.getDirPath();
+    if (dirPath.equals(oldDirPath)) {
+      return;
+    }
+
+    synchronized (watchStartLock) {
+      this.configFilePath = dirPath.resolve(CONFIG_FILE_NAME).toAbsolutePath().normalize();
+      this.cache = null;
+      try {
+        stopWatching();
+      } catch (IOException e) {
+        storage.logger().warn("Failed to stop watch service when updating dirPath", e);
+      }
+      ensureWatchStarted();
+    }
+
+    handleFileChange();
   }
 }

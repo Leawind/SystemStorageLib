@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.leawind.systemstoragelib.v1.BaseTest;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,8 +22,8 @@ public class ScopeMetaConfigTest extends BaseTest {
   private Path bar;
 
   @BeforeEach
-  void setup() {
-    config = lib.metaConfig().createConfig().scope("example_mod");
+  void setup() throws IOException {
+    config = lib.metaConfig().get().scope("example_mod");
     foo = fs.getPath("/foo");
     bar = fs.getPath("/bar");
   }
