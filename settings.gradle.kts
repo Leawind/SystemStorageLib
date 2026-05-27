@@ -8,4 +8,4 @@ pluginManagement {
 plugins {
 }
 
-rootProject.name = "SystemStorageLib"
+rootProject.name = "system-storage-lib"
