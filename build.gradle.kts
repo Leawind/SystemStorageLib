@@ -30,6 +30,7 @@ dependencies {
     shadowBundle("dev.dirs:directories:26")
 
     compileOnly("org.jspecify:jspecify:1.0.0")
+    compileOnly("org.jetbrains:annotations:24.0.1")
 
     compileOnly("org.slf4j:slf4j-api:2.0.17")
     testImplementation("org.slf4j:slf4j-simple:2.0.17")

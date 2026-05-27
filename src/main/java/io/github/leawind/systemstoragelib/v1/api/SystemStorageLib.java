@@ -4,6 +4,7 @@ import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfigStore;
 import io.github.leawind.systemstoragelib.v1.impl.SystemStorageLibImpl;
 import java.nio.file.Path;
 import java.util.stream.Stream;
+import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -17,6 +18,7 @@ public interface SystemStorageLib {
   /// Manager for meta configuration.
   ///
   /// @return the {@link MetaConfigStore} for reading and writing configuration
+  @ApiStatus.Experimental
   MetaConfigStore metaConfig();
 
   /// Creates or retrieves a {@link Scope} for the given scope name.
