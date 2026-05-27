@@ -83,6 +83,8 @@ tasks.processResources {
     ) {
         expand(props)
     }
+
+    from(rootProject.file("LICENSE")) { into("META-INF") }
 }
 
 publishing {
