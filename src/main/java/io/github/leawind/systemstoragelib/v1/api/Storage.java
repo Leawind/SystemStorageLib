@@ -4,6 +4,7 @@ import io.github.leawind.inventory.event.EventEmitter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.function.Function;
 import org.slf4j.Logger;
 
 public interface Storage {
@@ -42,4 +43,8 @@ public interface Storage {
 
   /// Emits when the storage directory path is updated.
   EventEmitter<Path> onDirUpdated();
+
+  default <T> T map(Function<Storage, T> function) {
+    return function.apply(this);
+  }
 }

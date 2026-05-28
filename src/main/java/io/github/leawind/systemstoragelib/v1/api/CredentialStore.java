@@ -25,7 +25,7 @@ import org.jspecify.annotations.Nullable;
 /// - Integrity verification is enforced — tampered entries MUST be ignored.
 /// - Keys are derived from the local environment.
 public interface CredentialStore {
-  static CredentialStore create(Storage storage) {
+  static CredentialStore of(Storage storage) {
     return new CredentialStoreImpl(storage);
   }
 

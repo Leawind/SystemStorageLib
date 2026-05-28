@@ -23,7 +23,7 @@ public class CredentialStoreTest extends BaseTest {
 
   @BeforeEach
   void setUp() {
-    store = CredentialStore.create(scope.storage(StoreType.CREDENTIALS));
+    store = scope.storage(StoreType.CREDENTIALS).map(CredentialStore::of);
   }
 
   @Test
