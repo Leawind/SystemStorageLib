@@ -26,7 +26,7 @@ fun DependencyHandlerScope.shadowBundle(dependencyNotation: String) {
 }
 
 dependencies {
-    shadowBundle("com.github.Leawind:inventory-java:9d3ca9b13b")
+    shadowBundle("com.github.Leawind:inventory-java:0.1.2")
     shadowBundle("dev.dirs:directories:26")
 
     compileOnly("org.jspecify:jspecify:1.0.0")
