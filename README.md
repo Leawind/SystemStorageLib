@@ -1,5 +1,5 @@
 <div align="center">
-<img src="src/main/resources/logo.png" alt="System Storage Lib" height="128" style="image-rendering:pixelated">
+<img src="src/main/resources/logo.png" alt="System Storage Lib" style="image-rendering:pixelated;height:6em;">
 
 # System Storage Lib
 
