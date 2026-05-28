@@ -36,7 +36,7 @@ public class StorageImpl implements Storage {
 
   private final EventEmitter<Path> onDirUpdated = new EventEmitter<>();
 
-  public StorageImpl(Logger logger, Path dirPath) {
+  StorageImpl(Logger logger, Path dirPath) {
     this.logger = logger;
     this.dirPath = dirPath.toAbsolutePath().normalize();
     this.lockPath = this.dirPath.resolve(LOCK_FILE_NAME);

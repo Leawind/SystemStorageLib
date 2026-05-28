@@ -269,7 +269,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
     }
   }
 
-  public synchronized void stopWatching() throws IOException {
+  private synchronized void stopWatching() throws IOException {
     WatchService ws = watchService;
     if (ws == null) {
       return;

@@ -317,7 +317,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
       // If we cannot read the meta config, fall back to the default scoped directories.
       logger().warn("Failed to load meta config for scope {}: {}", scopeName, e.getMessage());
     }
-    return new ScopeImpl(this, scopeName, new SystemLogger(logStore, scopeName), dirsForScope);
+    return new ScopeImpl(scopeName, new SystemLogger(logStore, scopeName), dirsForScope);
   }
 
   private void detectScopes() {

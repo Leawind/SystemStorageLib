@@ -36,7 +36,7 @@ public class LogStore implements AutoCloseable {
    *
    * <p>IOException is silently caught and ignored to avoid affecting normal business logic.
    */
-  public void writeLog(Level level, String scopeName, long pid, String message) {
+  void writeLog(Level level, String scopeName, long pid, String message) {
     try {
       try (UncheckedCloseable ignored = LockUtils.lock(storage.getLock().writeLock())) {
         rotateIfNeeded();

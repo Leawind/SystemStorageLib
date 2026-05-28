@@ -3,7 +3,6 @@ package io.github.leawind.systemstoragelib.v1.impl;
 import io.github.leawind.systemstoragelib.v1.api.Scope;
 import io.github.leawind.systemstoragelib.v1.api.Storage;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
-import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
 import io.github.leawind.systemstoragelib.v1.utils.MapUtils;
 import java.nio.file.Path;
 import java.util.List;
@@ -13,7 +12,6 @@ import org.slf4j.Logger;
 
 public final class ScopeImpl implements Scope {
 
-  private final SystemStorageLib lib;
   private final String name;
   private final Logger logger;
   private final Map<StoreType, Path> dirs;
@@ -24,7 +22,7 @@ public final class ScopeImpl implements Scope {
   ///
   /// - If any StoreType is missing.
   /// - If any dirPath is not unique.
-  public ScopeImpl(SystemStorageLib lib, String name, Logger logger, Map<StoreType, Path> dirs) {
+  ScopeImpl(String name, Logger logger, Map<StoreType, Path> dirs) {
 
     List<StoreType> missingTypes = StoreType.Utils.missingTypes(dirs.keySet());
     if (!missingTypes.isEmpty()) {
@@ -33,7 +31,6 @@ public final class ScopeImpl implements Scope {
 
     MapUtils.requireUniqueValues(dirs, "dirPath");
 
-    this.lib = lib;
     this.name = name;
     this.logger = logger;
     this.dirs = dirs;
