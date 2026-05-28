@@ -4,10 +4,13 @@
   "version": "${version}",
   "name": "${name}",
   "description": "${description}",
-  "authors": ["Leawind"],
+  "authors": ["${author}"],
+  "license": "MIT",
+  "icon": "${logo}",
   "contact": {
     "homepage": "${homeUrl}",
-    "sources": "${sourceUrl}"
+    "sources": "${sourceUrl}",
+    "issues": "${issuesUrl}"
   },
   "environment": "*",
   "entrypoints": {},

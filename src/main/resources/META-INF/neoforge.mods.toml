@@ -1,18 +1,19 @@
 modLoader = "lowcodefml"
 loaderVersion = "*"
-issueTrackerURL = "${sourceUrl}/issues"
+issueTrackerURL = "${issuesUrl}"
 license = "${license}"
 
 [[mods]]
 modId = "${id}"
 version = "${version}"
 displayName = "${name}"
-authors = "Leawind"
+authors = "${author}"
 description = '''
 ${description}
 '''
-logoFile = "logo.png"
+logoFile = "${logo}"
 logoBlur = false
+displayURL="${homeUrl}"
 
 [[dependencies.${id}]]
 modId = "minecraft"
