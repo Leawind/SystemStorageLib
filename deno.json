@@ -34,7 +34,8 @@
       ".releaserc.json",
       "deno.json",
       "scripts/**",
-      "src/**/*.json"
+      "src/**/*.json",
+      "*.md"
     ],
     "exclude": []
   },
