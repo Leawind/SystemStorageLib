@@ -5,7 +5,9 @@ import io.github.leawind.inventory.misc.Lazy;
 import io.github.leawind.systemstoragelib.v1.impl.SystemStorageLibImpl;
 import io.github.leawind.systemstoragelib.v1.impl.exception.SystemStorageLibException;
 import java.nio.file.Path;
+import org.jetbrains.annotations.ApiStatus;
 
+@ApiStatus.Internal
 final class SystemStorageLibHolder {
   private static final Lazy<SystemStorageLib> instance =
       new Lazy<>(

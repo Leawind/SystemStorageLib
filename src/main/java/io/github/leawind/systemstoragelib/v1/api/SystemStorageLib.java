@@ -3,7 +3,8 @@ package io.github.leawind.systemstoragelib.v1.api;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfigStore;
 import io.github.leawind.systemstoragelib.v1.impl.SystemStorageLibImpl;
 import java.nio.file.Path;
-import java.util.stream.Stream;
+import java.util.Map;
+import java.util.Optional;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -46,6 +47,7 @@ public interface SystemStorageLib {
   ///
   /// @param scopeName the scope name to validate
   /// @return {@code null} if valid, otherwise a description of the validation failure
+  @ApiStatus.Experimental
   @Nullable String validateScopeName(String scopeName);
 
   /// Returns the path to the logs directory.
@@ -64,6 +66,7 @@ public interface SystemStorageLib {
   /// Returns a builder for creating a `SystemStorageLib` instance with custom configuration.
   ///
   /// Usually for testing.
+  @ApiStatus.Experimental
   static Builder builder() {
     return new SystemStorageLibImpl.BuilderImpl();
   }

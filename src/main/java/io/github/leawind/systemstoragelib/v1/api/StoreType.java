@@ -4,6 +4,7 @@ import io.github.leawind.systemstoragelib.v1.api.metaconfig.ScopeMetaConfig;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import org.jetbrains.annotations.ApiStatus;
 
 /// Defines different data types within a specific scope.
 ///
@@ -51,6 +52,7 @@ public enum StoreType {
     };
   }
 
+  @ApiStatus.Internal
   public static final class Utils {
     private Utils() {}
 

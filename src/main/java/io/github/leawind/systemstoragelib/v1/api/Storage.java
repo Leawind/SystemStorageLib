@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.function.Function;
+import org.jetbrains.annotations.ApiStatus;
 import org.slf4j.Logger;
 
 public interface Storage {
@@ -42,6 +43,7 @@ public interface Storage {
   void delete() throws IOException;
 
   /// Emits when the storage directory path is updated.
+  @ApiStatus.Experimental
   EventEmitter<Path> onDirUpdated();
 
   default <T> T map(Function<Storage, T> function) {

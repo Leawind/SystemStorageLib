@@ -3,6 +3,7 @@ package io.github.leawind.systemstoragelib.v1.api;
 import io.github.leawind.systemstoragelib.v1.api.exception.CredentialIntegrityException;
 import io.github.leawind.systemstoragelib.v1.impl.CredentialStoreImpl;
 import java.io.IOException;
+import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -24,6 +25,7 @@ import org.jspecify.annotations.Nullable;
 /// - Keys are NOT stored in plaintext; only their digests or ciphertexts are stored.
 /// - Integrity verification is enforced — tampered entries MUST be ignored.
 /// - Keys are derived from the local environment.
+@ApiStatus.Experimental
 public interface CredentialStore {
   static CredentialStore of(Storage storage) {
     return new CredentialStoreImpl(storage);
