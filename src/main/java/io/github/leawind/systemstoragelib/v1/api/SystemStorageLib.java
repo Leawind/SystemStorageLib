@@ -31,8 +31,9 @@ public interface SystemStorageLib {
   /// Returns all known scope names, both from the in-memory cache and
   /// detected on disk.
   ///
-  /// @return a stream of scope names
-  Stream<String> streamScopes();
+  /// @return a map of scope names to scope instances
+  @ApiStatus.Experimental
+  Map<String, Optional<Scope>> scopes();
 
   /// Validates a scope name.
   ///

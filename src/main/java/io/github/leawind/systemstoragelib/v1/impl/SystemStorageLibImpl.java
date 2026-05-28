@@ -234,9 +234,9 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   }
 
   @Override
-  public Stream<String> streamScopes() {
+  public Map<String, Optional<Scope>> scopes() {
     detectScopes();
-    return scopes.keySet().stream();
+    return scopes;
   }
 
   @Override
