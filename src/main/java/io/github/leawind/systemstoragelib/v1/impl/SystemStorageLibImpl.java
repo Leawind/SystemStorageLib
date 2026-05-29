@@ -1,6 +1,5 @@
 package io.github.leawind.systemstoragelib.v1.impl;
 
-import dev.dirs.BaseDirectories;
 import io.github.leawind.systemstoragelib.v1.api.Scope;
 import io.github.leawind.systemstoragelib.v1.api.Storage;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
@@ -30,7 +29,7 @@ import org.slf4j.LoggerFactory;
 public class SystemStorageLibImpl implements SystemStorageLib {
   public static final Logger FALLBACK_LOGGER = LoggerFactory.getLogger(SystemStorageLibImpl.class);
 
-  public static final String ROOT_DIR_NAME = "mc_system_storage";
+  public static final String APP_NAME = "mc_system_storage";
 
   public static final int MIN_SCOPE_NAME_LENGTH = 2;
   public static final int MAX_SCOPE_NAME_LENGTH = 128;
@@ -341,38 +340,25 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
   public static final class BuilderImpl implements Builder {
 
+    private final Path metaConfigDir;
     private Path logsDir;
-    private Path metaConfigDir;
     private final Map<StoreType, Path> scopedDirs = new HashMap<>();
     private long maxLogFileSize = 10 * 1024 * 1024;
     private int maxLogArchiveFiles = 10;
 
-    public BuilderImpl() {}
+    public BuilderImpl(Path metaConfigDir) {
+      this.metaConfigDir = Objects.requireNonNull(metaConfigDir);
+    }
 
     @Override
     public SystemStorageLibImpl build() {
-      if (logsDir == null || metaConfigDir == null) {
-        BaseDirectories baseDirs = BaseDirectories.get();
-        if (logsDir == null) {
-          logsDir = Path.of(baseDirs.dataDir, ROOT_DIR_NAME, "logs");
-        }
-        if (metaConfigDir == null) {
-          metaConfigDir = Path.of(baseDirs.configDir, ROOT_DIR_NAME, "metaconfig");
-        }
-      }
       return new SystemStorageLibImpl(
           logsDir, metaConfigDir, scopedDirs, maxLogFileSize, maxLogArchiveFiles);
     }
 
     @Override
     public BuilderImpl logsDir(Path logsDir) {
-      this.logsDir = logsDir;
-      return this;
-    }
-
-    @Override
-    public BuilderImpl metaConfigDir(Path metaConfigDir) {
-      this.metaConfigDir = metaConfigDir;
+      this.logsDir = Objects.requireNonNull(logsDir);
       return this;
     }
 

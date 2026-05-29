@@ -67,8 +67,8 @@ public interface SystemStorageLib {
   ///
   /// Usually for testing.
   @ApiStatus.Experimental
-  static Builder builder() {
-    return new SystemStorageLibImpl.BuilderImpl();
+  static Builder builder(Path metaConfigDir) {
+    return new SystemStorageLibImpl.BuilderImpl(metaConfigDir);
   }
 
   /// Builder for creating a `SystemStorageLib` instance with custom configuration.
@@ -78,9 +78,6 @@ public interface SystemStorageLib {
 
     /// Sets the directory for log files.
     Builder logsDir(Path logsDir);
-
-    /// Sets the directory for meta configuration files.
-    Builder metaConfigDir(Path metaConfigDir);
 
     /// The scoped directory will be `rootDir / <scope>`.
     Builder storeDir(StoreType storeType, Path rootDir);

@@ -14,40 +14,31 @@ final class SystemStorageLibHolder {
           () -> {
             try {
               BaseDirectories baseDirs = BaseDirectories.get();
-              return SystemStorageLib.builder()
-                  .logsDir(
-                      Path.of(baseDirs.dataLocalDir, SystemStorageLibImpl.ROOT_DIR_NAME, "logs"))
-                  .metaConfigDir(
-                      Path.of(baseDirs.configDir, SystemStorageLibImpl.ROOT_DIR_NAME, "metaconfig"))
+              return SystemStorageLib.builder(
+                      Path.of(baseDirs.configDir, SystemStorageLibImpl.APP_NAME, "metaconfig"))
+                  .logsDir(Path.of(baseDirs.dataLocalDir, SystemStorageLibImpl.APP_NAME, "logs"))
                   .storeDir(
                       StoreType.CACHE,
                       Path.of(
-                          baseDirs.cacheDir,
-                          SystemStorageLibImpl.ROOT_DIR_NAME,
-                          StoreType.CACHE.id()))
+                          baseDirs.cacheDir, SystemStorageLibImpl.APP_NAME, StoreType.CACHE.id()))
                   .storeDir(
                       StoreType.CONFIG,
                       Path.of(
-                          baseDirs.configDir,
-                          SystemStorageLibImpl.ROOT_DIR_NAME,
-                          StoreType.CONFIG.id()))
+                          baseDirs.configDir, SystemStorageLibImpl.APP_NAME, StoreType.CONFIG.id()))
                   .storeDir(
                       StoreType.CREDENTIALS,
                       Path.of(
                           baseDirs.dataLocalDir,
-                          SystemStorageLibImpl.ROOT_DIR_NAME,
+                          SystemStorageLibImpl.APP_NAME,
                           StoreType.CREDENTIALS.id()))
                   .storeDir(
                       StoreType.DATA,
-                      Path.of(
-                          baseDirs.dataDir,
-                          SystemStorageLibImpl.ROOT_DIR_NAME,
-                          StoreType.DATA.id()))
+                      Path.of(baseDirs.dataDir, SystemStorageLibImpl.APP_NAME, StoreType.DATA.id()))
                   .storeDir(
                       StoreType.DATA_LOCAL,
                       Path.of(
                           baseDirs.dataLocalDir,
-                          SystemStorageLibImpl.ROOT_DIR_NAME,
+                          SystemStorageLibImpl.APP_NAME,
                           StoreType.DATA_LOCAL.id()))
                   .build();
             } catch (SystemStorageLibException e) {

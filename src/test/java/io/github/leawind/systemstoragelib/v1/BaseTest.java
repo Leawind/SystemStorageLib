@@ -28,9 +28,8 @@ public abstract class BaseTest {
     Files.createDirectories(tempDir);
 
     lib =
-        SystemStorageLib.builder()
+        SystemStorageLib.builder(fs.getPath("/meta_config"))
             .logsDir(fs.getPath("/logs"))
-            .metaConfigDir(fs.getPath("/meta_config"))
             .storeDir(StoreType.CREDENTIALS, fs.getPath("/credentials"))
             .storeDir(StoreType.CACHE, fs.getPath("/cache"))
             .storeDir(StoreType.CONFIG, fs.getPath("/config"))
