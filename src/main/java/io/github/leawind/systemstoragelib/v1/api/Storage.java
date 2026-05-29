@@ -6,11 +6,14 @@ import java.nio.file.Path;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.function.Function;
 import org.jetbrains.annotations.ApiStatus;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 
 public interface Storage {
 
-  Logger logger();
+  Logger getLogger();
+
+  void setLogger(@NonNull Logger logger);
 
   /// Returns the storage directory path, always absolute and normalized.
   Path getDirPath();
@@ -18,7 +21,7 @@ public interface Storage {
   /// Updates the storage directory path.
   ///
   /// The path will be converted to absolute and normalized form.
-  void setDirPath(Path dirPath);
+  void setDirPath(@NonNull Path dirPath);
 
   /// Returns the read-write lock for the storage directory.
   ///

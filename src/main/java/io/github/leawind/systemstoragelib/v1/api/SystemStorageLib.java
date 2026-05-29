@@ -81,11 +81,5 @@ public interface SystemStorageLib {
 
     /// The scoped directory will be `rootDir / <scope>`.
     Builder storeDir(StoreType storeType, Path rootDir);
-
-    /// Sets the maximum size of a log file in bytes before rotation.
-    Builder maxLogFileSize(long maxLogFileSize);
-
-    /// Sets the maximum number of rotated archive log files.
-    Builder maxLogArchiveFiles(int maxLogArchiveFiles);
   }
 }

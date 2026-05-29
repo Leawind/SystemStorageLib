@@ -45,7 +45,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
 
   private final Codec<MetaConfig> configCodec;
 
-  private final EventEmitter<MetaConfig> onChanged = new EventEmitter<>();
+  private final EventEmitter<ChangedEvent> onChanged = new EventEmitter<>();
 
   private Path configFilePath;
 
@@ -98,7 +98,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
       DataResult<JsonElement> result = configCodec.encodeStart(JsonOps.INSTANCE, newConfig);
       Optional<JsonElement> encoded = result.result();
       if (encoded.isEmpty()) {
-        storage.logger().error("Failed to encode meta config: {}", result.error().orElse(null));
+        storage.getLogger().error("Failed to encode meta config: {}", result.error().orElse(null));
         return;
       }
 
@@ -106,13 +106,13 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
       AtomicFileWriter.write(configFilePath, json.getBytes(StandardCharsets.UTF_8));
 
       synchronized (onChanged) {
-        onChanged.emit(newConfig);
+        onChanged.emit(new ChangedEvent(oldConfig, newConfig));
       }
     }
   }
 
   @Override
-  public EventEmitter<MetaConfig> onChanged() {
+  public EventEmitter<ChangedEvent> onChanged() {
     return onChanged;
   }
 
@@ -140,7 +140,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
 
     String content = Files.readString(configFilePath, StandardCharsets.UTF_8);
     if (content.isEmpty()) {
-      storage.logger().warn("Meta config file is empty: {}", configFilePath);
+      storage.getLogger().warn("Meta config file is empty: {}", configFilePath);
       return null;
     }
 
@@ -149,7 +149,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
       jsonElement = GSON.fromJson(content, JsonElement.class);
     } catch (JsonSyntaxException e) {
       storage
-          .logger()
+          .getLogger()
           .warn("Failed to parse JSON in meta config file {}: {}", configFilePath, e.getMessage());
       return null;
     }
@@ -159,7 +159,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
 
     if (parsed.isEmpty()) {
       storage
-          .logger()
+          .getLogger()
           .warn(
               "Failed to parse meta config file {}: {}",
               configFilePath,
@@ -215,7 +215,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
         thread.setDaemon(true);
         thread.start();
       } catch (IOException e) {
-        storage.logger().error("Failed to start file watcher for meta config", e);
+        storage.getLogger().error("Failed to start file watcher for meta config", e);
       }
     }
   }
@@ -223,7 +223,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
   private void watchLoop() {
     WatchService ws = watchService;
     if (ws == null) {
-      storage.logger().error("Starting watch loop but watch service is null");
+      storage.getLogger().error("Starting watch loop but watch service is null");
       return;
     }
 
@@ -232,7 +232,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
       try {
         key = ws.take();
       } catch (InterruptedException e) {
-        storage.logger().error("Watch loop interrupted", e);
+        storage.getLogger().error("Watch loop interrupted", e);
         Thread.currentThread().interrupt();
         return;
       } catch (ClosedWatchServiceException e) {
@@ -242,7 +242,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
       boolean configFileChanged = false;
       for (WatchEvent<?> event : key.pollEvents()) {
         if (event.kind() == StandardWatchEventKinds.OVERFLOW) {
-          storage.logger().info("Watch service overflow");
+          storage.getLogger().info("Watch service overflow");
           continue;
         }
         if (storage
@@ -278,7 +278,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
     try {
       ws.close();
     } catch (IOException e) {
-      storage.logger().warn("Failed to close watch service", e);
+      storage.getLogger().warn("Failed to close watch service", e);
       throw e;
     }
 
@@ -292,7 +292,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
   private synchronized void handleFileChange() {
     synchronized (onChanged) {
       if (cache == null) {
-        storage.logger().error("Meta config file change detected, but cache is still null");
+        storage.getLogger().error("Meta config file change detected, but cache is still null");
         cache = new MetaConfigImpl(lib);
       }
 
@@ -302,14 +302,14 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
         newConfig = readOrDefaultUnsafe();
       } catch (IOException e) {
         storage
-            .logger()
+            .getLogger()
             .warn("IOException occurred while reading meta config file handling file change", e);
         return;
       }
 
       if (!Objects.equals(cache, newConfig)) {
+        onChanged.emit(new ChangedEvent(cache, newConfig));
         cache = newConfig;
-        onChanged.emit(newConfig);
       }
     }
   }
@@ -326,7 +326,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
       try {
         stopWatching();
       } catch (IOException e) {
-        storage.logger().warn("Failed to stop watch service when updating dirPath", e);
+        storage.getLogger().warn("Failed to stop watch service when updating dirPath", e);
       }
       ensureWatchStarted();
     }

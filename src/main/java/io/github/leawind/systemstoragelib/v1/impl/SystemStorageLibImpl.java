@@ -34,8 +34,6 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   public static final int MIN_SCOPE_NAME_LENGTH = 2;
   public static final int MAX_SCOPE_NAME_LENGTH = 128;
 
-  private final Path logsDir;
-
   /// ### Examples
   ///
   /// - config: `/home/Steve/.config/<root_name>/config`.
@@ -44,7 +42,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
   private final LogStore logStore;
   private final Logger logger;
-  private final MetaConfigStore metaConfig;
+  private final MetaConfigStore metaConfigStore;
   private final Map<String, Optional<Scope>> scopes;
 
   /// ## Args
@@ -73,128 +71,136 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   ///   - `defaultScopedDirs` does not contain all {@link StoreType}.
   ///   - any directory path is not unique.
   public SystemStorageLibImpl(
-      @NonNull Path logsDir,
       @NonNull Path metaConfigDir,
-      @NonNull Map<StoreType, Path> defaultScopedDirs,
-      long maxLogFileSize,
-      int maxLogArchiveFiles) {
-
-    if (maxLogFileSize <= 1) {
-      throw new IllegalArgumentException("maxLogFileSize is too small: " + maxLogFileSize);
-    }
-    if (maxLogArchiveFiles <= 1) {
-      throw new IllegalArgumentException("maxLogArchiveFiles is too small: " + maxLogArchiveFiles);
-    }
+      @NonNull Path logsDir,
+      @NonNull Map<StoreType, Path> defaultScopedDirs) {
 
     Objects.requireNonNull(logsDir);
     Objects.requireNonNull(metaConfigDir);
 
-    logsDir = logsDir.toAbsolutePath().normalize();
-    metaConfigDir = metaConfigDir.toAbsolutePath().normalize();
-
     validateDirs(defaultScopedDirs);
 
-    if (defaultScopedDirs.containsValue(logsDir)) {
-      throw new IllegalArgumentException("logsDir is already used: " + logsDir);
-    }
+    metaConfigDir = metaConfigDir.toAbsolutePath().normalize();
     if (defaultScopedDirs.containsValue(metaConfigDir)) {
       throw new IllegalArgumentException("metaConfigDir is already used: " + metaConfigDir);
     }
 
-    this.logsDir = logsDir;
+    logsDir = logsDir.toAbsolutePath().normalize();
+    if (defaultScopedDirs.containsValue(logsDir)) {
+      throw new IllegalArgumentException("logsDir is already used: " + logsDir);
+    }
+
     this.defaultScopedDirs = new HashMap<>(defaultScopedDirs);
 
-    logStore =
-        new LogStore(new StorageImpl(FALLBACK_LOGGER, logsDir), maxLogFileSize, maxLogArchiveFiles);
-    logger = new SystemLogger(logStore, "");
+    logStore = new LogStore(new StorageImpl(logsDir, FALLBACK_LOGGER));
+    logger = new SystemLogger(logStore, "-");
 
-    metaConfig = new MetaConfigStoreImpl(this, new StorageImpl(logger, metaConfigDir));
+    metaConfigStore = new MetaConfigStoreImpl(this, new StorageImpl(metaConfigDir, logger));
+    metaConfigStore.storage().setLogger(logger);
+
     // Listen for external changes to meta config and update scope storage paths accordingly.
-    metaConfig.onChanged().on(this::handleMetaConfigChanged);
+    metaConfigStore.onChanged().on(this::handleMetaConfigChanged);
 
     scopes = new ConcurrentScopeHashMap<>(this);
-
     detectScopes();
+
+    // Load meta config
+    try {
+      this.handleMetaConfigChanged(new MetaConfigStore.ChangedEvent(null, metaConfigStore.get()));
+    } catch (IOException e) {
+      logger.error("Failed to load meta config during initializing", e);
+    }
   }
 
-  private void handleMetaConfigChanged(MetaConfig newConfig) {
-    // Phase 1: Compute and validate all changes across all scopes.
-    Map<Scope, Map<StoreType, Path>> pendingChanges = new HashMap<>();
+  private void handleMetaConfigChanged(MetaConfigStore.ChangedEvent event) {
+    var config = event.config();
 
-    scopes.forEach(
-        (scopeName, scopeOpt) -> {
-          if (scopeOpt.isEmpty()) {
-            return;
-          }
-          Scope scope = scopeOpt.get();
+    // Custom dirs
+    {
+      // Phase 1: Compute and validate all changes across all scopes.
+      Map<Scope, Map<StoreType, Path>> pendingChanges = new HashMap<>();
 
-          ScopeMetaConfig scopeMetaConfig = newConfig.scopes().get(scopeName);
-          Map<StoreType, Path> customDirs =
-              (scopeMetaConfig != null) ? scopeMetaConfig.getCustomDirs() : null;
+      scopes.forEach(
+          (scopeName, scopeOpt) -> {
+            if (scopeOpt.isEmpty()) {
+              return;
+            }
+            Scope scope = scopeOpt.get();
 
-          Map<StoreType, Path> newDirMap = new HashMap<>();
-          for (StoreType storeType : StoreType.values()) {
-            Path newDirPath = (customDirs != null) ? customDirs.get(storeType) : null;
+            ScopeMetaConfig scopeMetaConfig = config.scopes().get(scopeName);
+            Map<StoreType, Path> customDirs =
+                (scopeMetaConfig != null) ? scopeMetaConfig.getCustomDirs() : null;
 
-            if (newDirPath != null && !storeType.allowCustomDir()) {
+            Map<StoreType, Path> newDirMap = new HashMap<>();
+            for (StoreType storeType : StoreType.values()) {
+              Path newDirPath = (customDirs != null) ? customDirs.get(storeType) : null;
+
+              if (newDirPath != null && !storeType.allowCustomDir()) {
+                logger()
+                    .error(
+                        "Path of store type {} is not customizable, ignoring custom dir in"
+                            + " MetaConfig update",
+                        storeType.id());
+                continue;
+              }
+
+              if (newDirPath == null) {
+                newDirPath = defaultScopedDirs.get(storeType).resolve(scopeName);
+              }
+
+              newDirMap.put(storeType, newDirPath);
+            }
+
+            try {
+              MapUtils.requireUniqueValues(newDirMap, "dir path for each StoreType");
+            } catch (IllegalArgumentException e) {
               logger()
-                  .error(
-                      "Path of store type {} is not customizable, ignoring custom dir in"
-                          + " MetaConfig update",
-                      storeType.id());
-              continue;
+                  .warn(
+                      "MetaConfig update contains duplicate dir paths for scope `{}`, ignoring: {}",
+                      scopeName,
+                      e.getMessage());
+              return;
             }
 
-            if (newDirPath == null) {
-              newDirPath = defaultScopedDirs.get(storeType).resolve(scopeName);
-            }
+            pendingChanges.put(scope, newDirMap);
+          });
 
-            newDirMap.put(storeType, newDirPath);
-          }
+      // Phase 2: Apply all validated changes.
+      pendingChanges.forEach(
+          (scopeStorage, newDirMap) ->
+              newDirMap.forEach(
+                  (storeType, newDirPath) -> {
+                    try {
+                      Storage storage = scopeStorage.storage(storeType);
+                      if (storage.getDirPath().equals(newDirPath)) {
+                        return;
+                      }
 
-          try {
-            MapUtils.requireUniqueValues(newDirMap, "dir path for each StoreType");
-          } catch (IllegalArgumentException e) {
-            logger()
-                .warn(
-                    "MetaConfig update contains duplicate dir paths for scope `{}`, ignoring: {}",
-                    scopeName,
-                    e.getMessage());
-            return;
-          }
+                      logger()
+                          .info(
+                              "Updating dir path for scope `{}`, store type `{}` from `{}` to `{}`",
+                              scopeStorage.name(),
+                              storeType,
+                              storage.getDirPath(),
+                              newDirPath);
 
-          pendingChanges.put(scope, newDirMap);
-        });
-
-    // Phase 2: Apply all validated changes.
-    pendingChanges.forEach(
-        (scopeStorage, newDirMap) ->
-            newDirMap.forEach(
-                (storeType, newDirPath) -> {
-                  try {
-                    Storage storage = scopeStorage.storage(storeType);
-                    if (storage.getDirPath().equals(newDirPath)) {
-                      return;
+                      storage.setDirPath(newDirPath);
+                    } catch (Exception e) {
+                      logger()
+                          .warn(
+                              "Failed to update dir path for scope `{}`, store type `{}`: `{}`",
+                              scopeStorage.name(),
+                              storeType,
+                              e.getMessage());
                     }
+                  }));
+    }
 
-                    logger()
-                        .info(
-                            "Updating dir path for scope `{}`, store type `{}` from `{}` to `{}`",
-                            scopeStorage.name(),
-                            storeType,
-                            storage.getDirPath(),
-                            newDirPath);
-
-                    storage.setDirPath(newDirPath);
-                  } catch (Exception e) {
-                    logger()
-                        .warn(
-                            "Failed to update dir path for scope `{}`, store type `{}`: `{}`",
-                            scopeStorage.name(),
-                            storeType,
-                            e.getMessage());
-                  }
-                }));
+    // log configs
+    {
+      logStore.setMaxFileSize(config.getMaxLogFileSize());
+      logStore.setMaxArchiveFiles(config.getMaxLogArchiveFiles());
+    }
   }
 
   private static void validateDirs(Map<StoreType, Path> scopedDirs)
@@ -215,7 +221,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
   @Override
   public MetaConfigStore metaConfig() {
-    return metaConfig;
+    return metaConfigStore;
   }
 
   @Override
@@ -289,7 +295,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
   @Override
   public Path getLogsDir() {
-    return logsDir;
+    return logStore.storage().getDirPath();
   }
 
   private Scope createScopeStorage(String scopeName) {
@@ -297,7 +303,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
     Map<StoreType, Path> dirsForScope = new HashMap<>(defaultScopedDirs);
     try {
       // Load meta configuration which may contain per‑scope custom directory mappings.
-      MetaConfig meta = metaConfig.get();
+      MetaConfig meta = metaConfigStore.get();
       ScopeMetaConfig perScope = meta.scopes().get(scopeName);
       if (perScope != null) {
         // Override default directories with any custom paths defined for this scope.
@@ -343,8 +349,6 @@ public class SystemStorageLibImpl implements SystemStorageLib {
     private final Path metaConfigDir;
     private Path logsDir;
     private final Map<StoreType, Path> scopedDirs = new HashMap<>();
-    private long maxLogFileSize = 10 * 1024 * 1024;
-    private int maxLogArchiveFiles = 10;
 
     public BuilderImpl(Path metaConfigDir) {
       this.metaConfigDir = Objects.requireNonNull(metaConfigDir);
@@ -352,8 +356,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
     @Override
     public SystemStorageLibImpl build() {
-      return new SystemStorageLibImpl(
-          logsDir, metaConfigDir, scopedDirs, maxLogFileSize, maxLogArchiveFiles);
+      return new SystemStorageLibImpl(metaConfigDir, logsDir, scopedDirs);
     }
 
     @Override
@@ -367,18 +370,6 @@ public class SystemStorageLibImpl implements SystemStorageLib {
     @Override
     public BuilderImpl storeDir(StoreType storeType, Path rootDir) {
       scopedDirs.put(storeType, rootDir);
-      return this;
-    }
-
-    @Override
-    public BuilderImpl maxLogFileSize(long maxLogFileSize) {
-      this.maxLogFileSize = maxLogFileSize;
-      return this;
-    }
-
-    @Override
-    public BuilderImpl maxLogArchiveFiles(int maxLogArchiveFiles) {
-      this.maxLogArchiveFiles = maxLogArchiveFiles;
       return this;
     }
   }

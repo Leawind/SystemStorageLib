@@ -28,7 +28,7 @@ public class StorageImplTest extends BaseTest {
 
   @BeforeEach
   void setupEach() {
-    storage = new StorageImpl(lib.logger(), tempDir.resolve("storage"));
+    storage = new StorageImpl(tempDir.resolve("storage"), lib.logger());
   }
 
   @Test
@@ -39,7 +39,7 @@ public class StorageImplTest extends BaseTest {
   @Test
   void testDirPathIsAbsoluteAndNormalized() {
     Path relativePath = tempDir.resolve("storage/../storage");
-    Storage storage = new StorageImpl(lib.logger(), relativePath);
+    Storage storage = new StorageImpl(relativePath, lib.logger());
     assertEquals(relativePath.toAbsolutePath().normalize(), storage.getDirPath());
   }
 

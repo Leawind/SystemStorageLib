@@ -1,5 +1,6 @@
 package io.github.leawind.systemstoragelib.v1.impl.log;
 
+import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,8 +16,8 @@ public class SystemLogger implements Logger {
   private final long pid;
 
   public SystemLogger(LogStore logStore, String scopeName) {
-    this.logStore = logStore;
-    this.scopeName = scopeName;
+    this.logStore = Objects.requireNonNull(logStore);
+    this.scopeName = Objects.requireNonNull(scopeName);
     this.pid = ProcessHandle.current().pid();
   }
 

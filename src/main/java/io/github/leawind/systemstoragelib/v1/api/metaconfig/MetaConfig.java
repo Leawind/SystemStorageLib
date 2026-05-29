@@ -11,4 +11,14 @@ public interface MetaConfig {
   ScopeMetaConfig scope(String scopeName);
 
   // endregion
+
+  // region logConfig
+  int getMaxLogFileSize();
+
+  void setMaxLogFileSize(int value);
+
+  int getMaxLogArchiveFiles();
+
+  void setMaxLogArchiveFiles(int value);
+  // endregion
 }

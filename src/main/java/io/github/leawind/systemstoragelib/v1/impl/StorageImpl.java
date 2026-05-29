@@ -12,14 +12,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.stream.Stream;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 
 public class StorageImpl implements Storage {
   public static final String LOCK_FILE_NAME = ".lock";
 
-  private final Logger logger;
+  private Logger logger;
 
   private Path dirPath;
   private Path lockPath;
@@ -36,16 +38,21 @@ public class StorageImpl implements Storage {
 
   private final EventEmitter<Path> onDirUpdated = new EventEmitter<>();
 
-  StorageImpl(Logger logger, Path dirPath) {
-    this.logger = logger;
+  StorageImpl(Path dirPath, Logger logger) {
     this.dirPath = dirPath.toAbsolutePath().normalize();
+    this.logger = logger;
     this.lockPath = this.dirPath.resolve(LOCK_FILE_NAME);
     lockLazy.reset();
   }
 
   @Override
-  public Logger logger() {
+  public Logger getLogger() {
     return logger;
+  }
+
+  @Override
+  public void setLogger(@NonNull Logger logger) {
+    this.logger = Objects.requireNonNull(logger);
   }
 
   @Override
@@ -54,7 +61,7 @@ public class StorageImpl implements Storage {
   }
 
   @Override
-  public synchronized void setDirPath(Path dirPath) {
+  public synchronized void setDirPath(@NonNull Path dirPath) {
     try {
       Files.deleteIfExists(lockPath);
     } catch (IOException ignored) {

@@ -198,7 +198,7 @@ public class CredentialStoreImpl implements CredentialStore {
       try {
         machineId = MachineIdUtil.getMachineId();
       } catch (MachineIdResolutionException e) {
-        storage.logger().error("Failed to get machine id", e);
+        storage.getLogger().error("Failed to get machine id", e);
       }
 
       String keyMaterial =

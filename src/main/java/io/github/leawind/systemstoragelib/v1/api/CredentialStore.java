@@ -26,12 +26,10 @@ import org.jspecify.annotations.Nullable;
 /// - Integrity verification is enforced — tampered entries MUST be ignored.
 /// - Keys are derived from the local environment.
 @ApiStatus.Experimental
-public interface CredentialStore {
+public interface CredentialStore extends StorageWrapper {
   static CredentialStore of(Storage storage) {
     return new CredentialStoreImpl(storage);
   }
-
-  Storage storage();
 
   boolean exists(@NonNull String key);
 

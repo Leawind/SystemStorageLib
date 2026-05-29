@@ -3,6 +3,7 @@ package io.github.leawind.systemstoragelib.v1.impl.log;
 import io.github.leawind.inventory.lock.LockUtils;
 import io.github.leawind.inventory.misc.UncheckedCloseable;
 import io.github.leawind.systemstoragelib.v1.api.Storage;
+import io.github.leawind.systemstoragelib.v1.api.StorageWrapper;
 import io.github.leawind.systemstoragelib.v1.impl.StorageImpl;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -13,19 +14,36 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import org.slf4j.event.Level;
 
-public class LogStore implements AutoCloseable {
+public class LogStore implements StorageWrapper, AutoCloseable {
   private static final String LOG_FILE_NAME = "latest.log";
 
   private final Storage storage;
   private final Path logFilePath;
-  private final long maxFileSize;
-  private final int maxArchiveFiles;
+  private long maxFileSize;
+  private int maxArchiveFiles;
 
   public LogStore(Storage storage, long maxFileSize, int maxArchiveFiles) {
     this.storage = storage;
     this.logFilePath = storage.getDirPath().resolve(LOG_FILE_NAME);
     this.maxFileSize = maxFileSize;
     this.maxArchiveFiles = maxArchiveFiles;
+  }
+
+  public LogStore(Storage storage) {
+    this(storage, Long.MAX_VALUE, Integer.MAX_VALUE);
+  }
+
+  @Override
+  public Storage storage() {
+    return storage;
+  }
+
+  public void setMaxFileSize(long value) {
+    maxFileSize = value;
+  }
+
+  public void setMaxArchiveFiles(int value) {
+    maxArchiveFiles = value;
   }
 
   /**
@@ -45,7 +63,7 @@ public class LogStore implements AutoCloseable {
             logFilePath, line + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
       }
     } catch (IOException e) {
-      storage.logger().error("Failed to write log to {}", logFilePath, e);
+      storage.getLogger().error("Failed to write log to {}", logFilePath, e);
     }
   }
 
