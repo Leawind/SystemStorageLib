@@ -54,11 +54,11 @@ public class LogStore implements StorageWrapper, AutoCloseable {
    *
    * <p>IOException is silently caught and ignored to avoid affecting normal business logic.
    */
-  void writeLog(Level level, String scopeName, long pid, String message) {
+  void writeLog(long pid, Level level, String scopeName, String message) {
     try {
       try (UncheckedCloseable ignored = LockUtils.lock(storage.getLock().writeLock())) {
         rotateIfNeeded();
-        String line = formatLine(level, scopeName, pid, message);
+        String line = formatLine(pid, level, scopeName, message);
         Files.writeString(
             logFilePath, line + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
       }
@@ -95,7 +95,7 @@ public class LogStore implements StorageWrapper, AutoCloseable {
   private static final DateTimeFormatter FORMATTER =
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").withZone(ZoneOffset.UTC);
 
-  private static String formatLine(Level level, String scopeName, long pid, String message) {
+  private static String formatLine(long pid, Level level, String scopeName, String message) {
     // [2026-05-27T15:52:35.786Z] [3202337/Test worker] INFO () Hello world!
     return String.format(
         "[%s] [%d/%s] %s (%s) %s",

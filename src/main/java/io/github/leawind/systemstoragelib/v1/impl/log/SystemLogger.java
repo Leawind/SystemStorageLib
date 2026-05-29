@@ -37,9 +37,9 @@ public class SystemLogger extends ForwardingLogger {
     super.handleNormalizedLoggingCall(
         level, marker, "(" + name + ") " + messagePattern, arguments, throwable);
     logStore.writeLog(
+        pid,
         level,
         name,
-        pid,
         MessageFormatter.arrayFormat(messagePattern, arguments, throwable).getMessage());
   }
 }
