@@ -15,7 +15,8 @@ final class SystemStorageLibHolder {
             try {
               BaseDirectories baseDirs = BaseDirectories.get();
               return SystemStorageLib.builder()
-                  .logsDir(Path.of(baseDirs.dataDir, SystemStorageLibImpl.ROOT_DIR_NAME, "logs"))
+                  .logsDir(
+                      Path.of(baseDirs.dataLocalDir, SystemStorageLibImpl.ROOT_DIR_NAME, "logs"))
                   .metaConfigDir(
                       Path.of(baseDirs.configDir, SystemStorageLibImpl.ROOT_DIR_NAME, "metaconfig"))
                   .storeDir(
@@ -33,7 +34,7 @@ final class SystemStorageLibHolder {
                   .storeDir(
                       StoreType.CREDENTIALS,
                       Path.of(
-                          baseDirs.dataDir,
+                          baseDirs.dataLocalDir,
                           SystemStorageLibImpl.ROOT_DIR_NAME,
                           StoreType.CREDENTIALS.id()))
                   .storeDir(
