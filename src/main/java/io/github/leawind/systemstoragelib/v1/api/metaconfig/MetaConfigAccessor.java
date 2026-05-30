@@ -7,7 +7,7 @@ import java.util.function.Consumer;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
-public interface MetaConfigStore extends DirectoryAccessor {
+public interface MetaConfigAccessor extends DirectoryAccessor {
   /// Read the current configuration from disk, do not cache.
   ///
   /// If file not exist or corrupted, return a new default configuration but do not write to disk.

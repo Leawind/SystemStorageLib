@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import io.github.leawind.systemstoragelib.v1.BaseTest;
 import io.github.leawind.systemstoragelib.v1.api.Scope;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
-import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfigStore;
+import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfigAccessor;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 public class SystemStorageLibImplTest extends BaseTest {
-  private MetaConfigStore store;
+  private MetaConfigAccessor store;
 
   @BeforeEach
   void setupEach() {
@@ -236,7 +236,7 @@ public class SystemStorageLibImplTest extends BaseTest {
   @Test
   void metaConfigReturnsNonNullManager() {
     SystemStorageLibImpl impl = createImpl();
-    MetaConfigStore mgr = impl.metaConfig();
+    MetaConfigAccessor mgr = impl.metaConfig();
     assertNotNull(mgr);
   }
 }

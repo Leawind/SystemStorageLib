@@ -12,13 +12,13 @@ import org.slf4j.helpers.MessageFormatter;
 public class SystemLogger extends ForwardingLogger {
   private static final Logger SLF4J_LOGGER = LoggerFactory.getLogger(SystemLogger.class);
 
-  private final LogStore logStore;
+  private final LogAccessor logAccessor;
   private final long pid;
 
-  public SystemLogger(LogStore logStore, String scopeName) {
+  public SystemLogger(LogAccessor logAccessor, String scopeName) {
     super(SLF4J_LOGGER);
     this.name = scopeName;
-    this.logStore = Objects.requireNonNull(logStore);
+    this.logAccessor = Objects.requireNonNull(logAccessor);
     this.pid = ProcessHandle.current().pid();
   }
 
@@ -36,7 +36,7 @@ public class SystemLogger extends ForwardingLogger {
       @Nullable Throwable throwable) {
     super.handleNormalizedLoggingCall(
         level, marker, "(" + name + ") " + messagePattern, arguments, throwable);
-    logStore.writeLog(
+    logAccessor.writeLog(
         pid,
         level,
         name,

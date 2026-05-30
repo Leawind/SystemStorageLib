@@ -3,10 +3,10 @@ package io.github.leawind.systemstoragelib.v1.impl;
 import io.github.leawind.systemstoragelib.v1.api.Scope;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
-import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfigStore;
-import io.github.leawind.systemstoragelib.v1.impl.log.LogStore;
+import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfigAccessor;
+import io.github.leawind.systemstoragelib.v1.impl.log.LogAccessor;
 import io.github.leawind.systemstoragelib.v1.impl.log.SystemLogger;
-import io.github.leawind.systemstoragelib.v1.impl.metaconfig.MetaConfigStoreImpl;
+import io.github.leawind.systemstoragelib.v1.impl.metaconfig.MetaConfigAccessorImpl;
 import io.github.leawind.systemstoragelib.v1.utils.ConcurrentScopeHashMap;
 import io.github.leawind.systemstoragelib.v1.utils.MapUtils;
 import java.io.IOException;
@@ -37,9 +37,9 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   /// - data: `/home/Steve/.local/share/<root_name>/data`.
   private final Map<StoreType, Path> defaultScopedDirs;
 
-  private final LogStore logStore;
+  private final LogAccessor logAccessor;
   private final Logger logger;
-  private final MetaConfigStore metaConfigStore;
+  private final MetaConfigAccessor metaConfigAccessor;
   private final Map<String, Optional<Scope>> scopes;
 
   /// ## Args
@@ -89,33 +89,34 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
     this.defaultScopedDirs = new HashMap<>(defaultScopedDirs);
 
-    logStore = new LogStore(logsDir, FALLBACK_LOGGER);
-    logger = new SystemLogger(logStore, "-");
+    logAccessor = new LogAccessor(logsDir, FALLBACK_LOGGER);
+    logger = new SystemLogger(logAccessor, "-");
 
     // NOW
-    metaConfigStore = new MetaConfigStoreImpl(this, metaConfigDir, logger);
-    metaConfigStore.setLogger(logger);
+    metaConfigAccessor = new MetaConfigAccessorImpl(this, metaConfigDir, logger);
+    metaConfigAccessor.setLogger(logger);
 
     // Listen for external changes to meta config and update scope storage paths accordingly.
-    metaConfigStore.onChanged().on(this::handleMetaConfigChanged);
+    metaConfigAccessor.onChanged().on(this::handleMetaConfigChanged);
 
     scopes = new ConcurrentScopeHashMap<>(this);
     detectScopes();
 
     // Load meta config
     try {
-      this.handleMetaConfigChanged(new MetaConfigStore.ChangedEvent(null, metaConfigStore.get()));
+      this.handleMetaConfigChanged(
+          new MetaConfigAccessor.ChangedEvent(null, metaConfigAccessor.get()));
     } catch (IOException e) {
       logger.error("Failed to load meta config during initializing", e);
     }
   }
 
-  private void handleMetaConfigChanged(MetaConfigStore.ChangedEvent event) {
+  private void handleMetaConfigChanged(MetaConfigAccessor.ChangedEvent event) {
     var config = event.config();
 
     // log configs
-    logStore.setMaxFileSize(config.getMaxLogFileSize());
-    logStore.setMaxArchiveFiles(config.getMaxLogArchiveFiles());
+    logAccessor.setMaxFileSize(config.getMaxLogFileSize());
+    logAccessor.setMaxArchiveFiles(config.getMaxLogArchiveFiles());
   }
 
   private static void validateDirs(Map<StoreType, Path> scopedDirs)
@@ -135,8 +136,8 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   }
 
   @Override
-  public MetaConfigStore metaConfig() {
-    return metaConfigStore;
+  public MetaConfigAccessor metaConfig() {
+    return metaConfigAccessor;
   }
 
   @Override
@@ -210,13 +211,13 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
   @Override
   public Path getLogsDir() {
-    return logStore.getDirPath();
+    return logAccessor.getDirPath();
   }
 
   private Scope createScopeStorage(String scopeName) {
     // Build a directory map for the given scope, preferring custom directories from MetaConfig.
     return new ScopeImpl(
-        scopeName, new SystemLogger(logStore, scopeName), new HashMap<>(defaultScopedDirs));
+        scopeName, new SystemLogger(logAccessor, scopeName), new HashMap<>(defaultScopedDirs));
   }
 
   private void detectScopes() {

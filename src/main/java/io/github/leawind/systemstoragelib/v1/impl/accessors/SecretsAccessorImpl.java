@@ -62,7 +62,7 @@ public class SecretsAccessorImpl extends AbstractDirectoryAccessor implements Se
   private static final int GCM_TAG_LENGTH_BITS = 128;
   private static final int AES_KEY_LENGTH_BITS = 256;
 
-  private static final String SALT = "SystemStorageLib-SecretStore-v1";
+  private static final String SALT = "SystemStorageLib-Secrets-v1";
   private static final String FILE_SUFFIX = ".enc";
 
   private static final Set<PosixFilePermission> DIR_PERMISSIONS =
@@ -281,7 +281,7 @@ public class SecretsAccessorImpl extends AbstractDirectoryAccessor implements Se
       throws SecretIntegrityException {
     if (fileContent.length < MIN_FILE_SIZE) {
       throw new SecretIntegrityException(
-          "Credential file too short (" + fileContent.length + " bytes): " + filePath);
+          "Secret file too short (" + fileContent.length + " bytes): " + filePath);
     }
   }
 

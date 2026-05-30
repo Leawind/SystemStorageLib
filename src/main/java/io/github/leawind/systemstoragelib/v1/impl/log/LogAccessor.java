@@ -11,21 +11,21 @@ import java.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.event.Level;
 
-public class LogStore extends AbstractDirectoryAccessor {
+public class LogAccessor extends AbstractDirectoryAccessor {
   private static final String LOG_FILE_NAME = "latest.log";
 
   private final Path logFilePath;
   private long maxFileSize;
   private int maxArchiveFiles;
 
-  public LogStore(Path dirPath, Logger logger, long maxFileSize, int maxArchiveFiles) {
+  public LogAccessor(Path dirPath, Logger logger, long maxFileSize, int maxArchiveFiles) {
     super(dirPath, logger);
     this.logFilePath = dirPath.resolve(LOG_FILE_NAME);
     this.maxFileSize = maxFileSize;
     this.maxArchiveFiles = maxArchiveFiles;
   }
 
-  public LogStore(Path dirPath, Logger logger) {
+  public LogAccessor(Path dirPath, Logger logger) {
     this(dirPath, logger, Long.MAX_VALUE, Integer.MAX_VALUE);
   }
 

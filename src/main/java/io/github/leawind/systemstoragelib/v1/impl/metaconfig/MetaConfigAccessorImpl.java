@@ -15,7 +15,7 @@ import io.github.leawind.inventory.misc.UncheckedCloseable;
 import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
 import io.github.leawind.systemstoragelib.v1.api.accessors.AbstractDirectoryAccessor;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
-import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfigStore;
+import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfigAccessor;
 import io.github.leawind.systemstoragelib.v1.utils.AtomicFileWriter;
 import io.github.leawind.systemstoragelib.v1.utils.Codecs;
 import java.io.IOException;
@@ -37,8 +37,8 @@ import org.slf4j.Logger;
 ///
 /// A background file watcher detects external modifications and re-reads the file,
 /// emitting `onChanged` events when the parsed config differs from the cached value.
-public class MetaConfigStoreImpl extends AbstractDirectoryAccessor
-    implements MetaConfigStore, AutoCloseable {
+public class MetaConfigAccessorImpl extends AbstractDirectoryAccessor
+    implements MetaConfigAccessor, AutoCloseable {
   private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
   private static final String CONFIG_FILE_NAME = "config.json";
   private static final long FILE_CHANGE_DEBOUNCE_MS = 100;
@@ -58,7 +58,7 @@ public class MetaConfigStoreImpl extends AbstractDirectoryAccessor
 
   private long lastHandledFileChangeMs = 0;
 
-  public MetaConfigStoreImpl(SystemStorageLib lib, Path dirPath, Logger logger) {
+  public MetaConfigAccessorImpl(SystemStorageLib lib, Path dirPath, Logger logger) {
     super(dirPath, logger);
     this.lib = lib;
     configCodec = MetaConfigImpl.codec(lib);

@@ -17,8 +17,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-public class MetaConfigStoreTest extends BaseTest {
-  private MetaConfigStore store;
+public class MetaConfigAccessorTest extends BaseTest {
+  private MetaConfigAccessor store;
   private Path configFilePath;
 
   @TempDir Path customDir;
