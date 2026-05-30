@@ -80,22 +80,20 @@ Store and retrieve encrypted secrets:
 ```java
 Scope scope = SystemStorageLib.getInstance().scope("example_mod");
 
-var secrets = scope.access(StoreType.SECRETS, SecretStore::of);
-secrets.
-
-set("some_token","secret_value_123");
+var secrets = scope.access(StoreType.SECRETS, SecretsAccessor::from);
+secrets.set("some_token","secret_value_123");
 
 String token = secrets.get("some_token"); // "secret_value_123"
 ```
 
 > [!Warning]
 >
-> Credential encryption only protects against accidental leaks such as screenshots, screen sharing, and cloud sync. It cannot protect against malicious programs running locally.
+> Secrets encryption only protects against accidental leaks such as screenshots, screen sharing, and cloud sync. It cannot protect against malicious programs running locally.
 
 ## Storage Types
 
 | `StoreType` Enum Value | Storage Type | Description                                                                                    |
-|------------------------|--------------|------------------------------------------------------------------------------------------------|
+| ---------------------- | ------------ | ---------------------------------------------------------------------------------------------- |
 | `CACHE`                | Cache        | Regenerable data                                                                               |
 | `CONFIG`               | Config       | Configuration files, such as user preferences                                                  |
 | `SECRETS`              | Secrets      | Sensitive data requiring encryption (tokens, keys, etc.)                                       |
