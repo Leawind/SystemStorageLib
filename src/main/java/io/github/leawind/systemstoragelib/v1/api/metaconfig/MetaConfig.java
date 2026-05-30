@@ -13,9 +13,9 @@ public interface MetaConfig {
   // endregion
 
   // region logConfig
-  int getMaxLogFileSize();
+  long getMaxLogFileSize();
 
-  void setMaxLogFileSize(int value);
+  void setMaxLogFileSize(long value);
 
   int getMaxLogArchiveFiles();
 

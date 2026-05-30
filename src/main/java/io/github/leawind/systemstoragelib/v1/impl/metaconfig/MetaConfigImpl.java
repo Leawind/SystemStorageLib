@@ -11,7 +11,7 @@ import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 public final class MetaConfigImpl implements MetaConfig {
-  private static final int DEFAULT_MAX_LOG_FILE_SIZE = 1024 * 1024;
+  private static final long DEFAULT_MAX_LOG_FILE_SIZE = 1024 * 1024;
   private static final int DEFAULT_MAX_LOG_ARCHIVE_FILES = 16;
 
   public static Codec<MetaConfig> codec(SystemStorageLib lib) {
@@ -21,7 +21,7 @@ public final class MetaConfigImpl implements MetaConfig {
                     Codec.unboundedMap(Codec.STRING, ScopeMetaConfigImpl.CODEC)
                         .fieldOf("scopes")
                         .forGetter(MetaConfig::scopes),
-                    Codec.INT
+                    Codec.LONG
                         .optionalFieldOf("max_log_file_size", DEFAULT_MAX_LOG_FILE_SIZE)
                         .forGetter(MetaConfig::getMaxLogFileSize),
                     Codec.INT
@@ -34,13 +34,13 @@ public final class MetaConfigImpl implements MetaConfig {
 
   private final Map<String, ScopeMetaConfig> scopes;
 
-  private int maxLogFileSize;
+  private long maxLogFileSize;
   private int maxLogArchiveFiles;
 
   MetaConfigImpl(
       SystemStorageLib lib,
       @Nullable Map<String, ScopeMetaConfig> scopes,
-      int maxLogFileSize,
+      long maxLogFileSize,
       int maxLogArchiveFiles) {
     this.scopes = new ScopeHashMap<>(lib);
 
@@ -72,12 +72,12 @@ public final class MetaConfigImpl implements MetaConfig {
   }
 
   @Override
-  public int getMaxLogFileSize() {
+  public long getMaxLogFileSize() {
     return maxLogFileSize;
   }
 
   @Override
-  public void setMaxLogFileSize(int value) {
+  public void setMaxLogFileSize(long value) {
     if (value <= 1) {
       throw new IllegalArgumentException("maxLogFileSize is too small: " + value);
     }
