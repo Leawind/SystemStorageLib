@@ -78,10 +78,8 @@ Path dataDir = scope.directory(StoreType.DATA);
 ```java
 Scope scope = SystemStorageLib.getInstance().scope("example_mod");
 
-var secrets = scope.access(StoreType.SECRETS, SecretStore::of);
-secrets.
-
-set("some_token","secret_value_123");
+var secrets = scope.access(StoreType.SECRETS, SecretStore::from);
+secrets.set("some_token","secret_value_123");
 
 String token = secrets.get("some_token"); // "secret_value_123"
 ```
@@ -92,10 +90,10 @@ String token = secrets.get("some_token"); // "secret_value_123"
 
 ## 存储类型
 
-| `StoreType` 枚举值 | 存储类型 | 描述                          |
-|-----------------|------|-----------------------------|
-| `CACHE`         | 缓存   | 可再生数据                       |
-| `CONFIG`        | 配置   | 配置文件，如用户偏好                  |
-| `SECRETS`       | 密钥   | 需要加密的敏感数据（令牌、密钥等）           |
-| `DATA`          | 数据   | 可跨机器共享的持久化数据                |
-| `DATA_LOCAL`    | 本地数据 | 特定于当前机器的持久化数据，或重新生成代价高的缓存数据 |
+| `StoreType` 枚举值 | 存储类型 | 描述                                                   |
+| ------------------ | -------- | ------------------------------------------------------ |
+| `CACHE`            | 缓存     | 可再生数据                                             |
+| `CONFIG`           | 配置     | 配置文件，如用户偏好                                   |
+| `SECRETS`          | 密钥     | 需要加密的敏感数据（令牌、密钥等）                     |
+| `DATA`             | 数据     | 可跨机器共享的持久化数据                               |
+| `DATA_LOCAL`       | 本地数据 | 特定于当前机器的持久化数据，或重新生成代价高的缓存数据 |

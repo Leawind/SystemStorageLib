@@ -78,10 +78,8 @@ Path dataDir = scope.directory(StoreType.DATA);
 ```java
 Scope scope = SystemStorageLib.getInstance().scope("example_mod");
 
-var secrets = scope.access(StoreType.SECRETS, SecretStore::of);
-secrets.
-
-set("some_token","secret_value_123");
+var secrets = scope.access(StoreType.SECRETS, SecretStore::from);
+secrets.set("some_token","secret_value_123");
 
 String token = secrets.get("some_token"); // "secret_value_123"
 ```
@@ -93,7 +91,7 @@ String token = secrets.get("some_token"); // "secret_value_123"
 ## Типы хранилищ
 
 | Значение `StoreType` | Тип хранилища    | Описание                                                                                      |
-|----------------------|------------------|-----------------------------------------------------------------------------------------------|
+| -------------------- | ---------------- | --------------------------------------------------------------------------------------------- |
 | `CACHE`              | Кэш              | Восстанавливаемые данные                                                                      |
 | `CONFIG`             | Конфигурация     | Файлы настроек, например, пользовательские предпочтения                                       |
 | `SECRETS`            | Секреты          | Чувствительные данные, требующие шифрования (токены, ключи и т.д.)                            |
