@@ -50,7 +50,7 @@ public interface SystemStorageLib {
   @ApiStatus.Experimental
   @Nullable String validateScopeName(String scopeName);
 
-  /// Returns the path to the logs directory.
+  /// Returns the path to the log directory.
   ///
   /// @return the absolute path to the logs directory
   Path getLogsDir();

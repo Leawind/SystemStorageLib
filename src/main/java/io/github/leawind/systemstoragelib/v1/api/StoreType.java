@@ -17,10 +17,16 @@ import org.jetbrains.annotations.ApiStatus;
 ///
 /// @apiNote Each category must have different directory.
 public enum StoreType {
+  /// - Renewable and cheap to regenerate
   CACHE,
+  /// - Configuration files
   CONFIG,
+  /// - Sensitive data
   SECRETS,
+  /// - Persistent and shareable across machines
   DATA,
+  /// - Persistent and machine-local
+  /// - Renewable but costly to regenerate
   DATA_LOCAL;
 
   private final String id;
