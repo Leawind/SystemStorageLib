@@ -32,7 +32,7 @@ repositories {
 }
 
 dependencies {
-    modImplementation("com.github.Leawind:SystemStorageLib:${project.property("system_storage_lib_version)}")
+    modImplementation("com.github.Leawind:SystemStorageLib:${project.property("system_storage_lib_version")}")
 }
 ```
 
