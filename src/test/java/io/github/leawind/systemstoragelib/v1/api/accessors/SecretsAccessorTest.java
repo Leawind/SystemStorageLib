@@ -1,4 +1,4 @@
-package io.github.leawind.systemstoragelib.v1.api;
+package io.github.leawind.systemstoragelib.v1.api.accessors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -8,7 +8,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.leawind.systemstoragelib.v1.BaseTest;
-import io.github.leawind.systemstoragelib.v1.api.exception.CredentialIntegrityException;
+import io.github.leawind.systemstoragelib.v1.api.StoreType;
+import io.github.leawind.systemstoragelib.v1.api.exception.SecretIntegrityException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,76 +18,76 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class CredentialStoreTest extends BaseTest {
+public class SecretsAccessorTest extends BaseTest {
 
-  private CredentialStore store;
+  private SecretsAccessor secrets;
 
   @BeforeEach
   void setUp() {
-    store = scope.storage(StoreType.CREDENTIALS).map(CredentialStore::of);
+    secrets = scope.access(StoreType.SECRETS, SecretsAccessor::from);
   }
 
   @Test
-  void testSetAndGet() throws IOException, CredentialIntegrityException {
-    store.set("github_token", "secret_value_123");
-    assertEquals("secret_value_123", store.get("github_token"));
+  void testSetAndGet() throws IOException, SecretIntegrityException {
+    secrets.set("github_token", "secret_value_123");
+    assertEquals("secret_value_123", secrets.get("github_token"));
   }
 
   @Test
-  void testGetNonExistent() throws CredentialIntegrityException {
-    assertNull(store.get("non_existent_key"));
+  void testGetNonExistent() throws SecretIntegrityException {
+    assertNull(secrets.get("non_existent_key"));
   }
 
   @Test
   void testExists() throws IOException {
-    assertFalse(store.exists("api_key"));
-    store.set("api_key", "value");
-    assertTrue(store.exists("api_key"));
+    assertFalse(secrets.exists("api_key"));
+    secrets.set("api_key", "value");
+    assertTrue(secrets.exists("api_key"));
   }
 
   @Test
   void testRemove() throws IOException {
-    store.set("temp_key", "temp_value");
-    assertTrue(store.exists("temp_key"));
-    store.remove("temp_key");
-    assertFalse(store.exists("temp_key"));
+    secrets.set("temp_key", "temp_value");
+    assertTrue(secrets.exists("temp_key"));
+    secrets.remove("temp_key");
+    assertFalse(secrets.exists("temp_key"));
   }
 
   @Test
   void testRemoveNonExistent() throws IOException {
-    store.remove("non_existent");
+    secrets.remove("non_existent");
   }
 
   @Test
-  void testOverwrite() throws IOException, CredentialIntegrityException {
-    store.set("key", "old_value");
-    assertEquals("old_value", store.get("key"));
-    store.set("key", "new_value");
-    assertEquals("new_value", store.get("key"));
+  void testOverwrite() throws IOException, SecretIntegrityException {
+    secrets.set("key", "old_value");
+    assertEquals("old_value", secrets.get("key"));
+    secrets.set("key", "new_value");
+    assertEquals("new_value", secrets.get("key"));
   }
 
   @Test
-  void testEmptyValue() throws IOException, CredentialIntegrityException {
-    store.set("empty_key", "");
-    assertEquals("", store.get("empty_key"));
+  void testEmptyValue() throws IOException, SecretIntegrityException {
+    secrets.set("empty_key", "");
+    assertEquals("", secrets.get("empty_key"));
   }
 
   @Test
-  void testUnicodeValue() throws IOException, CredentialIntegrityException {
+  void testUnicodeValue() throws IOException, SecretIntegrityException {
     String unicode = "密码🔑セキュリティ";
-    store.set("unicode_key", unicode);
-    assertEquals(unicode, store.get("unicode_key"));
+    secrets.set("unicode_key", unicode);
+    assertEquals(unicode, secrets.get("unicode_key"));
   }
 
   @Test
   void testEmptyKeyRejected() {
-    assertThrows(IllegalArgumentException.class, () -> store.set("", "value"));
+    assertThrows(IllegalArgumentException.class, () -> secrets.set("", "value"));
   }
 
   @Test
   void testFileNamingIsHashed() throws IOException {
-    store.set("github_token", "value");
-    try (Stream<Path> paths = Files.list(store.storage().getDirPath())) {
+    secrets.set("github_token", "value");
+    try (Stream<Path> paths = Files.list(secrets.getDirPath())) {
       List<Path> encFiles = paths.filter(p -> p.toString().endsWith(".enc")).toList();
       assertEquals(1, encFiles.size());
       for (Path p : encFiles) {
@@ -100,8 +101,8 @@ public class CredentialStoreTest extends BaseTest {
   @Test
   void testFileContentIsEncrypted() throws IOException {
     String secretValue = "this_is_a_secret_that_should_not_appear_in_plaintext";
-    store.set("secret_key", secretValue);
-    try (Stream<Path> paths = Files.list(store.storage().getDirPath())) {
+    secrets.set("secret_key", secretValue);
+    try (Stream<Path> paths = Files.list(secrets.getDirPath())) {
       paths
           .filter(p -> p.toString().endsWith(".enc"))
           .forEach(
@@ -121,8 +122,8 @@ public class CredentialStoreTest extends BaseTest {
 
   @Test
   void testFileMinSize() throws IOException {
-    store.set("key", "x");
-    try (Stream<Path> paths = Files.list(store.storage().getDirPath())) {
+    secrets.set("key", "x");
+    try (Stream<Path> paths = Files.list(secrets.getDirPath())) {
       paths
           .filter(p -> p.toString().endsWith(".enc"))
           .forEach(
@@ -140,8 +141,8 @@ public class CredentialStoreTest extends BaseTest {
 
   @Test
   void testCorruptedFileThrowsIntegrityException() throws IOException {
-    store.set("corrupt_key", "value");
-    try (Stream<Path> paths = Files.list(store.storage().getDirPath())) {
+    secrets.set("corrupt_key", "value");
+    try (Stream<Path> paths = Files.list(secrets.getDirPath())) {
       paths
           .filter(p -> p.toString().endsWith(".enc"))
           .findFirst()
@@ -157,35 +158,26 @@ public class CredentialStoreTest extends BaseTest {
                 }
               });
     }
-    assertThrows(CredentialIntegrityException.class, () -> store.get("corrupt_key"));
+    assertThrows(SecretIntegrityException.class, () -> secrets.get("corrupt_key"));
   }
 
   @Test
-  void testMultipleKeysIsolation() throws IOException, CredentialIntegrityException {
-    store.set("key_a", "value_a");
-    store.set("key_b", "value_b");
-    assertEquals("value_a", store.get("key_a"));
-    assertEquals("value_b", store.get("key_b"));
-  }
-
-  @Test
-  void testClearRemovesCredentials() throws IOException {
-    store.set("key1", "val1");
-    store.set("key2", "val2");
-    store.storage().clear();
-    assertFalse(store.exists("key1"));
-    assertFalse(store.exists("key2"));
+  void testMultipleKeysIsolation() throws IOException, SecretIntegrityException {
+    secrets.set("key_a", "value_a");
+    secrets.set("key_b", "value_b");
+    assertEquals("value_a", secrets.get("key_a"));
+    assertEquals("value_b", secrets.get("key_b"));
   }
 
   @Test
   void testDirPathIsAccessible() {
-    assertNotNull(store.storage().getDirPath());
+    assertNotNull(secrets.getDirPath());
   }
 
   @Test
-  void testLongValue() throws IOException, CredentialIntegrityException {
+  void testLongValue() throws IOException, SecretIntegrityException {
     String longValue = "A".repeat(10000);
-    store.set("long_key", longValue);
-    assertEquals(longValue, store.get("long_key"));
+    secrets.set("long_key", longValue);
+    assertEquals(longValue, secrets.get("long_key"));
   }
 }

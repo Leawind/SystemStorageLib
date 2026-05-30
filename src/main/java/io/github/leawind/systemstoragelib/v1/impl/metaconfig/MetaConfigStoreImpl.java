@@ -8,10 +8,12 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import io.github.leawind.inventory.event.EventEmitter;
+import io.github.leawind.inventory.lock.FileBasedReentrantReadWriteLock;
 import io.github.leawind.inventory.lock.LockUtils;
+import io.github.leawind.inventory.misc.Lazy;
 import io.github.leawind.inventory.misc.UncheckedCloseable;
-import io.github.leawind.systemstoragelib.v1.api.Storage;
 import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
+import io.github.leawind.systemstoragelib.v1.api.accessors.AbstractDirectoryAccessor;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfigStore;
 import io.github.leawind.systemstoragelib.v1.utils.AtomicFileWriter;
@@ -29,59 +31,55 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 
 /// Stores configuration as JSON in `config.json` under the storage directory.
 ///
 /// A background file watcher detects external modifications and re-reads the file,
 /// emitting `onChanged` events when the parsed config differs from the cached value.
-public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
+public class MetaConfigStoreImpl extends AbstractDirectoryAccessor
+    implements MetaConfigStore, AutoCloseable {
   private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
   private static final String CONFIG_FILE_NAME = "config.json";
   private static final long FILE_CHANGE_DEBOUNCE_MS = 100;
 
   private final SystemStorageLib lib;
-  private final Storage storage;
-  private final Object watchStartLock = new Object();
-
   private final Codec<MetaConfig> configCodec;
 
-  private final EventEmitter<ChangedEvent> onChanged = new EventEmitter<>();
-
   private Path configFilePath;
+  private Lazy<FileBasedReentrantReadWriteLock> lock;
+
+  private final Object watchStartLock = new Object();
+
+  private final EventEmitter<ChangedEvent> onChanged = new EventEmitter<>();
 
   private volatile @Nullable MetaConfig cache = null;
   private volatile @Nullable WatchService watchService = null;
 
   private long lastHandledFileChangeMs = 0;
 
-  public MetaConfigStoreImpl(SystemStorageLib lib, Storage storage) {
+  public MetaConfigStoreImpl(SystemStorageLib lib, Path dirPath, Logger logger) {
+    super(dirPath, logger);
     this.lib = lib;
-    this.storage = storage;
-    this.configFilePath =
-        storage.getDirPath().resolve(CONFIG_FILE_NAME).toAbsolutePath().normalize();
-
     configCodec = MetaConfigImpl.codec(lib);
 
-    storage.onDirUpdated().on(this, this::handleDirUpdated);
-
-    ensureWatchStarted();
-  }
-
-  @Override
-  public Storage storage() {
-    return storage;
+    onDirPathChanged().on(this, this::handleDirUpdated);
+    onDirPathChanged().emit(null);
   }
 
   @Override
   public MetaConfig get() throws IOException {
-    try (UncheckedCloseable ignored = LockUtils.lock(storage.getLock().readLock())) {
+    if (!Files.exists(resolveConfigFilePath())) {
+      return new MetaConfigImpl(lib);
+    }
+    try (UncheckedCloseable ignored = LockUtils.readLock(lock.get())) {
       return readOrDefaultUnsafe();
     }
   }
 
   @Override
   public void update(Consumer<MetaConfig> updater) throws IOException {
-    try (UncheckedCloseable ignored = LockUtils.lock(storage.getLock().writeLock())) {
+    try (UncheckedCloseable ignored = LockUtils.writeLock(lock.get())) {
       MetaConfig oldConfig = readOrDefaultUnsafe();
       MetaConfig newConfig = Codecs.clone(oldConfig, configCodec, JsonOps.INSTANCE);
 
@@ -98,7 +96,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
       DataResult<JsonElement> result = configCodec.encodeStart(JsonOps.INSTANCE, newConfig);
       Optional<JsonElement> encoded = result.result();
       if (encoded.isEmpty()) {
-        storage.getLogger().error("Failed to encode meta config: {}", result.error().orElse(null));
+        getLogger().error("Failed to encode meta config: {}", result.error().orElse(null));
         return;
       }
 
@@ -140,7 +138,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
 
     String content = Files.readString(configFilePath, StandardCharsets.UTF_8);
     if (content.isEmpty()) {
-      storage.getLogger().warn("Meta config file is empty: {}", configFilePath);
+      getLogger().warn("Meta config file is empty: {}", configFilePath);
       return null;
     }
 
@@ -148,8 +146,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
     try {
       jsonElement = GSON.fromJson(content, JsonElement.class);
     } catch (JsonSyntaxException e) {
-      storage
-          .getLogger()
+      getLogger()
           .warn("Failed to parse JSON in meta config file {}: {}", configFilePath, e.getMessage());
       return null;
     }
@@ -158,8 +155,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
     Optional<MetaConfig> parsed = parsedResult.result();
 
     if (parsed.isEmpty()) {
-      storage
-          .getLogger()
+      getLogger()
           .warn(
               "Failed to parse meta config file {}: {}",
               configFilePath,
@@ -189,6 +185,9 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
     return result;
   }
 
+  /// Ensure the file watcher is started.
+  ///
+  /// Create if the directory not exist
   private void ensureWatchStarted() {
     if (watchService != null) {
       return;
@@ -200,10 +199,9 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
       }
 
       try {
-        WatchService ws = storage.getDirPath().getFileSystem().newWatchService();
-        Files.createDirectories(storage.getDirPath());
-        storage
-            .getDirPath()
+        WatchService ws = getDirPath().getFileSystem().newWatchService();
+        Files.createDirectories(getDirPath());
+        getDirPath()
             .register(
                 ws,
                 StandardWatchEventKinds.ENTRY_MODIFY,
@@ -215,7 +213,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
         thread.setDaemon(true);
         thread.start();
       } catch (IOException e) {
-        storage.getLogger().error("Failed to start file watcher for meta config", e);
+        getLogger().error("Failed to start file watcher for meta config", e);
       }
     }
   }
@@ -223,7 +221,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
   private void watchLoop() {
     WatchService ws = watchService;
     if (ws == null) {
-      storage.getLogger().error("Starting watch loop but watch service is null");
+      getLogger().error("Starting watch loop but watch service is null");
       return;
     }
 
@@ -232,7 +230,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
       try {
         key = ws.take();
       } catch (InterruptedException e) {
-        storage.getLogger().error("Watch loop interrupted", e);
+        getLogger().error("Watch loop interrupted", e);
         Thread.currentThread().interrupt();
         return;
       } catch (ClosedWatchServiceException e) {
@@ -242,11 +240,10 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
       boolean configFileChanged = false;
       for (WatchEvent<?> event : key.pollEvents()) {
         if (event.kind() == StandardWatchEventKinds.OVERFLOW) {
-          storage.getLogger().info("Watch service overflow");
+          getLogger().info("Watch service overflow");
           continue;
         }
-        if (storage
-            .getDirPath()
+        if (getDirPath()
             .resolve((Path) event.context())
             .toAbsolutePath()
             .normalize()
@@ -278,7 +275,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
     try {
       ws.close();
     } catch (IOException e) {
-      storage.getLogger().warn("Failed to close watch service", e);
+      getLogger().warn("Failed to close watch service", e);
       throw e;
     }
 
@@ -292,7 +289,6 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
   private synchronized void handleFileChange() {
     synchronized (onChanged) {
       if (cache == null) {
-        storage.getLogger().error("Meta config file change detected, but cache is still null");
         cache = new MetaConfigImpl(lib);
       }
 
@@ -301,8 +297,7 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
       try {
         newConfig = readOrDefaultUnsafe();
       } catch (IOException e) {
-        storage
-            .getLogger()
+        getLogger()
             .warn("IOException occurred while reading meta config file handling file change", e);
         return;
       }
@@ -314,23 +309,27 @@ public class MetaConfigStoreImpl implements MetaConfigStore, AutoCloseable {
     }
   }
 
-  private void handleDirUpdated(Path oldDirPath) {
-    Path dirPath = storage.getDirPath();
-    if (dirPath.equals(oldDirPath)) {
+  private void handleDirUpdated(@Nullable Path oldDirPath) {
+    if (getDirPath().equals(oldDirPath)) {
       return;
     }
 
     synchronized (watchStartLock) {
-      this.configFilePath = dirPath.resolve(CONFIG_FILE_NAME).toAbsolutePath().normalize();
+      this.configFilePath = resolveConfigFilePath();
+      this.lock = new Lazy<>(() -> createLock(configFilePath));
       this.cache = null;
       try {
         stopWatching();
       } catch (IOException e) {
-        storage.getLogger().warn("Failed to stop watch service when updating dirPath", e);
+        getLogger().warn("Failed to stop watch service when updating dirPath", e);
       }
       ensureWatchStarted();
     }
 
     handleFileChange();
+  }
+
+  private Path resolveConfigFilePath() {
+    return getDirPath().resolve(CONFIG_FILE_NAME).normalize();
   }
 }

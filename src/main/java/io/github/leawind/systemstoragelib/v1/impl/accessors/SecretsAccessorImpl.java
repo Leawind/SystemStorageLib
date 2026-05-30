@@ -1,10 +1,8 @@
-package io.github.leawind.systemstoragelib.v1.impl;
+package io.github.leawind.systemstoragelib.v1.impl.accessors;
 
-import io.github.leawind.inventory.lock.LockUtils;
-import io.github.leawind.inventory.misc.UncheckedCloseable;
-import io.github.leawind.systemstoragelib.v1.api.CredentialStore;
-import io.github.leawind.systemstoragelib.v1.api.Storage;
-import io.github.leawind.systemstoragelib.v1.api.exception.CredentialIntegrityException;
+import io.github.leawind.systemstoragelib.v1.api.accessors.AbstractDirectoryAccessor;
+import io.github.leawind.systemstoragelib.v1.api.accessors.SecretsAccessor;
+import io.github.leawind.systemstoragelib.v1.api.exception.SecretIntegrityException;
 import io.github.leawind.systemstoragelib.v1.utils.AtomicFileWriter;
 import io.github.leawind.systemstoragelib.v1.utils.machineid.MachineIdResolutionException;
 import io.github.leawind.systemstoragelib.v1.utils.machineid.MachineIdUtil;
@@ -39,8 +37,9 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 
-/// AES-256-GCM encrypted credential storage with environment-bound key derivation.
+/// AES-256-GCM encrypted secret storage with environment-bound key derivation.
 ///
 /// File names are `{sha256_hex}.enc` (e.g. `a1b2c3d4...e5f6.enc`);
 /// Binary format per file:
@@ -53,7 +52,7 @@ import org.jspecify.annotations.Nullable;
 /// | EOF-16 | 16B | GCM Auth Tag |
 ///
 /// AES key derived via PBKDF2 from `user.name:user.home:machineId`.
-public class CredentialStoreImpl implements CredentialStore {
+public class SecretsAccessorImpl extends AbstractDirectoryAccessor implements SecretsAccessor {
 
   private static final byte FORMAT_VERSION = 0x01;
   private static final int IV_LENGTH = 12;
@@ -63,6 +62,7 @@ public class CredentialStoreImpl implements CredentialStore {
   private static final int GCM_TAG_LENGTH_BITS = 128;
   private static final int AES_KEY_LENGTH_BITS = 256;
 
+  private static final String SALT = "SystemStorageLib-SecretStore-v1";
   private static final String FILE_SUFFIX = ".enc";
 
   private static final Set<PosixFilePermission> DIR_PERMISSIONS =
@@ -74,16 +74,10 @@ public class CredentialStoreImpl implements CredentialStore {
 
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
-  private final Storage storage;
   private volatile SecretKey aesKey;
 
-  public CredentialStoreImpl(Storage storage) {
-    this.storage = storage;
-  }
-
-  @Override
-  public Storage storage() {
-    return storage;
+  public SecretsAccessorImpl(Path dirPath, Logger logger) {
+    super(dirPath, logger);
   }
 
   @Override
@@ -96,7 +90,7 @@ public class CredentialStoreImpl implements CredentialStore {
     validateKey(key);
     Path filePath = keyToFilePath(key);
 
-    try (UncheckedCloseable ignored = LockUtils.lock(storage.getLock().writeLock())) {
+    try {
       ensureDirectoryExists();
 
       byte[] plaintext = value.getBytes(StandardCharsets.UTF_8);
@@ -118,30 +112,30 @@ public class CredentialStoreImpl implements CredentialStore {
   ///
   /// @param key the key to look up
   /// @return the decrypted value, or `null` if the key does not exist
-  /// @throws CredentialIntegrityException if the credential file is corrupted,
+  /// @throws SecretIntegrityException if the secret file is corrupted,
   ///         tampered with, or an I/O error occurs during reading
   @Override
-  public @Nullable String get(@NonNull String key) throws CredentialIntegrityException {
+  public @Nullable String get(@NonNull String key) throws SecretIntegrityException {
     validateKey(key);
     Path filePath = keyToFilePath(key);
     if (!Files.exists(filePath)) {
       return null;
     }
 
-    try (UncheckedCloseable ignored = LockUtils.lock(storage.getLock().readLock())) {
+    try {
       byte[] fileContent = Files.readAllBytes(filePath);
       validateFileSize(fileContent, filePath);
       byte[] plaintext = decryptFileContent(fileContent);
       return new String(plaintext, StandardCharsets.UTF_8);
     } catch (IOException e) {
-      throw new CredentialIntegrityException("Failed to read credential file: " + filePath, e);
+      throw new SecretIntegrityException("Failed to read secret file: " + filePath, e);
     } catch (InvalidAlgorithmParameterException
         | NoSuchPaddingException
         | IllegalBlockSizeException
         | NoSuchAlgorithmException
         | BadPaddingException
         | InvalidKeyException e) {
-      throw new CredentialIntegrityException("Failed to decrypt credential file: " + filePath, e);
+      throw new SecretIntegrityException("Failed to decrypt secret file: " + filePath, e);
     }
   }
 
@@ -160,7 +154,7 @@ public class CredentialStoreImpl implements CredentialStore {
   }
 
   private Path keyToFilePath(String key) {
-    return storage.getDirPath().resolve(sha256Hex(key) + FILE_SUFFIX);
+    return getDirPath().resolve(sha256Hex(key) + FILE_SUFFIX);
   }
 
   private static String sha256Hex(String input) {
@@ -198,12 +192,12 @@ public class CredentialStoreImpl implements CredentialStore {
       try {
         machineId = MachineIdUtil.getMachineId();
       } catch (MachineIdResolutionException e) {
-        storage.getLogger().error("Failed to get machine id", e);
+        getLogger().error("Failed to get machine id", e);
       }
 
       String keyMaterial =
           System.getProperty("user.name") + ":" + System.getProperty("user.home") + ":" + machineId;
-      byte[] salt = "SystemStorageLib-CredentialStore-v1".getBytes(StandardCharsets.UTF_8);
+      byte[] salt = SALT.getBytes(StandardCharsets.UTF_8);
 
       PBEKeySpec keySpec =
           new PBEKeySpec(keyMaterial.toCharArray(), salt, 65536, AES_KEY_LENGTH_BITS);
@@ -242,9 +236,9 @@ public class CredentialStoreImpl implements CredentialStore {
     return result;
   }
 
-  /// @throws CredentialIntegrityException if the version is unsupported
+  /// @throws SecretIntegrityException if the version is unsupported
   private byte[] decryptFileContent(byte[] fileContent)
-      throws CredentialIntegrityException,
+      throws SecretIntegrityException,
           NoSuchPaddingException,
           NoSuchAlgorithmException,
           InvalidAlgorithmParameterException,
@@ -253,7 +247,7 @@ public class CredentialStoreImpl implements CredentialStore {
           BadPaddingException {
     byte version = fileContent[0];
     if (version != FORMAT_VERSION) {
-      throw new CredentialIntegrityException("Unsupported format version: " + version);
+      throw new SecretIntegrityException("Unsupported format version: " + version);
     }
 
     byte[] iv = new byte[IV_LENGTH];
@@ -276,17 +270,17 @@ public class CredentialStoreImpl implements CredentialStore {
 
   private void ensureDirectoryExists() throws IOException {
     try {
-      Files.createDirectories(storage.getDirPath(), DIR_ATTRIBUTE);
+      Files.createDirectories(getDirPath(), DIR_ATTRIBUTE);
     } catch (UnsupportedOperationException e) {
-      Files.createDirectories(storage.getDirPath());
+      Files.createDirectories(getDirPath());
     }
-    applyDirPermissions(storage.getDirPath());
+    applyDirPermissions(getDirPath());
   }
 
   private static void validateFileSize(byte[] fileContent, Path filePath)
-      throws CredentialIntegrityException {
+      throws SecretIntegrityException {
     if (fileContent.length < MIN_FILE_SIZE) {
-      throw new CredentialIntegrityException(
+      throw new SecretIntegrityException(
           "Credential file too short (" + fileContent.length + " bytes): " + filePath);
     }
   }

@@ -1,10 +1,6 @@
 package io.github.leawind.systemstoragelib.v1.impl.log;
 
-import io.github.leawind.inventory.lock.LockUtils;
-import io.github.leawind.inventory.misc.UncheckedCloseable;
-import io.github.leawind.systemstoragelib.v1.api.Storage;
-import io.github.leawind.systemstoragelib.v1.api.StorageWrapper;
-import io.github.leawind.systemstoragelib.v1.impl.StorageImpl;
+import io.github.leawind.systemstoragelib.v1.api.accessors.AbstractDirectoryAccessor;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,30 +8,25 @@ import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import org.slf4j.Logger;
 import org.slf4j.event.Level;
 
-public class LogStore implements StorageWrapper, AutoCloseable {
+public class LogStore extends AbstractDirectoryAccessor {
   private static final String LOG_FILE_NAME = "latest.log";
 
-  private final Storage storage;
   private final Path logFilePath;
   private long maxFileSize;
   private int maxArchiveFiles;
 
-  public LogStore(Storage storage, long maxFileSize, int maxArchiveFiles) {
-    this.storage = storage;
-    this.logFilePath = storage.getDirPath().resolve(LOG_FILE_NAME);
+  public LogStore(Path dirPath, Logger logger, long maxFileSize, int maxArchiveFiles) {
+    super(dirPath, logger);
+    this.logFilePath = dirPath.resolve(LOG_FILE_NAME);
     this.maxFileSize = maxFileSize;
     this.maxArchiveFiles = maxArchiveFiles;
   }
 
-  public LogStore(Storage storage) {
-    this(storage, Long.MAX_VALUE, Integer.MAX_VALUE);
-  }
-
-  @Override
-  public Storage storage() {
-    return storage;
+  public LogStore(Path dirPath, Logger logger) {
+    this(dirPath, logger, Long.MAX_VALUE, Integer.MAX_VALUE);
   }
 
   public void setMaxFileSize(long value) {
@@ -56,14 +47,13 @@ public class LogStore implements StorageWrapper, AutoCloseable {
    */
   void writeLog(long pid, Level level, String scopeName, String message) {
     try {
-      try (UncheckedCloseable ignored = LockUtils.lock(storage.getLock().writeLock())) {
-        rotateIfNeeded();
-        String line = formatLine(pid, level, scopeName, message);
-        Files.writeString(
-            logFilePath, line + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-      }
+      rotateIfNeeded();
+      String line = formatLine(pid, level, scopeName, message);
+      Files.createDirectories(getDirPath());
+      Files.writeString(
+          logFilePath, line + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     } catch (IOException e) {
-      storage.getLogger().error("Failed to write log to {}", logFilePath, e);
+      getLogger().error("Failed to write log to {}", logFilePath, e);
     }
   }
 
@@ -74,22 +64,17 @@ public class LogStore implements StorageWrapper, AutoCloseable {
       return;
     }
 
-    Files.deleteIfExists(storage.getDirPath().resolve("1.log"));
+    Files.deleteIfExists(getDirPath().resolve("1.log"));
 
     for (int i = 2; i <= maxArchiveFiles; i++) {
-      Path src = storage.getDirPath().resolve(i + ".log");
-      Path dst = storage.getDirPath().resolve((i - 1) + ".log");
+      Path src = getDirPath().resolve(i + ".log");
+      Path dst = getDirPath().resolve((i - 1) + ".log");
       if (Files.exists(src)) {
         Files.move(src, dst);
       }
     }
 
-    Files.move(logFilePath, storage.getDirPath().resolve(maxArchiveFiles + ".log"));
-  }
-
-  @Override
-  public void close() throws IOException {
-    Files.deleteIfExists(storage.getDirPath().resolve(StorageImpl.LOCK_FILE_NAME));
+    Files.move(logFilePath, getDirPath().resolve(maxArchiveFiles + ".log"));
   }
 
   private static final DateTimeFormatter FORMATTER =

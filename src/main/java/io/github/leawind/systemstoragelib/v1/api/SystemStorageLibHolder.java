@@ -26,11 +26,11 @@ final class SystemStorageLibHolder {
                       Path.of(
                           baseDirs.configDir, SystemStorageLibImpl.APP_NAME, StoreType.CONFIG.id()))
                   .storeDir(
-                      StoreType.CREDENTIALS,
+                      StoreType.SECRETS,
                       Path.of(
                           baseDirs.dataLocalDir,
                           SystemStorageLibImpl.APP_NAME,
-                          StoreType.CREDENTIALS.id()))
+                          StoreType.SECRETS.id()))
                   .storeDir(
                       StoreType.DATA,
                       Path.of(baseDirs.dataDir, SystemStorageLibImpl.APP_NAME, StoreType.DATA.id()))

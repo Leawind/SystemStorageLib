@@ -30,7 +30,7 @@ public abstract class BaseTest {
     lib =
         SystemStorageLib.builder(fs.getPath("/meta_config"))
             .logsDir(fs.getPath("/logs"))
-            .storeDir(StoreType.CREDENTIALS, fs.getPath("/credentials"))
+            .storeDir(StoreType.SECRETS, fs.getPath("/secrets"))
             .storeDir(StoreType.CACHE, fs.getPath("/cache"))
             .storeDir(StoreType.CONFIG, fs.getPath("/config"))
             .storeDir(StoreType.DATA, fs.getPath("/data"))

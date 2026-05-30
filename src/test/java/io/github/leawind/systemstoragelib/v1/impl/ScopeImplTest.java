@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.leawind.systemstoragelib.v1.BaseTest;
 import io.github.leawind.systemstoragelib.v1.api.Scope;
-import io.github.leawind.systemstoragelib.v1.api.Storage;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -25,7 +24,7 @@ public class ScopeImplTest extends BaseTest {
   @BeforeEach
   void setupEach() {
     dirs = new HashMap<>();
-    dirs.put(StoreType.CREDENTIALS, fs.getPath("credentials"));
+    dirs.put(StoreType.SECRETS, fs.getPath("secrets"));
     dirs.put(StoreType.CONFIG, fs.getPath("config"));
     dirs.put(StoreType.DATA, fs.getPath("data"));
     dirs.put(StoreType.CACHE, fs.getPath("cache"));
@@ -37,11 +36,11 @@ public class ScopeImplTest extends BaseTest {
     Scope storage = new ScopeImpl("test_scope", TEST_LOGGER, dirs);
 
     assertNotNull(storage.logger());
-    assertNotNull(storage.storage(StoreType.CACHE));
-    assertNotNull(storage.storage(StoreType.CONFIG));
-    assertNotNull(storage.storage(StoreType.CREDENTIALS));
-    assertNotNull(storage.storage(StoreType.DATA));
-    assertNotNull(storage.storage(StoreType.DATA_LOCAL));
+    assertNotNull(storage.directory(StoreType.CACHE));
+    assertNotNull(storage.directory(StoreType.CONFIG));
+    assertNotNull(storage.directory(StoreType.SECRETS));
+    assertNotNull(storage.directory(StoreType.DATA));
+    assertNotNull(storage.directory(StoreType.DATA_LOCAL));
 
     assertEquals("test_scope", storage.name());
   }
@@ -52,8 +51,7 @@ public class ScopeImplTest extends BaseTest {
     assertNotNull(scope);
     assertEquals("my_scope", scope.name());
 
-    Storage config = scope.storage(StoreType.CONFIG);
-    assertTrue(config.getDirPath().endsWith("my_scope"));
+    assertTrue(scope.directory(StoreType.CONFIG).endsWith("my_scope"));
   }
 
   @Test
@@ -74,7 +72,7 @@ public class ScopeImplTest extends BaseTest {
   void throwsWhenTwoStoreTypesShareSameDirPath() {
     Path sharedPath = fs.getPath("shared");
     Map<StoreType, Path> duplicateDirs = new HashMap<>();
-    duplicateDirs.put(StoreType.CREDENTIALS, sharedPath);
+    duplicateDirs.put(StoreType.SECRETS, sharedPath);
     duplicateDirs.put(StoreType.CONFIG, sharedPath);
     duplicateDirs.put(StoreType.DATA, fs.getPath("data"));
     duplicateDirs.put(StoreType.CACHE, fs.getPath("cache"));

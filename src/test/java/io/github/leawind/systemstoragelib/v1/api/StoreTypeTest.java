@@ -30,7 +30,7 @@ public class StoreTypeTest extends BaseTest {
     void valuesContainsAllConstants() {
       Set<StoreType> values = new HashSet<>();
       java.util.Collections.addAll(values, StoreType.values());
-      assertTrue(values.contains(StoreType.CREDENTIALS));
+      assertTrue(values.contains(StoreType.SECRETS));
       assertTrue(values.contains(StoreType.CONFIG));
       assertTrue(values.contains(StoreType.DATA));
       assertTrue(values.contains(StoreType.CACHE));
@@ -46,7 +46,7 @@ public class StoreTypeTest extends BaseTest {
       List<StoreType> missing =
           StoreType.Utils.missingTypes(
               Set.of(
-                  StoreType.CREDENTIALS,
+                  StoreType.SECRETS,
                   StoreType.CONFIG,
                   StoreType.DATA,
                   StoreType.CACHE,
@@ -60,7 +60,7 @@ public class StoreTypeTest extends BaseTest {
           StoreType.Utils.missingTypes(
               Set.of(StoreType.CONFIG, StoreType.DATA, StoreType.CACHE, StoreType.DATA_LOCAL));
       assertEquals(1, missing.size());
-      assertEquals(StoreType.CREDENTIALS, missing.get(0));
+      assertEquals(StoreType.SECRETS, missing.get(0));
     }
 
     @Test
@@ -68,7 +68,7 @@ public class StoreTypeTest extends BaseTest {
       List<StoreType> missing =
           StoreType.Utils.missingTypes(Set.of(StoreType.CONFIG, StoreType.DATA));
       assertEquals(3, missing.size());
-      assertTrue(missing.contains(StoreType.CREDENTIALS));
+      assertTrue(missing.contains(StoreType.SECRETS));
       assertTrue(missing.contains(StoreType.CACHE));
       assertTrue(missing.contains(StoreType.DATA_LOCAL));
     }
@@ -84,8 +84,8 @@ public class StoreTypeTest extends BaseTest {
   class Of {
 
     @Test
-    void fromIdentifierCredentials() {
-      assertEquals(StoreType.CREDENTIALS, StoreType.fromId("credentials"));
+    void fromIdentifierSecrets() {
+      assertEquals(StoreType.SECRETS, StoreType.fromId("secrets"));
     }
 
     @Test

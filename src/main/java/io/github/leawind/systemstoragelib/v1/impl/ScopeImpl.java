@@ -1,13 +1,11 @@
 package io.github.leawind.systemstoragelib.v1.impl;
 
 import io.github.leawind.systemstoragelib.v1.api.Scope;
-import io.github.leawind.systemstoragelib.v1.api.Storage;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.utils.MapUtils;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 
 public final class ScopeImpl implements Scope {
@@ -15,8 +13,6 @@ public final class ScopeImpl implements Scope {
   private final String name;
   private final Logger logger;
   private final Map<StoreType, Path> dirs;
-
-  private final Map<StoreType, Storage> storages = new ConcurrentHashMap<>();
 
   /// ### Throws {@link IllegalArgumentException}
   ///
@@ -47,8 +43,7 @@ public final class ScopeImpl implements Scope {
   }
 
   @Override
-  public Storage storage(StoreType storeType) {
-    return storages.computeIfAbsent(
-        storeType, key -> new StorageImpl(dirs.get(key).resolve(name), logger));
+  public Path directory(StoreType storeType) {
+    return dirs.get(storeType).resolve(name);
   }
 }

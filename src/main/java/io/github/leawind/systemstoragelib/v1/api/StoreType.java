@@ -1,6 +1,5 @@
 package io.github.leawind.systemstoragelib.v1.api;
 
-import io.github.leawind.systemstoragelib.v1.api.metaconfig.ScopeMetaConfig;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -12,44 +11,30 @@ import org.jetbrains.annotations.ApiStatus;
 /// | - | - |
 /// | {@link #CACHE} | Renewable + cheap to regenerate |
 /// | {@link #CONFIG} | Configuration files |
-/// | {@link #CREDENTIALS} | Sensitive credentials |
+/// | {@link #SECRETS} | Sensitive data |
 /// | {@link #DATA} | Persistent + shareable across machines |
 /// | {@link #DATA_LOCAL} | Persistent + machine-local (or renewable but costly to regenerate) |
 ///
 /// @apiNote Each category must have different directory.
 public enum StoreType {
-  CACHE("cache", true),
-  CONFIG("config", true),
-  CREDENTIALS("credentials", false),
-  DATA("data", true),
-  DATA_LOCAL("data_local", true);
+  CACHE,
+  CONFIG,
+  SECRETS,
+  DATA,
+  DATA_LOCAL;
 
   private final String id;
-  private final boolean allowCustomDir;
 
-  StoreType(String id, boolean allowCustomDir) {
-    this.id = id;
-    this.allowCustomDir = allowCustomDir;
+  StoreType() {
+    this.id = name().toLowerCase();
   }
 
   public String id() {
     return id;
   }
 
-  /// @see ScopeMetaConfig#getCustomDirs()
-  public boolean allowCustomDir() {
-    return allowCustomDir;
-  }
-
   public static StoreType fromId(String id) {
-    return switch (id) {
-      case "cache" -> CACHE;
-      case "config" -> CONFIG;
-      case "credentials" -> CREDENTIALS;
-      case "data" -> DATA;
-      case "data_local" -> DATA_LOCAL;
-      default -> throw new IllegalArgumentException("Unknown store type: " + id);
-    };
+    return valueOf(id.toUpperCase());
   }
 
   @ApiStatus.Internal

@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.leawind.systemstoragelib.v1.BaseTest;
-import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,11 +26,10 @@ public class MetaConfigStoreTest extends BaseTest {
   @BeforeEach
   void setupEach() {
     store = lib.metaConfig();
-    configFilePath = store.storage().getDirPath().resolve("config.json");
+    configFilePath = store.getDirPath().resolve("config.json");
   }
 
   private MetaConfig getDefaultConfig() throws IOException {
-    store.update(config -> config.scopes().clear());
     return store.get();
   }
 
@@ -39,10 +37,7 @@ public class MetaConfigStoreTest extends BaseTest {
     MetaConfig[] result = {null};
     store.update(
         config -> {
-          config
-              .scope("example_mod")
-              .getCustomDirs()
-              .put(StoreType.CONFIG, customDir.resolve("config"));
+          config.setMaxLogFileSize(100);
           result[0] = config;
         });
     return result[0];
@@ -68,7 +63,7 @@ public class MetaConfigStoreTest extends BaseTest {
 
     @Test
     void getReturnsDefaultWhenConfigFileIsEmpty() throws IOException {
-      Files.createDirectories(store.storage().getDirPath());
+      Files.createDirectories(configFilePath.getParent());
       Files.createFile(configFilePath);
 
       assertNotNull(store.get());
@@ -76,7 +71,7 @@ public class MetaConfigStoreTest extends BaseTest {
 
     @Test
     void getReturnsDefaultWhenConfigFileIsMalformed() throws IOException {
-      Files.createDirectories(store.storage().getDirPath());
+      Files.createDirectories(store.getDirPath());
       Files.writeString(configFilePath, "{invalid json content");
 
       assertNotNull(store.get());
@@ -88,29 +83,19 @@ public class MetaConfigStoreTest extends BaseTest {
 
     @Test
     void updateDoesNotThrowWhenDirExists() throws IOException {
-      Files.createDirectories(store.storage().getDirPath());
+      Files.createDirectories(store.getDirPath());
       assertDoesNotThrow(() -> store.update(config -> {}));
     }
 
     @Test
     void updateCreatesConfigFile() throws IOException {
-      store.update(
-          config ->
-              config
-                  .scope("example_mod")
-                  .getCustomDirs()
-                  .put(StoreType.DATA, customDir.resolve("data")));
+      store.update(config -> config.setMaxLogFileSize(100));
       assertTrue(Files.exists(configFilePath));
     }
 
     @Test
     void updateIsIdempotentWithSameConfig() throws IOException {
-      store.update(
-          config ->
-              config
-                  .scope("example_mod")
-                  .getCustomDirs()
-                  .put(StoreType.CONFIG, customDir.resolve("config")));
+      store.update(config -> config.setMaxLogFileSize(100));
 
       long modifiedTime1 = Files.getLastModifiedTime(configFilePath).toMillis();
 
@@ -120,13 +105,7 @@ public class MetaConfigStoreTest extends BaseTest {
         Thread.currentThread().interrupt();
       }
 
-      store.update(
-          config ->
-              config
-                  .scope("example_mod")
-                  .getCustomDirs()
-                  .put(StoreType.CONFIG, customDir.resolve("config")));
-
+      store.update(config -> config.setMaxLogFileSize(100));
       long modifiedTime2 = Files.getLastModifiedTime(configFilePath).toMillis();
       assertEquals(modifiedTime1, modifiedTime2);
     }
@@ -137,64 +116,40 @@ public class MetaConfigStoreTest extends BaseTest {
 
     @Test
     void externalModificationTriggersOnChanged() throws IOException, InterruptedException {
-      store.update(
-          config ->
-              config
-                  .scope("scope1")
-                  .getCustomDirs()
-                  .put(StoreType.CONFIG, customDir.resolve("custom/config")));
+      store.update(config -> config.setMaxLogFileSize(100));
+
       waitForWatcherSettle();
 
       CountDownLatch latch = new CountDownLatch(1);
       store.onChanged().on(event -> latch.countDown());
 
-      store.update(
-          config ->
-              config
-                  .scope("scope2")
-                  .getCustomDirs()
-                  .put(StoreType.CONFIG, customDir.resolve("custom/config2")));
+      store.update(config -> config.setMaxLogFileSize(200));
 
       assertTrue(latch.await(2000, TimeUnit.MILLISECONDS));
     }
 
     @Test
     void updateTriggersOnChanged() throws IOException, InterruptedException {
-      store.update(
-          config ->
-              config
-                  .scope("example_mod")
-                  .getCustomDirs()
-                  .put(StoreType.CONFIG, customDir.resolve("config")));
+      store.get();
       waitForWatcherSettle();
 
       CountDownLatch latch = new CountDownLatch(1);
       store.onChanged().on(event -> latch.countDown());
 
-      store.update(config -> config.scopes().clear());
-
+      setAsNonDefaultConfig();
       assertTrue(latch.await(500, TimeUnit.MILLISECONDS));
     }
 
     @Test
     void updateSameConfigDoesNotTriggerOnChanged() throws IOException, InterruptedException {
-      store.update(
-          config ->
-              config
-                  .scope("example_mod")
-                  .getCustomDirs()
-                  .put(StoreType.CONFIG, customDir.resolve("config")));
+      setAsNonDefaultConfig();
+
       waitForWatcherSettle();
 
       CountDownLatch latch = new CountDownLatch(1);
       store.onChanged().on(event -> latch.countDown());
 
-      store.update(
-          config ->
-              config
-                  .scope("example_mod")
-                  .getCustomDirs()
-                  .put(StoreType.CONFIG, customDir.resolve("config")));
+      setAsNonDefaultConfig();
 
       assertFalse(latch.await(500, TimeUnit.MILLISECONDS));
     }

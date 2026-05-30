@@ -18,14 +18,6 @@ public class SystemStorageLibTest extends BaseTest {
 
   @Test
   void test2() throws IOException {
-    var scope = lib.scope("example_mod");
-
-    lib.metaConfig()
-        .update(
-            config ->
-                config
-                    .scope(scope.name())
-                    .getCustomDirs()
-                    .put(StoreType.DATA, tempDir.resolve("/custom_data")));
+    lib.metaConfig().update(config -> config.setMaxLogFileSize(1000));
   }
 }
