@@ -10,7 +10,7 @@ A Minecraft library mod providing system-level persistent storage for other mods
 </div>
 
 - **Standard Storage Locations** — Follows XDG/Windows/macOS conventions via [directories-jvm](https://github.com/dirs-dev/directories-jvm)
-- **Five Storage Types** — Cache, Config, Credentials, Data, Local Data
+- **Five Storage Types** — Cache, Config, Secrets, Data, Local Data
 - **Cross-Process Locking** — File-based cross-process read/write locks
 - **Encrypted Key-Value Storage** — AES-256-GCM with PBKDF2 key derivation, bound to the current system
 
@@ -72,18 +72,20 @@ Scope scope = SystemStorageLib.getInstance().scope("example_mod");
 Get the data directory:
 
 ```java
-Storage dataStorage = scope.storage(StoreType.DATA);
-Path dataDir = dataStorage.getDirPath();
+Path dataDir = scope.directory(StoreType.DATA);
 ```
 
-Store and retrieve encrypted credentials:
+Store and retrieve encrypted secrets:
 
 ```java
 Scope scope = SystemStorageLib.getInstance().scope("example_mod");
 
-CredentialStore credentials = scope.storage(StoreType.CREDENTIALS).map(CredentialStore::of);
-credentials.set("some_token", "secret_value_123");
-String token = credentials.get("some_token"); // "secret_value_123"
+var secrets = scope.access(StoreType.SECRETS, SecretStore::of);
+secrets.
+
+set("some_token","secret_value_123");
+
+String token = secrets.get("some_token"); // "secret_value_123"
 ```
 
 > [!Warning]
@@ -93,9 +95,9 @@ String token = credentials.get("some_token"); // "secret_value_123"
 ## Storage Types
 
 | `StoreType` Enum Value | Storage Type | Description                                                                                    |
-| ---------------------- | ------------ | ---------------------------------------------------------------------------------------------- |
+|------------------------|--------------|------------------------------------------------------------------------------------------------|
 | `CACHE`                | Cache        | Regenerable data                                                                               |
 | `CONFIG`               | Config       | Configuration files, such as user preferences                                                  |
-| `CREDENTIALS`          | Credentials  | Sensitive data requiring encryption (tokens, keys, etc.)                                       |
+| `SECRETS`              | Secrets      | Sensitive data requiring encryption (tokens, keys, etc.)                                       |
 | `DATA`                 | Data         | Persistent data that can be shared across machines                                             |
 | `DATA_LOCAL`           | Local Data   | Persistent data specific to the current machine, or cache data that is expensive to regenerate |

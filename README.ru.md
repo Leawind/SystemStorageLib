@@ -10,7 +10,7 @@
 </div>
 
 - **Стандартизированное расположение** — соответствие соглашениям XDG/Windows/macOS через [directories-jvm](https://github.com/dirs-dev/directories-jvm)
-- **Пять типов хранилищ** — кэш, конфигурация, учётные данные, данные, локальные данные
+- **Пять типов хранилищ** — кэш, конфигурация, секреты, данные, локальные данные
 - **Межпроцессные блокировки** — файловые блокировки чтения/записи между процессами
 - **Шифрованное хранилище ключ-значение** — AES-256-GCM с выводом ключа PBKDF2, привязанное к текущей системе
 
@@ -70,18 +70,20 @@ Scope scope = SystemStorageLib.getInstance().scope("example_mod");
 Получение каталога данных:
 
 ```java
-Storage dataStorage = scope.storage(StoreType.DATA);
-Path dataDir = dataStorage.getDirPath();
+Path dataDir = scope.directory(StoreType.DATA);
 ```
 
-Сохранение и чтение зашифрованных учётных данных:
+Сохранение и чтение зашифрованных секретов:
 
 ```java
 Scope scope = SystemStorageLib.getInstance().scope("example_mod");
 
-CredentialStore credentials = scope.storage(StoreType.CREDENTIALS).map(CredentialStore::of);
-credentials.set("some_token", "secret_value_123");
-String token = credentials.get("some_token"); // "secret_value_123"
+var secrets = scope.access(StoreType.SECRETS, SecretStore::of);
+secrets.
+
+set("some_token","secret_value_123");
+
+String token = secrets.get("some_token"); // "secret_value_123"
 ```
 
 > [!Warning]
@@ -91,9 +93,9 @@ String token = credentials.get("some_token"); // "secret_value_123"
 ## Типы хранилищ
 
 | Значение `StoreType` | Тип хранилища    | Описание                                                                                      |
-| -------------------- | ---------------- | --------------------------------------------------------------------------------------------- |
+|----------------------|------------------|-----------------------------------------------------------------------------------------------|
 | `CACHE`              | Кэш              | Восстанавливаемые данные                                                                      |
 | `CONFIG`             | Конфигурация     | Файлы настроек, например, пользовательские предпочтения                                       |
-| `CREDENTIALS`        | Учётные данные   | Чувствительные данные, требующие шифрования (токены, ключи и т.д.)                            |
+| `SECRETS`            | Секреты          | Чувствительные данные, требующие шифрования (токены, ключи и т.д.)                            |
 | `DATA`               | Данные           | Постоянные данные, которые могут быть общими для нескольких машин                             |
 | `DATA_LOCAL`         | Локальные данные | Постоянные данные, специфичные для текущей машины, или кэш-данные, дорогие для восстановления |

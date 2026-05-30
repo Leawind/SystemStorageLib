@@ -10,7 +10,7 @@
 </div>
 
 - **规范存储位置** — 通过 [directories-jvm](https://github.com/dirs-dev/directories-jvm) 遵循 XDG/Windows/macOS 约定
-- **五种存储类型** — 缓存、配置、凭据、数据、本地数据
+- **五种存储类型** — 缓存、配置、密钥、数据、本地数据
 - **跨进程锁** — 基于文件的跨进程读写锁
 - **加密键值存储** — AES-256-GCM 配合 PBKDF2 密钥派生，绑定到当前系统
 
@@ -70,18 +70,20 @@ Scope scope = SystemStorageLib.getInstance().scope("example_mod");
 获取数据目录：
 
 ```java
-Storage dataStorage = scope.storage(StoreType.DATA);
-Path dataDir = dataStorage.getDirPath();
+Path dataDir = scope.directory(StoreType.DATA);
 ```
 
-存储和读取加密凭据：
+存储和读取加密密钥：
 
 ```java
 Scope scope = SystemStorageLib.getInstance().scope("example_mod");
 
-CredentialStore credentials = scope.storage(StoreType.CREDENTIALS).map(CredentialStore::of);
-credentials.set("some_token", "secret_value_123");
-String token = credentials.get("some_token"); // "secret_value_123"
+var secrets = scope.access(StoreType.SECRETS, SecretStore::of);
+secrets.
+
+set("some_token","secret_value_123");
+
+String token = secrets.get("some_token"); // "secret_value_123"
 ```
 
 > [!Warning]
@@ -90,10 +92,10 @@ String token = credentials.get("some_token"); // "secret_value_123"
 
 ## 存储类型
 
-| `StoreType` 枚举值 | 存储类型 | 描述                                                   |
-| ------------------ | -------- | ------------------------------------------------------ |
-| `CACHE`            | 缓存     | 可再生数据                                             |
-| `CONFIG`           | 配置     | 配置文件，如用户偏好                                   |
-| `CREDENTIALS`      | 凭据     | 需要加密的敏感数据（令牌、密钥等）                     |
-| `DATA`             | 数据     | 可跨机器共享的持久化数据                               |
-| `DATA_LOCAL`       | 本地数据 | 特定于当前机器的持久化数据，或重新生成代价高的缓存数据 |
+| `StoreType` 枚举值 | 存储类型 | 描述                          |
+|-----------------|------|-----------------------------|
+| `CACHE`         | 缓存   | 可再生数据                       |
+| `CONFIG`        | 配置   | 配置文件，如用户偏好                  |
+| `SECRETS`       | 密钥   | 需要加密的敏感数据（令牌、密钥等）           |
+| `DATA`          | 数据   | 可跨机器共享的持久化数据                |
+| `DATA_LOCAL`    | 本地数据 | 特定于当前机器的持久化数据，或重新生成代价高的缓存数据 |
