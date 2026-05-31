@@ -71,28 +71,13 @@ public class SystemStorageLibImpl implements SystemStorageLib {
       @NonNull Path metaConfigDir,
       @NonNull Path logsDir,
       @NonNull Map<StoreType, Path> defaultScopedDirs) {
-
-    Objects.requireNonNull(logsDir);
-    Objects.requireNonNull(metaConfigDir);
-
-    validateDirs(defaultScopedDirs);
-
-    metaConfigDir = metaConfigDir.toAbsolutePath().normalize();
-    if (defaultScopedDirs.containsValue(metaConfigDir)) {
-      throw new IllegalArgumentException("metaConfigDir is already used: " + metaConfigDir);
-    }
-
-    logsDir = logsDir.toAbsolutePath().normalize();
-    if (defaultScopedDirs.containsValue(logsDir)) {
-      throw new IllegalArgumentException("logsDir is already used: " + logsDir);
-    }
+    validateConstructorArgs(metaConfigDir, logsDir, defaultScopedDirs);
 
     this.defaultScopedDirs = new HashMap<>(defaultScopedDirs);
 
     logAccessor = new LogAccessor(logsDir, FALLBACK_LOGGER);
     logger = new SystemLogger(logAccessor, "-");
-
-    // NOW
+    
     metaConfigAccessor = new MetaConfigAccessorImpl(this, metaConfigDir, logger);
     metaConfigAccessor.setLogger(logger);
 
@@ -108,6 +93,26 @@ public class SystemStorageLibImpl implements SystemStorageLib {
           new MetaConfigAccessor.ChangedEvent(null, metaConfigAccessor.get()));
     } catch (IOException e) {
       logger.error("Failed to load meta config during initializing", e);
+    }
+  }
+
+  private void validateConstructorArgs(
+      @NonNull Path metaConfigDir,
+      @NonNull Path logsDir,
+      @NonNull Map<StoreType, Path> defaultScopedDirs) {
+    Objects.requireNonNull(logsDir);
+    Objects.requireNonNull(metaConfigDir);
+
+    validateDirs(defaultScopedDirs);
+
+    metaConfigDir = metaConfigDir.toAbsolutePath().normalize();
+    if (defaultScopedDirs.containsValue(metaConfigDir)) {
+      throw new IllegalArgumentException("metaConfigDir is already used: " + metaConfigDir);
+    }
+
+    logsDir = logsDir.toAbsolutePath().normalize();
+    if (defaultScopedDirs.containsValue(logsDir)) {
+      throw new IllegalArgumentException("logsDir is already used: " + logsDir);
     }
   }
 
