@@ -1,9 +1,9 @@
 package io.github.leawind.systemstoragelib.v1.impl.accessors;
 
+import io.github.leawind.inventory.lock.AtomicFileWriter;
 import io.github.leawind.systemstoragelib.v1.api.accessors.AbstractDirectoryAccessor;
 import io.github.leawind.systemstoragelib.v1.api.accessors.SecretsAccessor;
 import io.github.leawind.systemstoragelib.v1.api.exception.SecretIntegrityException;
-import io.github.leawind.systemstoragelib.v1.utils.AtomicFileWriter;
 import io.github.leawind.systemstoragelib.v1.utils.machineid.MachineIdResolutionException;
 import io.github.leawind.systemstoragelib.v1.utils.machineid.MachineIdUtil;
 import java.io.IOException;
