@@ -9,11 +9,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.leawind.systemstoragelib.v1.BaseTest;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
+import io.github.leawind.systemstoragelib.v1.api.accessors.SecretsAccessor.SecretEntry;
 import io.github.leawind.systemstoragelib.v1.api.exception.SecretIntegrityException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -130,8 +135,8 @@ public class SecretsAccessorTest extends BaseTest {
               p -> {
                 try {
                   byte[] content = Files.readAllBytes(p);
-                  // Min size: 1 (version) + 12 (IV) + 16 (auth tag) = 29
-                  assertTrue(content.length >= 29, "Encrypted file should be at least 29 bytes");
+                  // Min size: 1 (version) + 8 (expiration) + 12 (IV) + 16 (auth tag) = 37
+                  assertTrue(content.length >= 37, "Encrypted file should be at least 37 bytes");
                 } catch (IOException e) {
                   throw new RuntimeException(e);
                 }
@@ -180,4 +185,147 @@ public class SecretsAccessorTest extends BaseTest {
     secrets.set("long_key", longValue);
     assertEquals(longValue, secrets.get("long_key"));
   }
+
+  // region Expiration tests
+
+  @Test
+  void testSetWithExpiration() throws IOException, SecretIntegrityException {
+    Instant expiresAt = Instant.now().plus(1, ChronoUnit.HOURS);
+    secrets.set("expiring_key", "secret_data", expiresAt);
+    Optional<SecretEntry> entry = secrets.getEntry("expiring_key");
+    assertTrue(entry.isPresent());
+    assertEquals("secret_data", entry.get().value());
+    assertNotNull(entry.get().expiresAt());
+    assertFalse(entry.get().isExpired());
+  }
+
+  @Test
+  void testSetWithNoExpiration() throws IOException, SecretIntegrityException {
+    secrets.set("permanent_key", "forever_value");
+    Optional<SecretEntry> entry = secrets.getEntry("permanent_key");
+    assertTrue(entry.isPresent());
+    assertEquals("forever_value", entry.get().value());
+    assertTrue(entry.get().expiresAt() == null || !entry.get().isExpired());
+  }
+
+  @Test
+  void testExpiredSecretNotExists() throws IOException {
+    Instant past = Instant.now().minus(1, ChronoUnit.HOURS);
+    secrets.set("expired_key", "expired_value", past);
+    assertFalse(secrets.exists("expired_key"));
+  }
+
+  @Test
+  void testExpiredSecretGetReturnsNull() throws IOException, SecretIntegrityException {
+    Instant past = Instant.now().minus(1, ChronoUnit.HOURS);
+    secrets.set("expired_get_key", "expired_value", past);
+    assertNull(secrets.get("expired_get_key"));
+  }
+
+  @Test
+  void testExpiredSecretGetEntryReturnsEmpty() throws IOException, SecretIntegrityException {
+    Instant past = Instant.now().minus(1, ChronoUnit.HOURS);
+    secrets.set("expired_entry_key", "expired_value", past);
+    assertTrue(secrets.getEntry("expired_entry_key").isEmpty());
+  }
+
+  @Test
+  void testGetExpiration() throws IOException {
+    Instant expiresAt = Instant.now().plus(2, ChronoUnit.HOURS);
+    secrets.set("exp_key", "value", expiresAt);
+    Optional<Instant> expiration = secrets.getExpiration("exp_key");
+    assertTrue(expiration.isPresent());
+    long diffSeconds = Math.abs(expiration.get().getEpochSecond() - expiresAt.getEpochSecond());
+    assertTrue(diffSeconds <= 2, "Expiration should be within 2 seconds of what was set");
+  }
+
+  @Test
+  void testGetExpirationNonExistent() {
+    Optional<Instant> expiration = secrets.getExpiration("non_existent_exp_key");
+    assertTrue(expiration.isEmpty());
+  }
+
+  @Test
+  void testUpdateExpiration() throws IOException, SecretIntegrityException {
+    Instant original = Instant.now().plus(1, ChronoUnit.HOURS);
+    secrets.set("update_exp_key", "value", original);
+    Instant newExpiration = Instant.now().plus(3, ChronoUnit.HOURS);
+    secrets.updateExpiration("update_exp_key", newExpiration);
+    Optional<Instant> expiration = secrets.getExpiration("update_exp_key");
+    assertTrue(expiration.isPresent());
+    long diffSeconds = Math.abs(expiration.get().getEpochSecond() - newExpiration.getEpochSecond());
+    assertTrue(diffSeconds <= 2);
+  }
+
+  @Test
+  void testMakePermanent() throws IOException, SecretIntegrityException {
+    Instant expiresAt = Instant.now().plus(1, ChronoUnit.HOURS);
+    secrets.set("make_perm_key", "value", expiresAt);
+    secrets.makePermanent("make_perm_key");
+    Optional<SecretEntry> entry = secrets.getEntry("make_perm_key");
+    assertTrue(entry.isPresent());
+    assertFalse(entry.get().isExpired());
+  }
+
+  @Test
+  void testCleanupRemovesExpired() throws IOException {
+    Instant past = Instant.now().minus(1, ChronoUnit.HOURS);
+    Instant future = Instant.now().plus(1, ChronoUnit.HOURS);
+    secrets.set("cleanup_expired_1", "val1", past);
+    secrets.set("cleanup_expired_2", "val2", past);
+    secrets.set("cleanup_valid", "val3", future);
+    secrets.set("cleanup_permanent", "val4");
+    int cleaned = secrets.cleanup();
+    assertEquals(2, cleaned);
+    assertFalse(secrets.exists("cleanup_expired_1"));
+    assertFalse(secrets.exists("cleanup_expired_2"));
+    assertTrue(secrets.exists("cleanup_valid"));
+    assertTrue(secrets.exists("cleanup_permanent"));
+  }
+
+  @Test
+  void testCleanupEmptyDirectory() throws IOException {
+    int cleaned = secrets.cleanup();
+    assertEquals(0, cleaned);
+  }
+
+  @Test
+  void testSetWithDuration() throws IOException, SecretIntegrityException {
+    secrets.set("duration_key", "duration_value", Duration.ofHours(2));
+    Optional<SecretEntry> entry = secrets.getEntry("duration_key");
+    assertTrue(entry.isPresent());
+    assertEquals("duration_value", entry.get().value());
+    assertNotNull(entry.get().expiresAt());
+    assertFalse(entry.get().isExpired());
+  }
+
+  @Test
+  void testUpdateExpirationWithDuration() throws IOException, SecretIntegrityException {
+    secrets.set("update_dur_key", "value", Duration.ofHours(1));
+    secrets.updateExpiration("update_dur_key", Duration.ofHours(5));
+    Optional<SecretEntry> entry = secrets.getEntry("update_dur_key");
+    assertTrue(entry.isPresent());
+    assertNotNull(entry.get().expiresAt());
+    assertFalse(entry.get().isExpired());
+  }
+
+  @Test
+  void testSecretEntryIsExpiredPast() {
+    SecretEntry expiredEntry = new SecretEntry("value", Instant.now().minus(1, ChronoUnit.HOURS));
+    assertTrue(expiredEntry.isExpired());
+  }
+
+  @Test
+  void testSecretEntryIsExpiredFuture() {
+    SecretEntry activeEntry = new SecretEntry("value", Instant.now().plus(1, ChronoUnit.HOURS));
+    assertFalse(activeEntry.isExpired());
+  }
+
+  @Test
+  void testSecretEntryValueGetter() {
+    SecretEntry entry = new SecretEntry("test_value", Instant.now());
+    assertEquals("test_value", entry.value());
+  }
+
+  // endregion
 }
