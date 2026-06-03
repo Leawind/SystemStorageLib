@@ -245,12 +245,11 @@ public class MetaConfigAccessorImpl extends AbstractDirectoryAccessor
           getLogger().info("Watch service overflow");
           continue;
         }
-        if (getDirPath()
-            .resolve((Path) event.context())
-            .toAbsolutePath()
-            .normalize()
-            .equals(configFilePath)) {
-          configFileChanged = true;
+        try {
+          if (Files.isSameFile(getDirPath().resolve((Path) event.context()), configFilePath)) {
+            configFileChanged = true;
+          }
+        } catch (IOException ignored) {
         }
       }
 
