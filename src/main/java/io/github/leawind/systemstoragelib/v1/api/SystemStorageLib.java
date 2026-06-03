@@ -1,6 +1,8 @@
 package io.github.leawind.systemstoragelib.v1.api;
 
+import io.github.leawind.systemstoragelib.v1.api.dirdoc.DirectoryDocumenter;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfigAccessor;
+import io.github.leawind.systemstoragelib.v1.impl.Holder;
 import io.github.leawind.systemstoragelib.v1.impl.SystemStorageLibImpl;
 import java.nio.file.Path;
 import java.util.Map;
@@ -10,6 +12,8 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 public interface SystemStorageLib {
+
+  DirectoryDocumenter getDirectoryDocumenter();
 
   /// Logger for this library instance, writing to both SLF4J and the library's own log file.
   ///
@@ -60,7 +64,7 @@ public interface SystemStorageLib {
   ///
   /// @return the singleton instance
   static SystemStorageLib getInstance() {
-    return SystemStorageLibHolder.getInstance();
+    return Holder.getSystemStorageLibInstance();
   }
 
   /// Returns a builder for creating a `SystemStorageLib` instance with custom configuration.

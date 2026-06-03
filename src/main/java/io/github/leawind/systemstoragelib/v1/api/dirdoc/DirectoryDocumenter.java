@@ -1,6 +1,8 @@
-package io.github.leawind.systemstoragelib.v1.utils.dirdoc;
+package io.github.leawind.systemstoragelib.v1.api.dirdoc;
 
+import io.github.leawind.systemstoragelib.v1.impl.dirdoc.MutableDirectoryDocumenterImpl;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.util.Map;
@@ -53,22 +55,15 @@ public interface DirectoryDocumenter {
     /// Clears all memorized paths.
     void forgetAll();
 
-    /// Memorizes a path using introduction loaded from a classpath resource.
-    ///
-    /// ### Example
-    ///
-    /// ```java
-    /// da.memorizeByResource(path, "root/data.md");
-    /// ```
-    ///
-    /// @param name the resource name to read content from, relative to root
-    /// @throws RuntimeException if the resource name is absolute path or resource cannot be read
     default Mutable memorizeByResource(Path path, String name) {
-      try (var is = Thread.currentThread().getContextClassLoader().getResourceAsStream(name)) {
-        if (is == null) {
+      Class<?> clazz =
+          StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE).getCallerClass();
+
+      try (InputStream inputStream = clazz.getResourceAsStream(name)) {
+        if (inputStream == null) {
           throw new NullPointerException("Resource not found: " + name);
         }
-        memorize(path, new String(is.readAllBytes()));
+        memorize(path, new String(inputStream.readAllBytes()));
       } catch (IOException e) {
         throw new RuntimeException(e);
       }

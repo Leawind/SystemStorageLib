@@ -15,6 +15,7 @@ import io.github.leawind.inventory.misc.Lazy;
 import io.github.leawind.inventory.misc.UncheckedCloseable;
 import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
 import io.github.leawind.systemstoragelib.v1.api.accessors.AbstractDirectoryAccessor;
+import io.github.leawind.systemstoragelib.v1.api.dirdoc.DirectoryDocumenter;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfigAccessor;
 import io.github.leawind.systemstoragelib.v1.utils.Codecs;
@@ -58,8 +59,9 @@ public class MetaConfigAccessorImpl extends AbstractDirectoryAccessor
 
   private long lastHandledFileChangeMs = 0;
 
-  public MetaConfigAccessorImpl(SystemStorageLib lib, Path dirPath, Logger logger) {
-    super(dirPath, logger);
+  public MetaConfigAccessorImpl(
+      SystemStorageLib lib, Path dirPath, Logger logger, DirectoryDocumenter directoryDocumenter) {
+    super(dirPath, logger, directoryDocumenter);
     this.lib = lib;
     configCodec = MetaConfigImpl.codec(lib);
 
@@ -91,7 +93,7 @@ public class MetaConfigAccessorImpl extends AbstractDirectoryAccessor
 
       cache = newConfig;
 
-      Files.createDirectories(configFilePath.getParent());
+      lib.getDirectoryDocumenter().createDirectories(configFilePath.getParent());
 
       DataResult<JsonElement> result = configCodec.encodeStart(JsonOps.INSTANCE, newConfig);
       Optional<JsonElement> encoded = result.result();
@@ -200,7 +202,7 @@ public class MetaConfigAccessorImpl extends AbstractDirectoryAccessor
 
       try {
         WatchService ws = getDirPath().getFileSystem().newWatchService();
-        Files.createDirectories(getDirPath());
+        lib.getDirectoryDocumenter().createDirectories(getDirPath());
         getDirPath()
             .register(
                 ws,

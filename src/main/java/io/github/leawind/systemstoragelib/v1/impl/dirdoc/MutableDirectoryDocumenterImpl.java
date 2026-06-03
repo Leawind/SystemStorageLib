@@ -1,5 +1,6 @@
-package io.github.leawind.systemstoragelib.v1.utils.dirdoc;
+package io.github.leawind.systemstoragelib.v1.impl.dirdoc;
 
+import io.github.leawind.systemstoragelib.v1.api.dirdoc.DirectoryDocumenter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

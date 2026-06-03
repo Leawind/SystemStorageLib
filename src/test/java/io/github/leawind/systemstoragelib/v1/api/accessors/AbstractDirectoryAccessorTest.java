@@ -16,7 +16,9 @@ public class AbstractDirectoryAccessorTest extends BaseTest {
 
   @BeforeEach
   void setupEach() {
-    accessor = new AbstractDirectoryAccessor(tempDir.resolve("storage"), lib.logger()) {};
+    accessor =
+        new AbstractDirectoryAccessor(
+            tempDir.resolve("storage"), lib.logger(), lib.getDirectoryDocumenter()) {};
   }
 
   @Test
@@ -27,7 +29,8 @@ public class AbstractDirectoryAccessorTest extends BaseTest {
   @Test
   void testDirPathIsAbsoluteAndNormalized() {
     Path relativePath = tempDir.resolve("storage/../storage");
-    var storage = new AbstractDirectoryAccessor(relativePath, lib.logger());
+    var storage =
+        new AbstractDirectoryAccessor(relativePath, lib.logger(), lib.getDirectoryDocumenter());
     assertEquals(relativePath.toAbsolutePath().normalize(), storage.getDirPath());
   }
 

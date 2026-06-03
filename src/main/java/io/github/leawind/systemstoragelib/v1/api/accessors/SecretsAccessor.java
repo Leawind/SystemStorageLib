@@ -1,6 +1,8 @@
 package io.github.leawind.systemstoragelib.v1.api.accessors;
 
 import io.github.leawind.systemstoragelib.v1.api.DirectoryAccessor;
+import io.github.leawind.systemstoragelib.v1.api.Scope;
+import io.github.leawind.systemstoragelib.v1.api.dirdoc.DirectoryDocumenter;
 import io.github.leawind.systemstoragelib.v1.api.exception.SecretIntegrityException;
 import io.github.leawind.systemstoragelib.v1.impl.accessors.SecretsAccessorImpl;
 import java.io.IOException;
@@ -10,7 +12,6 @@ import java.time.Instant;
 import java.util.Optional;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
 
 /// Persistently stores encrypted key-value pairs with expiration support in a specific directory.
 /// Used for storing sensitive data such as API tokens, OAuth credentials, etc.
@@ -34,8 +35,9 @@ import org.slf4j.Logger;
 /// - Keys are derived from the local environment.
 /// - Expired secrets are treated as non-existent and automatically cleaned up on access.
 public interface SecretsAccessor extends DirectoryAccessor {
-  static SecretsAccessor from(Path dirPath, Logger logger) {
-    return new SecretsAccessorImpl(dirPath, logger);
+
+  static SecretsAccessor from(Path dirPath, Scope scope, DirectoryDocumenter directoryDocumenter) {
+    return new SecretsAccessorImpl(dirPath, scope, directoryDocumenter);
   }
 
   // region Core methods

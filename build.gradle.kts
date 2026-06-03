@@ -1,3 +1,7 @@
+import java.io.FilterReader
+import java.io.Reader
+import java.io.StringReader
+
 plugins {
     `java-library`
     id("com.gradleup.shadow") version "9.3.1"
@@ -67,6 +71,42 @@ tasks.assemble {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+
+class EmbedMarkdownFilter(reader: Reader) : FilterReader(reader) {
+    var sourceFile: File? = null
+    private var resolvedReader: Reader? = null
+
+    private fun getResolvedReader(): Reader {
+        if (resolvedReader == null) {
+            val file = sourceFile ?: error("sourceFile is not set for EmbedMarkdownFilter")
+            resolvedReader = StringReader(resolveEmbeds(file))
+        }
+        return resolvedReader!!
+    }
+
+    override fun read(cbuf: CharArray, off: Int, len: Int): Int = getResolvedReader().read(cbuf, off, len)
+    override fun read(): Int = getResolvedReader().read()
+
+    private fun resolveEmbeds(file: File): String {
+        return file.readText(Charsets.UTF_8).replace(Regex("""\{\[embed\]\((.*?)\)\}""")) { match ->
+            val relativePath = match.groupValues[1].trim()
+            val targetFile = File(file.parentFile, relativePath)
+
+            if (targetFile.exists() && targetFile.isFile) {
+                resolveEmbeds(targetFile)
+            } else {
+                match.value
+            }
+        }
+    }
+}
+
+tasks.named<Copy>("processResources") {
+    filesMatching("**/*.md") {
+        filter(mapOf("sourceFile" to file), EmbedMarkdownFilter::class.java)
+    }
 }
 
 tasks.processResources {

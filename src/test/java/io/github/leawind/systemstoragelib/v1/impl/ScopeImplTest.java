@@ -33,7 +33,7 @@ public class ScopeImplTest extends BaseTest {
 
   @Test
   void notNull() {
-    Scope storage = new ScopeImpl("test_scope", TEST_LOGGER, dirs);
+    Scope storage = new ScopeImpl("test_scope", TEST_LOGGER, dirs, lib.getDirectoryDocumenter());
 
     assertNotNull(storage.logger());
     assertNotNull(storage.directory(StoreType.CACHE));
@@ -63,7 +63,7 @@ public class ScopeImplTest extends BaseTest {
       IllegalArgumentException ex =
           assertThrows(
               IllegalArgumentException.class,
-              () -> new ScopeImpl("scope", TEST_LOGGER, incomplete));
+              () -> new ScopeImpl("scope", TEST_LOGGER, incomplete, lib.getDirectoryDocumenter()));
       assertTrue(ex.getMessage().contains("Missing StoreTypes"));
     }
   }
@@ -81,6 +81,6 @@ public class ScopeImplTest extends BaseTest {
     IllegalArgumentException ex =
         assertThrows(
             IllegalArgumentException.class,
-            () -> new ScopeImpl("scope", TEST_LOGGER, duplicateDirs));
+            () -> new ScopeImpl("scope", TEST_LOGGER, duplicateDirs, lib.getDirectoryDocumenter()));
   }
 }

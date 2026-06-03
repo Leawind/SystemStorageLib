@@ -1,8 +1,9 @@
 package io.github.leawind.systemstoragelib.v1.api;
 
-import io.github.leawind.systemstoragelib.v1.api.accessors.SecretsAccessor;
+import io.github.leawind.inventory.util.function.TriFunction;
+import io.github.leawind.systemstoragelib.v1.api.dirdoc.DirectoryDocumenter;
 import java.nio.file.Path;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 import org.slf4j.Logger;
 
 public interface Scope {
@@ -22,15 +23,14 @@ public interface Scope {
   /// @param storeType the store type
   Path directory(StoreType storeType);
 
-  /// ### Example
-  ///
-  /// ```java
-  /// SecretsAccessor secrets = scope.access(StoreType.SECRETS, SecretsAccessor::from)
-  /// ```
-  ///
-  /// @see SecretsAccessor
+  DirectoryDocumenter directoryDocumenter();
+
+  default <T extends DirectoryAccessor> T access(StoreType storeType, Function<Path, T> factory) {
+    return factory.apply(directory(storeType));
+  }
+
   default <T extends DirectoryAccessor> T access(
-      StoreType storeType, BiFunction<Path, Logger, T> factory) {
-    return factory.apply(directory(storeType), logger());
+      StoreType storeType, TriFunction<Path, Scope, DirectoryDocumenter, T> factory) {
+    return factory.apply(directory(storeType), this, directoryDocumenter());
   }
 }

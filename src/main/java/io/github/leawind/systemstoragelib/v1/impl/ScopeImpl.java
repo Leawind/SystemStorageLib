@@ -2,6 +2,7 @@ package io.github.leawind.systemstoragelib.v1.impl;
 
 import io.github.leawind.systemstoragelib.v1.api.Scope;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
+import io.github.leawind.systemstoragelib.v1.api.dirdoc.DirectoryDocumenter;
 import io.github.leawind.systemstoragelib.v1.utils.MapUtils;
 import java.nio.file.Path;
 import java.util.List;
@@ -13,12 +14,17 @@ public final class ScopeImpl implements Scope {
   private final String name;
   private final Logger logger;
   private final Map<StoreType, Path> dirs;
+  private final DirectoryDocumenter directoryDocumenter;
 
   /// ### Throws {@link IllegalArgumentException}
   ///
   /// - If any StoreType is missing.
   /// - If any dirPath is not unique.
-  ScopeImpl(String name, Logger logger, Map<StoreType, Path> dirs) {
+  ScopeImpl(
+      String name,
+      Logger logger,
+      Map<StoreType, Path> dirs,
+      DirectoryDocumenter directoryDocumenter) {
 
     List<StoreType> missingTypes = StoreType.Utils.missingTypes(dirs.keySet());
     if (!missingTypes.isEmpty()) {
@@ -30,6 +36,7 @@ public final class ScopeImpl implements Scope {
     this.name = name;
     this.logger = logger;
     this.dirs = dirs;
+    this.directoryDocumenter = directoryDocumenter;
   }
 
   @Override
@@ -45,5 +52,10 @@ public final class ScopeImpl implements Scope {
   @Override
   public Path directory(StoreType storeType) {
     return dirs.get(storeType).resolve(name);
+  }
+
+  @Override
+  public DirectoryDocumenter directoryDocumenter() {
+    return directoryDocumenter;
   }
 }

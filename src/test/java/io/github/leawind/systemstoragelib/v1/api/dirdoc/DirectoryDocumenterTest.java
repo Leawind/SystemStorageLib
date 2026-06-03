@@ -1,4 +1,4 @@
-package io.github.leawind.systemstoragelib.v1.utils.dirdoc;
+package io.github.leawind.systemstoragelib.v1.api.dirdoc;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -20,84 +20,84 @@ public class DirectoryDocumenterTest {
   private static final String README_CONTENT = "# Managed Directory\nDo not delete manually.";
 
   @TempDir Path tempDir;
-  private DirectoryDocumenter.Mutable directoryAwareness;
+  private DirectoryDocumenter.Mutable directoryDocumenter;
 
   @BeforeEach
   void setUp() {
-    directoryAwareness = DirectoryDocumenter.mutable(README_NAME);
+    directoryDocumenter = DirectoryDocumenter.mutable(README_NAME);
   }
 
   @Test
   void memorize_and_remember() {
     Path path = tempDir.resolve("test-dir");
-    assertFalse(directoryAwareness.remember(path));
+    assertFalse(directoryDocumenter.remember(path));
 
-    directoryAwareness.memorize(path, README_CONTENT);
-    assertTrue(directoryAwareness.remember(path));
+    directoryDocumenter.memorize(path, README_CONTENT);
+    assertTrue(directoryDocumenter.remember(path));
 
     // Normalized path should match
-    assertTrue(directoryAwareness.remember(path.toAbsolutePath().normalize()));
+    assertTrue(directoryDocumenter.remember(path.toAbsolutePath().normalize()));
   }
 
   @Test
   void memorize_null_path_throws() {
     assertThrows(
-        NullPointerException.class, () -> directoryAwareness.memorize(null, README_CONTENT));
+        NullPointerException.class, () -> directoryDocumenter.memorize(null, README_CONTENT));
   }
 
   @Test
   void memorize_null_content_throws() {
     Path path = tempDir.resolve("test");
-    assertThrows(NullPointerException.class, () -> directoryAwareness.memorize(path, null));
+    assertThrows(NullPointerException.class, () -> directoryDocumenter.memorize(path, null));
   }
 
   @Test
   void forget_single_path() {
     Path path = tempDir.resolve("test-dir");
-    directoryAwareness.memorize(path, README_CONTENT);
-    assertTrue(directoryAwareness.remember(path));
+    directoryDocumenter.memorize(path, README_CONTENT);
+    assertTrue(directoryDocumenter.remember(path));
 
-    directoryAwareness.forget(path);
-    assertFalse(directoryAwareness.remember(path));
+    directoryDocumenter.forget(path);
+    assertFalse(directoryDocumenter.remember(path));
   }
 
   @Test
   void forget_unmemorized_path_does_nothing() {
     Path path = tempDir.resolve("unknown");
-    assertDoesNotThrow(() -> directoryAwareness.forget(path));
-    assertFalse(directoryAwareness.remember(path));
+    assertDoesNotThrow(() -> directoryDocumenter.forget(path));
+    assertFalse(directoryDocumenter.remember(path));
   }
 
   @Test
   void forget_all_clears_entries() {
     Path p1 = tempDir.resolve("dir1");
     Path p2 = tempDir.resolve("dir2");
-    directoryAwareness.memorize(p1, "content1");
-    directoryAwareness.memorize(p2, "content2");
+    directoryDocumenter.memorize(p1, "content1");
+    directoryDocumenter.memorize(p2, "content2");
 
-    assertTrue(directoryAwareness.remember(p1));
-    assertTrue(directoryAwareness.remember(p2));
+    assertTrue(directoryDocumenter.remember(p1));
+    assertTrue(directoryDocumenter.remember(p2));
 
-    directoryAwareness.forgetAll();
-    assertFalse(directoryAwareness.remember(p1));
-    assertFalse(directoryAwareness.remember(p2));
+    directoryDocumenter.forgetAll();
+    assertFalse(directoryDocumenter.remember(p1));
+    assertFalse(directoryDocumenter.remember(p2));
   }
 
   @Test
   void properties() throws IOException {
-    directoryAwareness.memorize(tempDir.resolve("dir"), "Hello, ${name}");
+    directoryDocumenter.memorize(tempDir.resolve("dir"), "Hello, ${name}");
 
-    directoryAwareness.properties().put("name", "Steve");
-    directoryAwareness.createDirectories(tempDir.resolve("dir"));
+    directoryDocumenter.properties().put("name", "Steve");
+    directoryDocumenter.createDirectories(tempDir.resolve("dir"));
     assertEquals("Hello, Steve", Files.readString(tempDir.resolve("dir").resolve(README_NAME)));
   }
 
   @Test
   void create_Directories_directory_with_readme() throws IOException {
     Path target = tempDir.resolve("new-dir");
-    directoryAwareness.memorize(target, README_CONTENT);
+    directoryDocumenter.memorize(target, README_CONTENT);
 
-    directoryAwareness.createDirectories(target);
+    directoryDocumenter.createDirectories(target);
 
     assertTrue(Files.isDirectory(target));
     Path readme = target.resolve(README_NAME);
@@ -108,11 +108,11 @@ public class DirectoryDocumenterTest {
   @Test
   void create_Directories_nested_directories_with_readme() throws IOException {
     Path target = tempDir.resolve("a").resolve("b").resolve("c");
-    directoryAwareness.memorize(tempDir.resolve("a"), "# Level A");
-    directoryAwareness.memorize(tempDir.resolve("a").resolve("b"), "# Level B");
-    directoryAwareness.memorize(target, "# Level C");
+    directoryDocumenter.memorize(tempDir.resolve("a"), "# Level A");
+    directoryDocumenter.memorize(tempDir.resolve("a").resolve("b"), "# Level B");
+    directoryDocumenter.memorize(target, "# Level C");
 
-    directoryAwareness.createDirectories(target);
+    directoryDocumenter.createDirectories(target);
 
     assertTrue(Files.isDirectory(target));
     assertReadmeExists(tempDir.resolve("a"), "# Level A");
@@ -124,9 +124,9 @@ public class DirectoryDocumenterTest {
   void create_Directories_existing_directory_checks_readme() throws IOException {
     Path target = tempDir.resolve("existing");
     Files.createDirectory(target);
-    directoryAwareness.memorize(target, README_CONTENT);
+    directoryDocumenter.memorize(target, README_CONTENT);
 
-    directoryAwareness.createDirectories(target);
+    directoryDocumenter.createDirectories(target);
 
     Path readme = target.resolve(README_NAME);
     assertTrue(Files.isRegularFile(readme));
@@ -136,13 +136,13 @@ public class DirectoryDocumenterTest {
   @Test
   void create_Directories_does_not_overwrite_existing_readme() throws IOException {
     Path target = tempDir.resolve("dir");
-    directoryAwareness.memorize(target, README_CONTENT);
-    directoryAwareness.createDirectories(target);
+    directoryDocumenter.memorize(target, README_CONTENT);
+    directoryDocumenter.createDirectories(target);
 
     String modified = "# Modified\nDo not touch.";
     Files.writeString(target.resolve(README_NAME), modified);
 
-    directoryAwareness.createDirectories(target);
+    directoryDocumenter.createDirectories(target);
 
     assertEquals(modified, Files.readString(target.resolve(README_NAME)));
   }
@@ -150,9 +150,9 @@ public class DirectoryDocumenterTest {
   @Test
   void create_Directories_with_file_attributes() throws IOException {
     Path target = tempDir.resolve("attrs-dir");
-    directoryAwareness.memorize(target, README_CONTENT);
+    directoryDocumenter.memorize(target, README_CONTENT);
 
-    directoryAwareness.createDirectories(target);
+    directoryDocumenter.createDirectories(target);
 
     assertTrue(Files.isDirectory(target));
     assertTrue(Files.isRegularFile(target.resolve(README_NAME)));
@@ -160,14 +160,14 @@ public class DirectoryDocumenterTest {
 
   @Test
   void create_Directories_null_path_throws() {
-    assertThrows(NullPointerException.class, () -> directoryAwareness.createDirectories(null));
+    assertThrows(NullPointerException.class, () -> directoryDocumenter.createDirectories(null));
   }
 
   @Test
   void memorizeByResource_success() {
     Path path = tempDir.resolve("resource-dir");
-    assertDoesNotThrow(() -> directoryAwareness.memorizeByResource(path, "sample-readme.txt"));
-    assertTrue(directoryAwareness.remember(path));
+    assertDoesNotThrow(() -> directoryDocumenter.memorizeByResource(path, "/sample-readme.txt"));
+    assertTrue(directoryDocumenter.remember(path));
   }
 
   @Test
@@ -175,7 +175,7 @@ public class DirectoryDocumenterTest {
     Path path = tempDir.resolve("bad-resource");
     assertThrows(
         RuntimeException.class,
-        () -> directoryAwareness.memorizeByResource(path, "nonexistent.txt"));
+        () -> directoryDocumenter.memorizeByResource(path, "nonexistent.txt"));
   }
 
   @Test
@@ -184,12 +184,12 @@ public class DirectoryDocumenterTest {
     Path absolute = raw.toAbsolutePath();
     Path normalized = absolute.normalize();
 
-    directoryAwareness.memorize(raw, README_CONTENT);
-    assertTrue(directoryAwareness.remember(absolute));
-    assertTrue(directoryAwareness.remember(normalized));
+    directoryDocumenter.memorize(raw, README_CONTENT);
+    assertTrue(directoryDocumenter.remember(absolute));
+    assertTrue(directoryDocumenter.remember(normalized));
 
-    directoryAwareness.forget(absolute);
-    assertFalse(directoryAwareness.remember(raw));
+    directoryDocumenter.forget(absolute);
+    assertFalse(directoryDocumenter.remember(raw));
   }
 
   @Test
@@ -205,8 +205,8 @@ public class DirectoryDocumenterTest {
           () -> {
             try {
               Path p = tempDir.resolve("concurrent-" + idx);
-              directoryAwareness.memorize(p, "content-" + idx);
-              if (!directoryAwareness.remember(p)) {
+              directoryDocumenter.memorize(p, "content-" + idx);
+              if (!directoryDocumenter.remember(p)) {
                 failed.set(true);
               }
             } catch (Exception e) {
@@ -234,8 +234,8 @@ public class DirectoryDocumenterTest {
           () -> {
             try {
               Path p = tempDir.resolve("thread-dir-" + idx);
-              directoryAwareness.memorize(p, "Readme for " + idx);
-              directoryAwareness.createDirectories(p);
+              directoryDocumenter.memorize(p, "Readme for " + idx);
+              directoryDocumenter.createDirectories(p);
               assertTrue(Files.isRegularFile(p.resolve(README_NAME)));
             } catch (IOException e) {
               throw new RuntimeException(e);
@@ -260,14 +260,14 @@ public class DirectoryDocumenterTest {
     Path parent = tempDir.resolve("parent");
     Path child = parent.resolve("child");
 
-    directoryAwareness.memorize(parent, "# Parent");
-    directoryAwareness.createDirectories(parent);
+    directoryDocumenter.memorize(parent, "# Parent");
+    directoryDocumenter.createDirectories(parent);
 
     assertTrue(Files.isDirectory(parent));
     assertReadmeExists(parent, "# Parent");
 
-    directoryAwareness.memorize(child, "# Child");
-    directoryAwareness.createDirectories(child);
+    directoryDocumenter.memorize(child, "# Child");
+    directoryDocumenter.createDirectories(child);
 
     assertTrue(Files.isDirectory(child));
     assertReadmeExists(child, "# Child");
@@ -278,12 +278,12 @@ public class DirectoryDocumenterTest {
   void readme_content_preserved_across_creates() throws IOException {
     Path dir = tempDir.resolve("persistent");
     String content = "# Important\nKeep this.";
-    directoryAwareness.memorize(dir, content);
+    directoryDocumenter.memorize(dir, content);
 
-    directoryAwareness.createDirectories(dir);
+    directoryDocumenter.createDirectories(dir);
     String firstRead = Files.readString(dir.resolve(README_NAME));
 
-    directoryAwareness.createDirectories(dir);
+    directoryDocumenter.createDirectories(dir);
     String secondRead = Files.readString(dir.resolve(README_NAME));
 
     assertEquals(content, firstRead);

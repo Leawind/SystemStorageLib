@@ -3,8 +3,9 @@ package io.github.leawind.systemstoragelib.v1.api.accessors;
 import io.github.leawind.inventory.event.EventEmitter;
 import io.github.leawind.inventory.lock.FileBasedReentrantReadWriteLock;
 import io.github.leawind.systemstoragelib.v1.api.DirectoryAccessor;
+import io.github.leawind.systemstoragelib.v1.api.dirdoc.DirectoryDocumenter;
+import io.github.leawind.systemstoragelib.v1.impl.Holder;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
@@ -12,11 +13,14 @@ import org.slf4j.Logger;
 public class AbstractDirectoryAccessor implements DirectoryAccessor {
   private Path dirPath;
   private Logger logger;
+  protected final DirectoryDocumenter directoryDocumenter;
   private final EventEmitter<Path> onDirPathChanged = new EventEmitter<>();
 
-  protected AbstractDirectoryAccessor(Path dirPath, Logger logger) {
+  protected AbstractDirectoryAccessor(
+      Path dirPath, Logger logger, DirectoryDocumenter directoryDocumenter) {
     this.dirPath = dirPath.normalize();
     this.logger = logger;
+    this.directoryDocumenter = directoryDocumenter;
   }
 
   @Override
@@ -63,7 +67,7 @@ public class AbstractDirectoryAccessor implements DirectoryAccessor {
   /// - `tryLock()` returns `false` if the lock cannot be acquired immediately.
   public static FileBasedReentrantReadWriteLock createLock(Path lockFilePath) {
     try {
-      Files.createDirectories(lockFilePath.getParent());
+      Holder.getDirectoryDocumenter().createDirectories(lockFilePath.getParent());
       return new FileBasedReentrantReadWriteLock(lockFilePath);
     } catch (IOException e) {
       throw new RuntimeException(e);

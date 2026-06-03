@@ -3,6 +3,7 @@ package io.github.leawind.systemstoragelib.v1.impl;
 import io.github.leawind.systemstoragelib.v1.api.Scope;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.SystemStorageLib;
+import io.github.leawind.systemstoragelib.v1.api.dirdoc.DirectoryDocumenter;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfigAccessor;
 import io.github.leawind.systemstoragelib.v1.impl.log.LogAccessor;
 import io.github.leawind.systemstoragelib.v1.impl.log.SystemLogger;
@@ -30,6 +31,8 @@ public class SystemStorageLibImpl implements SystemStorageLib {
 
   public static final int MIN_SCOPE_NAME_LENGTH = 2;
   public static final int MAX_SCOPE_NAME_LENGTH = 128;
+
+  private final DirectoryDocumenter directoryDocumenter;
 
   /// ### Examples
   ///
@@ -73,12 +76,24 @@ public class SystemStorageLibImpl implements SystemStorageLib {
       @NonNull Map<StoreType, Path> defaultScopedDirs) {
     validateConstructorArgs(metaConfigDir, logsDir, defaultScopedDirs);
 
+    {
+      var da =
+          DirectoryDocumenter.mutable("README.md")
+              .extendFrom(Holder.getDirectoryDocumenter())
+              .memorizeByResource(metaConfigDir, "/readthem/metaConfig.md")
+              .memorizeByResource(logsDir, "/readthem/logs.md");
+      defaultScopedDirs.forEach(
+          (storeType, path) -> da.memorizeByResource(path, "/readthem/" + storeType.id() + ".md"));
+      directoryDocumenter = da;
+    }
+
     this.defaultScopedDirs = new HashMap<>(defaultScopedDirs);
 
-    logAccessor = new LogAccessor(logsDir, FALLBACK_LOGGER);
+    logAccessor = new LogAccessor(logsDir, FALLBACK_LOGGER, directoryDocumenter);
     logger = new SystemLogger(logAccessor, "-");
-    
-    metaConfigAccessor = new MetaConfigAccessorImpl(this, metaConfigDir, logger);
+
+    metaConfigAccessor =
+        new MetaConfigAccessorImpl(this, metaConfigDir, logger, directoryDocumenter);
     metaConfigAccessor.setLogger(logger);
 
     // Listen for external changes to meta config and update scope storage paths accordingly.
@@ -133,6 +148,11 @@ public class SystemStorageLibImpl implements SystemStorageLib {
     }
 
     MapUtils.requireUniqueValues(scopedDirs, "dir for each StoreType");
+  }
+
+  @Override
+  public DirectoryDocumenter getDirectoryDocumenter() {
+    return directoryDocumenter;
   }
 
   @Override
@@ -222,7 +242,10 @@ public class SystemStorageLibImpl implements SystemStorageLib {
   private Scope createScopeStorage(String scopeName) {
     // Build a directory map for the given scope, preferring custom directories from MetaConfig.
     return new ScopeImpl(
-        scopeName, new SystemLogger(logAccessor, scopeName), new HashMap<>(defaultScopedDirs));
+        scopeName,
+        new SystemLogger(logAccessor, scopeName),
+        new HashMap<>(defaultScopedDirs),
+        this.directoryDocumenter);
   }
 
   private void detectScopes() {

@@ -31,7 +31,7 @@ public class CustomDirMap extends ValidatingHashMap<StoreType, Path> {
   @Override
   public void validateEntry(StoreType storeType, Path path) {
     Objects.requireNonNull(path, "custom directory path must not be null");
- 
+
     if (!path.isAbsolute()) {
       throw new IllegalArgumentException("Custom directory path must be absolute: " + path);
     }

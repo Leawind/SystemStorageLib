@@ -1,8 +1,10 @@
 package io.github.leawind.systemstoragelib.v1.impl.accessors;
 
 import io.github.leawind.inventory.lock.AtomicFileWriter;
+import io.github.leawind.systemstoragelib.v1.api.Scope;
 import io.github.leawind.systemstoragelib.v1.api.accessors.AbstractDirectoryAccessor;
 import io.github.leawind.systemstoragelib.v1.api.accessors.SecretsAccessor;
+import io.github.leawind.systemstoragelib.v1.api.dirdoc.DirectoryDocumenter;
 import io.github.leawind.systemstoragelib.v1.api.exception.SecretIntegrityException;
 import io.github.leawind.systemstoragelib.v1.utils.machineid.MachineIdResolutionException;
 import io.github.leawind.systemstoragelib.v1.utils.machineid.MachineIdUtil;
@@ -39,7 +41,6 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import org.jspecify.annotations.NonNull;
-import org.slf4j.Logger;
 
 /// AES-256-GCM encrypted secret storage with environment-bound key derivation and expiration
 // support.
@@ -86,8 +87,8 @@ public class SecretsAccessorImpl extends AbstractDirectoryAccessor implements Se
 
   private volatile SecretKey aesKey;
 
-  public SecretsAccessorImpl(Path dirPath, Logger logger) {
-    super(dirPath, logger);
+  public SecretsAccessorImpl(Path dirPath, Scope scope, DirectoryDocumenter directoryDocumenter) {
+    super(dirPath, scope.logger(), directoryDocumenter);
   }
 
   @Override
@@ -364,9 +365,9 @@ public class SecretsAccessorImpl extends AbstractDirectoryAccessor implements Se
 
   private void ensureDirectoryExists() throws IOException {
     try {
-      Files.createDirectories(getDirPath(), DIR_ATTRIBUTE);
+      directoryDocumenter.createDirectories(getDirPath(), DIR_ATTRIBUTE);
     } catch (UnsupportedOperationException e) {
-      Files.createDirectories(getDirPath());
+      directoryDocumenter.createDirectories(getDirPath());
     }
     applyDirPermissions(getDirPath());
   }

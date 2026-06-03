@@ -1,6 +1,7 @@
 package io.github.leawind.systemstoragelib.v1.impl.log;
 
 import io.github.leawind.systemstoragelib.v1.api.accessors.AbstractDirectoryAccessor;
+import io.github.leawind.systemstoragelib.v1.api.dirdoc.DirectoryDocumenter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,15 +19,20 @@ public class LogAccessor extends AbstractDirectoryAccessor {
   private long maxFileSize;
   private int maxArchiveFiles;
 
-  public LogAccessor(Path dirPath, Logger logger, long maxFileSize, int maxArchiveFiles) {
-    super(dirPath, logger);
+  public LogAccessor(
+      Path dirPath,
+      Logger logger,
+      DirectoryDocumenter directoryDocumenter,
+      long maxFileSize,
+      int maxArchiveFiles) {
+    super(dirPath, logger, directoryDocumenter);
     this.logFilePath = dirPath.resolve(LOG_FILE_NAME);
     this.maxFileSize = maxFileSize;
     this.maxArchiveFiles = maxArchiveFiles;
   }
 
-  public LogAccessor(Path dirPath, Logger logger) {
-    this(dirPath, logger, Long.MAX_VALUE, Integer.MAX_VALUE);
+  public LogAccessor(Path dirPath, Logger logger, DirectoryDocumenter directoryDocumenter) {
+    this(dirPath, logger, directoryDocumenter, Long.MAX_VALUE, Integer.MAX_VALUE);
   }
 
   public void setMaxFileSize(long value) {
@@ -49,7 +55,7 @@ public class LogAccessor extends AbstractDirectoryAccessor {
     try {
       rotateIfNeeded();
       String line = formatLine(pid, level, scopeName, message);
-      Files.createDirectories(getDirPath());
+      directoryDocumenter.createDirectories(getDirPath());
       Files.writeString(
           logFilePath, line + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     } catch (IOException e) {
