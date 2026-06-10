@@ -18,6 +18,7 @@ import io.github.leawind.systemstoragelib.v1.api.accessors.AbstractDirectoryAcce
 import io.github.leawind.systemstoragelib.v1.api.dirdoc.DirectoryDocumenter;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfig;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfigAccessor;
+import io.github.leawind.systemstoragelib.v1.impl.Holder;
 import io.github.leawind.systemstoragelib.v1.utils.Codecs;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -317,7 +318,16 @@ public class MetaConfigAccessorImpl extends AbstractDirectoryAccessor
 
     synchronized (watchStartLock) {
       this.configFilePath = resolveConfigFilePath();
-      this.lock = new Lazy<>(() -> createLock(configFilePath));
+      this.lock =
+          new Lazy<>(
+              () -> {
+                try {
+                  Holder.getDirectoryDocumenter().createDirectories(configFilePath.getParent());
+                  return new FileBasedReentrantReadWriteLock(configFilePath);
+                } catch (IOException e) {
+                  throw new RuntimeException(e);
+                }
+              });
       this.cache = null;
       try {
         stopWatching();
