@@ -9,8 +9,8 @@ import java.nio.file.Path;
 
 public final class Holder {
 
-  private static final DirectoryDocumenter DIRECTORY_DOCUMENTER;
-  private static final SystemStorageLib SYSTEM_STORAGE_LIB;
+  public static final DirectoryDocumenter DIRECTORY_DOCUMENTER;
+  public static final SystemStorageLib SYSTEM_STORAGE_LIB;
 
   static {
     BaseDirectories baseDirs = BaseDirectories.get();
@@ -41,13 +41,5 @@ public final class Holder {
       throw new SystemStorageLibException(
           "Failed to initialize SystemStorageLib with default directories", e);
     }
-  }
-
-  public static DirectoryDocumenter getDirectoryDocumenter() {
-    return DIRECTORY_DOCUMENTER;
-  }
-
-  public static SystemStorageLib getSystemStorageLibInstance() {
-    return SYSTEM_STORAGE_LIB;
   }
 }

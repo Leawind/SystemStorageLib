@@ -322,7 +322,7 @@ public class MetaConfigAccessorImpl extends AbstractDirectoryAccessor
           new Lazy<>(
               () -> {
                 try {
-                  Holder.getDirectoryDocumenter().createDirectories(configFilePath.getParent());
+                  Holder.DIRECTORY_DOCUMENTER.createDirectories(configFilePath.getParent());
                   return new FileBasedReentrantReadWriteLock(configFilePath);
                 } catch (IOException e) {
                   throw new RuntimeException(e);

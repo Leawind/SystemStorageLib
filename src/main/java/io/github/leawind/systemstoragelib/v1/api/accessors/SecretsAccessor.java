@@ -1,10 +1,10 @@
 package io.github.leawind.systemstoragelib.v1.api.accessors;
 
+import io.github.leawind.systemstoragelib.v1.Factory;
 import io.github.leawind.systemstoragelib.v1.api.DirectoryAccessor;
 import io.github.leawind.systemstoragelib.v1.api.Scope;
 import io.github.leawind.systemstoragelib.v1.api.dirdoc.DirectoryDocumenter;
 import io.github.leawind.systemstoragelib.v1.api.exception.SecretIntegrityException;
-import io.github.leawind.systemstoragelib.v1.impl.accessors.SecretsAccessorImpl;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -37,7 +37,7 @@ import org.jspecify.annotations.Nullable;
 public interface SecretsAccessor extends DirectoryAccessor {
 
   static SecretsAccessor from(Path dirPath, Scope scope, DirectoryDocumenter directoryDocumenter) {
-    return new SecretsAccessorImpl(dirPath, scope, directoryDocumenter);
+    return Factory.createSecretsAccessor(dirPath, scope, directoryDocumenter);
   }
 
   // region Core methods

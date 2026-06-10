@@ -79,7 +79,7 @@ public class SystemStorageLibImpl implements SystemStorageLib {
     {
       var da =
           DirectoryDocumenter.mutable("README.md")
-              .extendFrom(Holder.getDirectoryDocumenter())
+              .extendFrom(Holder.DIRECTORY_DOCUMENTER)
               .memorizeByResource(metaConfigDir, "/readthem/metaConfig.md")
               .memorizeByResource(logsDir, "/readthem/logs.md");
       defaultScopedDirs.forEach(

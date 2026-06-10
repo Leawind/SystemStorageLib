@@ -1,6 +1,6 @@
 package io.github.leawind.systemstoragelib.v1.api.dirdoc;
 
-import io.github.leawind.systemstoragelib.v1.impl.dirdoc.MutableDirectoryDocumenterImpl;
+import io.github.leawind.systemstoragelib.v1.Factory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -15,7 +15,7 @@ import java.util.Map;
 public interface DirectoryDocumenter {
 
   static DirectoryDocumenter.Mutable mutable(String fileName) {
-    return new MutableDirectoryDocumenterImpl(fileName);
+    return Factory.createMutableDirectoryDocumenter(fileName);
   }
 
   Map<String, String> properties();

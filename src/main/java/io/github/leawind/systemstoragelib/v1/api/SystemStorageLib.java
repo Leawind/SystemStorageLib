@@ -1,9 +1,8 @@
 package io.github.leawind.systemstoragelib.v1.api;
 
+import io.github.leawind.systemstoragelib.v1.Factory;
 import io.github.leawind.systemstoragelib.v1.api.dirdoc.DirectoryDocumenter;
 import io.github.leawind.systemstoragelib.v1.api.metaconfig.MetaConfigAccessor;
-import io.github.leawind.systemstoragelib.v1.impl.Holder;
-import io.github.leawind.systemstoragelib.v1.impl.SystemStorageLibImpl;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -64,7 +63,7 @@ public interface SystemStorageLib {
   ///
   /// @return the singleton instance
   static SystemStorageLib getInstance() {
-    return Holder.getSystemStorageLibInstance();
+    return Factory.getSystemStorageLibInstance();
   }
 
   /// Returns a builder for creating a `SystemStorageLib` instance with custom configuration.
@@ -72,7 +71,7 @@ public interface SystemStorageLib {
   /// Usually for testing.
   @ApiStatus.Experimental
   static Builder builder(Path metaConfigDir) {
-    return new SystemStorageLibImpl.BuilderImpl(metaConfigDir);
+    return Factory.createLibBuilder(metaConfigDir);
   }
 
   /// Builder for creating a `SystemStorageLib` instance with custom configuration.
