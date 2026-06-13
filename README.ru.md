@@ -1,3 +1,6 @@
+| [中文](README.zh.md) | [English](README.md) | Русский |
+| -------------------- | -------------------- | ------- |
+
 <div align="center">
 <img src="src/main/resources/logo.128x.png" alt="System Storage Lib" style="image-rendering:pixelated;height:6em;">
 
@@ -8,8 +11,6 @@
 
 [![CurseForge Downloads](https://img.shields.io/curseforge/dt/1556147?style=flat&logo=curseforge&color=F1643%5E&cacheSeconds=3600&label=CurseForge)](https://www.curseforge.com/minecraft/mc-mods/system-storage-lib)
 [![Modrinth Downloads](https://img.shields.io/modrinth/dt/t07y8PBv?style=flat&logo=modrinth&color=17B85A&cacheSeconds=3600&label=Modrinth)](https://modrinth.com/mod/system-storage-lib)
-
-[中文](README.zh.md) | [English](README.md) | Русский
 
 Библиотека-мод для Minecraft, предоставляющая системное постоянное хранилище для других модов в соответствии с
 соглашениями о каталогах данных операционных систем.
@@ -53,7 +54,7 @@ dependencies {
 ```json
 {
   "depends": {
-	  "system-storage-lib": ">=${system_storage_lib_version}"
+    "system-storage-lib": ">=${system_storage_lib_version}"
   }
 }
 ```
@@ -100,7 +101,7 @@ String token = secrets.get("some_token"); // "secret_value_123"
 ## Типы хранилищ
 
 | Значение `StoreType` | Тип хранилища    | Описание                                                                                            |
-|----------------------|------------------|-----------------------------------------------------------------------------------------------------|
+| -------------------- | ---------------- | --------------------------------------------------------------------------------------------------- |
 | `CACHE`              | Кэш              | Восстанавливаемые данные                                                                            |
 | `CONFIG`             | Конфигурация     | Файлы конфигурации, например, пользовательские настройки                                            |
 | `SECRETS`            | Секреты          | Конфиденциальные данные, требующие шифрования (токены, ключи и т.д.)                                |

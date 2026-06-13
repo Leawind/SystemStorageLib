@@ -1,3 +1,6 @@
+| [中文](README.zh.md) | English | [Русский](README.ru.md) |
+| -------------------- | ------- | ----------------------- |
+
 <div align="center">
 <img src="src/main/resources/logo.128x.png" alt="System Storage Lib" style="image-rendering:pixelated;height:6em;">
 
@@ -8,8 +11,6 @@
 
 [![CurseForge Downloads](https://img.shields.io/curseforge/dt/1556147?style=flat&logo=curseforge&color=F1643%5E&cacheSeconds=3600&label=CurseForge)](https://www.curseforge.com/minecraft/mc-mods/system-storage-lib)
 [![Modrinth Downloads](https://img.shields.io/modrinth/dt/t07y8PBv?style=flat&logo=modrinth&color=17B85A&cacheSeconds=3600&label=Modrinth)](https://modrinth.com/mod/system-storage-lib)
-
-[中文](README.zh.md) | English | [Русский](README.ru.md)
 
 A Minecraft library mod providing system-level persistent storage for other mods, following data directory conventions of each operating system.
 
