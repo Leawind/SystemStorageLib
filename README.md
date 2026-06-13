@@ -45,7 +45,7 @@ dependencies {
 ```json
 {
   "depends": {
-	  "system-storage-lib": ">=${system_storage_lib_version}"
+    "system-storage-lib": ">=${system_storage_lib_version}"
   }
 }
 ```
