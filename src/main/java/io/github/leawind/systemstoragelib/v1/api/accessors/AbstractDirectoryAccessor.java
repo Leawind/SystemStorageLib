@@ -1,6 +1,6 @@
 package io.github.leawind.systemstoragelib.v1.api.accessors;
 
-import io.github.leawind.inventory.event.EventEmitter;
+import io.github.leawind.inventory.event.SimpleEventEmitter;
 import io.github.leawind.systemstoragelib.v1.api.DirectoryAccessor;
 import io.github.leawind.systemstoragelib.v1.api.dirdoc.DirectoryDocumenter;
 import java.nio.file.Path;
@@ -11,7 +11,7 @@ public class AbstractDirectoryAccessor implements DirectoryAccessor {
   private Path dirPath;
   private Logger logger;
   protected final DirectoryDocumenter directoryDocumenter;
-  private final EventEmitter<Path> onDirPathChanged = new EventEmitter<>();
+  protected final SimpleEventEmitter.Owned<Path> onDirPathChanged = SimpleEventEmitter.create();
 
   protected AbstractDirectoryAccessor(
       Path dirPath, Logger logger, DirectoryDocumenter directoryDocumenter) {
@@ -46,7 +46,7 @@ public class AbstractDirectoryAccessor implements DirectoryAccessor {
   }
 
   @Override
-  public EventEmitter<Path> onDirPathChanged() {
+  public SimpleEventEmitter<Path> onDirPathChanged() {
     return onDirPathChanged;
   }
 }

@@ -1,6 +1,6 @@
 package io.github.leawind.systemstoragelib.v1.api;
 
-import io.github.leawind.inventory.event.EventEmitter;
+import io.github.leawind.inventory.event.SimpleEventEmitter;
 import java.nio.file.Path;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
@@ -19,5 +19,5 @@ public interface DirectoryAccessor {
   void setLogger(@NonNull Logger logger);
 
   /// Emits when the storage directory path is changed.
-  EventEmitter<Path> onDirPathChanged();
+  SimpleEventEmitter<Path> onDirPathChanged();
 }

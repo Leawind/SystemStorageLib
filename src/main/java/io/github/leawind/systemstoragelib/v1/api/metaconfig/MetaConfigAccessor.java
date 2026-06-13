@@ -1,6 +1,6 @@
 package io.github.leawind.systemstoragelib.v1.api.metaconfig;
 
-import io.github.leawind.inventory.event.EventEmitter;
+import io.github.leawind.inventory.event.SimpleEventEmitter;
 import io.github.leawind.systemstoragelib.v1.api.DirectoryAccessor;
 import java.io.IOException;
 import java.util.function.Consumer;
@@ -27,7 +27,7 @@ public interface MetaConfigAccessor extends DirectoryAccessor {
   /// Either by {@link #update(Consumer)} or file changed by external process.
   ///
   /// Event: The new configuration.
-  EventEmitter<ChangedEvent> onChanged();
+  SimpleEventEmitter<ChangedEvent> onChanged();
 
   record ChangedEvent(@Nullable MetaConfig oldConfig, @NonNull MetaConfig config) {}
 }

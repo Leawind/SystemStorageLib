@@ -7,7 +7,7 @@ import com.google.gson.JsonSyntaxException;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
-import io.github.leawind.inventory.event.EventEmitter;
+import io.github.leawind.inventory.event.SimpleEventEmitter;
 import io.github.leawind.inventory.lock.AtomicFileWriter;
 import io.github.leawind.inventory.lock.FileBasedReentrantReadWriteLock;
 import io.github.leawind.inventory.lock.LockUtils;
@@ -53,7 +53,7 @@ public class MetaConfigAccessorImpl extends AbstractDirectoryAccessor
 
   private final Object watchStartLock = new Object();
 
-  private final EventEmitter<ChangedEvent> onChanged = new EventEmitter<>();
+  private final SimpleEventEmitter.Owned<ChangedEvent> onChanged = SimpleEventEmitter.create();
 
   private volatile @Nullable MetaConfig cache = null;
   private volatile @Nullable WatchService watchService = null;
@@ -66,8 +66,8 @@ public class MetaConfigAccessorImpl extends AbstractDirectoryAccessor
     this.lib = lib;
     configCodec = MetaConfigImpl.codec(lib);
 
-    onDirPathChanged().on(this, this::handleDirUpdated);
-    onDirPathChanged().emit(null);
+    onDirPathChanged().on(this::handleDirUpdated);
+    onDirPathChanged.emit(null);
   }
 
   @Override
@@ -113,7 +113,7 @@ public class MetaConfigAccessorImpl extends AbstractDirectoryAccessor
   }
 
   @Override
-  public EventEmitter<ChangedEvent> onChanged() {
+  public SimpleEventEmitter<ChangedEvent> onChanged() {
     return onChanged;
   }
 
