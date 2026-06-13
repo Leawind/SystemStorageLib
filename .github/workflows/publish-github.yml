@@ -1,0 +1,42 @@
+name: Publish to GitHub
+
+on:
+    push:
+        tags:
+            - 'v*'
+    workflow_dispatch:
+
+jobs:
+    publish:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+
+        steps:
+            -   uses: actions/checkout@v4
+
+            -   name: Set up JDK
+                uses: actions/setup-java@v4
+                with:
+                    java-version: '25'
+                    distribution: 'temurin'
+
+            -   name: Setup Gradle
+                uses: gradle/actions/setup-gradle@v4
+
+            -   name: Grant Permission to Execute Gradle
+                run: chmod +x ./gradlew
+
+            -   name: Build with Gradle
+                run: ./gradlew build
+
+            -   name: Publish to GitHub
+                uses: Kir-Antipov/mc-publish@v3.3
+                with:
+                    loaders: |
+                        fabric
+                        forge
+                        quilt
+
+                    github-generate-changelog: true
+                    github-token: ${{ secrets.GH_TOKEN }}
