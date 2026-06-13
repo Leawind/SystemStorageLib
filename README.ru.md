@@ -45,7 +45,7 @@ dependencies {
 ```json
 {
   "depends": {
-    "system_storage_lib": ">=${system_storage_lib_version}"
+	  "system-storage-lib": ">=${system_storage_lib_version}"
   }
 }
 ```
@@ -54,7 +54,7 @@ dependencies {
 
 ```toml
 [[dependencies.example_mod]]
-modId="system_storage_lib"
+modId = "system-storage-lib"
 mandatory=true
 versionRange="[${system_storage_lib_version},)"
 ordering="NONE"
