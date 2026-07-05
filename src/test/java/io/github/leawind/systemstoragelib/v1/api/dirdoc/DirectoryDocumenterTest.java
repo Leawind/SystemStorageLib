@@ -24,7 +24,7 @@ public class DirectoryDocumenterTest {
 
   @BeforeEach
   void setUp() {
-    directoryDocumenter = DirectoryDocumenter.mutable(README_NAME);
+    directoryDocumenter = DirectoryDocumenter.create(README_NAME);
   }
 
   @Test

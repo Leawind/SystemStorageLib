@@ -14,7 +14,7 @@ import java.util.Map;
 /// All operations are thread-safe. Paths are normalized to absolute form for consistent matching.
 public interface DirectoryDocumenter {
 
-  static DirectoryDocumenter.Mutable mutable(String fileName) {
+  static DirectoryDocumenter.Mutable create(String fileName) {
     return Factory.createMutableDirectoryDocumenter(fileName);
   }
 
