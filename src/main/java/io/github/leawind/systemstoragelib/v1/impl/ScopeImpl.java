@@ -4,6 +4,7 @@ import io.github.leawind.systemstoragelib.v1.api.Scope;
 import io.github.leawind.systemstoragelib.v1.api.StoreType;
 import io.github.leawind.systemstoragelib.v1.api.dirdoc.DirectoryDocumenter;
 import io.github.leawind.systemstoragelib.v1.utils.MapUtils;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +52,13 @@ public final class ScopeImpl implements Scope {
 
   @Override
   public Path directory(StoreType storeType) {
-    return dirs.get(storeType).resolve(name);
+    Path path = dirs.get(storeType).resolve(name);
+    try {
+      directoryDocumenter.patrol(path);
+    } catch (IOException e) {
+      logger.warn("Failed to patrol directory: {}", path, e);
+    }
+    return path;
   }
 
   @Override
