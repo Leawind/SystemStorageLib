@@ -17,23 +17,23 @@ public final class Holder {
 
     String appName = SystemStorageLibImpl.APP_NAME;
 
-    Path cacheRoot = Path.of(baseDirs.cacheDir, appName);
-    Path configRoot = Path.of(baseDirs.configDir, appName);
-    Path dataRoot = Path.of(baseDirs.dataDir, appName);
-    Path dataLocalRoot = Path.of(baseDirs.dataLocalDir, appName);
+    Path cacheDir = Path.of(baseDirs.cacheDir, appName);
+    Path configDir = Path.of(baseDirs.configDir, appName);
+    Path dataDir = Path.of(baseDirs.dataDir, appName);
+    Path dataLocalDir = Path.of(baseDirs.dataLocalDir, appName);
 
     DIRECTORY_DOCUMENTER =
-        DirectoryDocumenter.mutable("README.md").memorizeByResource(cacheRoot, "/readthem/root.md");
+        DirectoryDocumenter.mutable("README.md").memorizeByResource(cacheDir, "/readthem/root.md");
 
     try {
       SYSTEM_STORAGE_LIB =
-          SystemStorageLib.builder(configRoot.resolve("metaconfig"))
-              .logsDir(dataLocalRoot.resolve("logs"))
-              .storeDir(StoreType.CACHE, cacheRoot.resolve(StoreType.CACHE.id()))
-              .storeDir(StoreType.CONFIG, configRoot.resolve(StoreType.CONFIG.id()))
-              .storeDir(StoreType.SECRETS, dataLocalRoot.resolve(StoreType.SECRETS.id()))
-              .storeDir(StoreType.DATA, dataRoot.resolve(StoreType.DATA.id()))
-              .storeDir(StoreType.DATA_LOCAL, dataLocalRoot.resolve(StoreType.DATA_LOCAL.id()))
+          SystemStorageLib.builder(configDir.resolve("metaconfig"))
+              .logsDir(dataLocalDir.resolve("logs"))
+              .storeDir(StoreType.CACHE, cacheDir.resolve(StoreType.CACHE.id()))
+              .storeDir(StoreType.CONFIG, configDir.resolve(StoreType.CONFIG.id()))
+              .storeDir(StoreType.SECRETS, dataLocalDir.resolve(StoreType.SECRETS.id()))
+              .storeDir(StoreType.DATA, dataDir.resolve(StoreType.DATA.id()))
+              .storeDir(StoreType.DATA_LOCAL, dataLocalDir.resolve(StoreType.DATA_LOCAL.id()))
               .build();
     } catch (SystemStorageLibException e) {
       throw e;
