@@ -23,7 +23,11 @@ public final class Holder {
     Path dataLocalDir = Path.of(baseDirs.dataLocalDir, appName);
 
     DIRECTORY_DOCUMENTER =
-        DirectoryDocumenter.create("README.md").memorizeByResource(cacheDir, "/readthem/root.md");
+        DirectoryDocumenter.create("README.md")
+            .memorizeByResource(cacheDir, "/readthem/root.md")
+            .memorizeByResource(configDir, "/readthem/root.md")
+            .memorizeByResource(dataDir, "/readthem/root.md")
+            .memorizeByResource(dataLocalDir, "/readthem/root.md");
 
     try {
       SYSTEM_STORAGE_LIB =
