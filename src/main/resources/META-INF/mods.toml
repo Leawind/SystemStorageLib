@@ -17,6 +17,6 @@ displayURL="${homeUrl}"
 
 [[dependencies.${id}]]
 modId = "minecraft"
-mandatory = true
+type = "required"
 versionRange = "[${minecraftVersion},)"
 ordering = "NONE"
